@@ -76,14 +76,16 @@ Find as separate bash script.
 
 ### My Daily Use Stuff
 - [`firefox`](https://archlinux.org/packages/extra/x86_64/firefox/) — Its literally firefox
-- [`discord`](https://aur.archlinux.org/packages/discord) — Chat and voice communication app *(AUR)*
+- [`discord`](https://aur.archlinux.org/packages/discord) — Chat and voice communication app
 - [`steam`](https://archlinux.org/packages/extra/x86_64/steam/) — Gaming platform and launcher
-- [`spotify`](https://aur.archlinux.org/packages/spotify) — Music streaming client *(AUR)*
+- [`spotify`](https://aur.archlinux.org/packages/spotify) — Music streaming client
 
-### Wine & Proton
+### Wine & Protony stuff
 - [`wine`](https://archlinux.org/packages/extra/x86_64/wine/) — Windows compatibility layer
 - [`winetricks`](https://archlinux.org/packages/community/x86_64/winetricks/) — Helper scripts for Wine
 - [`protontricks`](https://aur.archlinux.org/packages/protontricks) — Helper for Proton Steam (AUR)
+- [`lutris`](https://archlinux.org/packages/extra/any/lutris/) - Game manager
+- [`gamescope`](https://archlinux.org/packages/extra/x86_64/gamescope/) - Microcompositor for running games easier
 
 ### Laptop Stuff
 - [`acpid`](https://archlinux.org/packages/core/x86_64/acpid/) — ACPI event daemon
@@ -95,7 +97,7 @@ Find as separate bash script.
 - [`ufw`](https://archlinux.org/packages/community/x86_64/ufw/) — Uncomplicated firewall
 
 ### Programming
-- [`code`](https://aur.archlinux.org/packages/visual-studio-code-bin) — Visual Studio Code *(AUR)*
+- [`code`](https://aur.archlinux.org/packages/visual-studio-code-bin) — Visual Studio Code
 - [`python`](https://archlinux.org/packages/extra/x86_64/python/) — Python 3
 - [`python-pip`](https://archlinux.org/packages/extra/x86_64/python-pip/) — Python package manager
 - [`python-virtualenv`](https://archlinux.org/packages/community/any/python-virtualenv/) — Virtual environments
