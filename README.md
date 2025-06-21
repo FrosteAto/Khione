@@ -17,6 +17,7 @@ Find as separate bash script.
 - [`man-pages`](https://archlinux.org/packages/core/any/man-pages/) — POSIX man pages
 - [`texinfo`](https://archlinux.org/packages/core/x86_64/texinfo/) — Info documentation
 - [`bash-completion`](https://archlinux.org/packages/extra/any/bash-completion/) — CLI auto-completion
+- [`xdg-user-dirs`](https://archlinux.org/packages/extra/x86_64/xdg-user-dirs/) — Manage standard user directories
 
 ### Networking
 - [`networkmanager`](https://archlinux.org/packages/extra/x86_64/networkmanager/) — Network manager
@@ -30,6 +31,9 @@ Find as separate bash script.
 - [`libva-mesa-driver`](https://archlinux.org/packages/extra/x86_64/libva-mesa-driver/) — VA-API video accel
 - [`lib32-libva-mesa-driver`](https://archlinux.org/packages/multilib/x86_64/lib32-libva-mesa-driver/) — 32-bit VA-API
 
+### Development Libraries (Multilib)
+- [`multilib-devel`](https://archlinux.org/packages/multilib/x86_64/multilib-devel/) — Development files for multilib 32-bit libraries
+
 ### KDE Plasma (Wayland)
 - [`plasma-meta`](https://archlinux.org/packages/extra/x86_64/plasma-meta/) — KDE Plasma desktop (meta)
 - [`kde-applications-meta`](https://archlinux.org/packages/extra/x86_64/kde-applications-meta/) — KDE apps suite
@@ -39,6 +43,8 @@ Find as separate bash script.
 - [`kde-cli-tools`](https://archlinux.org/packages/extra/x86_64/kde-cli-tools/) — Command-line KDE tools
 - [`kscreen`](https://archlinux.org/packages/extra/x86_64/kscreen/) — Display configuration GUI
 - [`dolphin`](https://archlinux.org/packages/extra/x86_64/dolphin/) — KDE file manager
+- [`qt5ct`](https://archlinux.org/packages/community/x86_64/qt5ct/) — Qt5 configuration tool
+- [`qt6ct`](https://archlinux.org/packages/community/x86_64/qt6ct/) — Qt6 configuration tool
 
 ### Audio (PipeWire)
 - [`pipewire`](https://archlinux.org/packages/extra/x86_64/pipewire/) — Audio/video server
@@ -49,7 +55,8 @@ Find as separate bash script.
 - [`wireplumber`](https://archlinux.org/packages/extra/x86_64/wireplumber/) — Session manager for PipeWire
 
 ### Login Manager
-- [`ly`](https://aur.archlinux.org/packages/ly) — Terminal-style login manager *(AUR)*
+- [`greetd`](https://aur.archlinux.org/packages/greetd) — Wayland login manager *(AUR)*
+- [`tuigreet`](https://aur.archlinux.org/packages/tuigreet) — TUI greeter for greetd *(AUR)*
 
 ### Flatpak
 - [`flatpak`](https://archlinux.org/packages/extra/x86_64/flatpak/) — Flatpak package system
@@ -57,7 +64,7 @@ Find as separate bash script.
 ### Printing & Scanning
 - [`cups`](https://archlinux.org/packages/extra/x86_64/cups/) — Printing system
 - [`cups-pdf`](https://archlinux.org/packages/community/x86_64/cups-pdf/) — Print to PDF
-- [`print-manage`](https://archlinux.org/packages/extra/x86_64/print-manager/) — GTK printer config
+- [`print-manager`](https://archlinux.org/packages/extra/x86_64/print-manager/) — GTK printer configuration
 - [`sane`](https://archlinux.org/packages/extra/x86_64/sane/) — Scanner libraries
 - [`skanlite`](https://archlinux.org/packages/extra/x86_64/skanlite/) — Scanner frontend
 - [`hplip`](https://archlinux.org/packages/extra/x86_64/hplip/) — HP printer/scanner support
@@ -69,10 +76,14 @@ Find as separate bash script.
 
 ### My Daily Use Stuff
 - [`firefox`](https://archlinux.org/packages/extra/x86_64/firefox/) — Its literally firefox
-- [`discord`](https://aur.archlinux.org/packages/discord) — Chat and voice communication app
+- [`discord`](https://aur.archlinux.org/packages/discord) — Chat and voice communication app *(AUR)*
 - [`steam`](https://archlinux.org/packages/extra/x86_64/steam/) — Gaming platform and launcher
-- [`spotify`](https://aur.archlinux.org/packages/spotify) — Music streaming client
+- [`spotify`](https://aur.archlinux.org/packages/spotify) — Music streaming client *(AUR)*
 
+### Wine & Proton
+- [`wine`](https://archlinux.org/packages/extra/x86_64/wine/) — Windows compatibility layer
+- [`winetricks`](https://archlinux.org/packages/community/x86_64/winetricks/) — Helper scripts for Wine
+- [`protontricks`](https://aur.archlinux.org/packages/protontricks) — Helper for Proton Steam (AUR)
 
 ### Laptop Stuff
 - [`acpid`](https://archlinux.org/packages/core/x86_64/acpid/) — ACPI event daemon
@@ -80,12 +91,11 @@ Find as separate bash script.
 - [`tlp-rdw`](https://archlinux.org/packages/community/x86_64/tlp-rdw/) — Radio device wizard
 - [`powertop`](https://archlinux.org/packages/community/x86_64/powertop/) — Power usage analyzer
 
-### AUR 
-- [`yay`](https://aur.archlinux.org/packages/yay) — AUR helper
+### Firewall
+- [`ufw`](https://archlinux.org/packages/community/x86_64/ufw/) — Uncomplicated firewall
 
 ### Programming
-
-- [`code`](https://aur.archlinux.org/packages/visual-studio-code-bin) — Visual Studio Code
+- [`code`](https://aur.archlinux.org/packages/visual-studio-code-bin) — Visual Studio Code *(AUR)*
 - [`python`](https://archlinux.org/packages/extra/x86_64/python/) — Python 3
 - [`python-pip`](https://archlinux.org/packages/extra/x86_64/python-pip/) — Python package manager
 - [`python-virtualenv`](https://archlinux.org/packages/community/any/python-virtualenv/) — Virtual environments
