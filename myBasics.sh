@@ -41,8 +41,8 @@ else
 fi
 
 aur_packages=(
-  tuigreet
   greetd
+  tuigreet
   discord
   spotify
   code
