@@ -21,7 +21,7 @@ official_packages=(
   flatpak
   cups cups-pdf print-manager sane skanlite hplip avahi nss-mdns
   wlr-randr
-  firefox steam steam-native-runtime
+  firefox steam
   acpid tlp tlp-rdw powertop
   python python-pip python-virtualenv php composer nodejs npm docker docker-compose make cmake
   ufw
