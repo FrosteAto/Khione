@@ -89,9 +89,6 @@ Find as separate bash script.
 
 ### Laptop Stuff
 - [`acpid`](https://archlinux.org/packages/core/x86_64/acpid/) — ACPI event daemon
-- [`tlp`](https://archlinux.org/packages/community/x86_64/tlp/) — Power saving tools
-- [`tlp-rdw`](https://archlinux.org/packages/community/x86_64/tlp-rdw/) — Radio device wizard
-- [`powertop`](https://archlinux.org/packages/community/x86_64/powertop/) — Power usage analyzer
 
 ### Firewall
 - [`ufw`](https://archlinux.org/packages/community/x86_64/ufw/) — Uncomplicated firewall
