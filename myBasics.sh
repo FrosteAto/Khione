@@ -22,7 +22,7 @@ official_packages=(
   cups cups-pdf print-manager sane skanlite hplip avahi nss-mdns
   wlr-randr
   firefox steam
-  acpid tlp tlp-rdw powertop
+  acpid
   python python-pip python-virtualenv php composer nodejs npm docker docker-compose make cmake
   ufw
 )
