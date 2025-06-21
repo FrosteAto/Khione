@@ -1,4 +1,4 @@
-# Dekstop Wayland KDE Arch Setup
+# Desktop Wayland KDE Arch Setup
 My install list for a fully working desktop setup with all the programs I need. Assumes AMD CPU & GPU.
 
 Find as separate bash script.
