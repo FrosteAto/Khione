@@ -127,4 +127,4 @@ command = "tuigreet --cmd 'dbus-run-session startplasma-wayland'"
 user = "$arch_user"
 EOF
 
-echo -e "\e[1;32m✅ Setup complete. Reboot and enjoy your system!\e[0m"
+echo -e "Setup complete, please reboot."
