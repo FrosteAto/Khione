@@ -58,7 +58,6 @@ sudo systemctl enable ufw.service
 echo "Configuring firewall rules."
 sudo ufw default deny incoming
 sudo ufw default allow outgoing
-sudo ufw allow OpenSSH
 sudo ufw enable
 
 echo "Adding $arch_user to docker group."
