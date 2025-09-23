@@ -19,7 +19,7 @@ fi
 official_packages=(
   flatpak git kitty
   cups cups-pdf print-manager sane skanlite hplip avahi nss-mdns
-  firefox steam
+  firefox steam krita
   python python-pip python-virtualenv php composer nodejs npm docker docker-compose make cmake
   ufw
 )
@@ -43,10 +43,11 @@ aur_packages=(
   tuigreet
   discord
   spotify
-  code
+  visual-studio-code-bin
   wine winetricks protontricks
   lutris
   gamescope
+  plex-desktop
 )
 
 echo "Installing AUR packages."
