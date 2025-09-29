@@ -39,8 +39,6 @@ else
 fi
 
 aur_packages=(
-  greetd
-  tuigreet
   discord
   spotify
   visual-studio-code-bin
