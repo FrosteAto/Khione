@@ -17,9 +17,9 @@ if ! grep -q "^\[multilib\]" /etc/pacman.conf; then
 fi
 
 official_packages=(
-  flatpak git kitty
+  flatpak git kitty mpv 
   cups cups-pdf print-manager sane skanlite hplip avahi nss-mdns
-  firefox steam krita
+  firefox steam krita unity-hub godot obs-studio
   python python-pip python-virtualenv php composer nodejs npm docker docker-compose make cmake
   ufw
 )
