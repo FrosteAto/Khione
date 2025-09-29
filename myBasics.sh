@@ -3,7 +3,7 @@ set -e
 
 read -rp "Enter the name of your user (must already exist): " arch_user
 if ! id "$arch_user" &>/dev/null; then
-  echo "❌ User '$arch_user' does not exist. Exiting."
+  echo "User '$arch_user' does not exist. Exiting."
   exit 1
 fi
 
