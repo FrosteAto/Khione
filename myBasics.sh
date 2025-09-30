@@ -19,7 +19,7 @@ fi
 official_packages=(
   flatpak git kitty mpv 
   cups cups-pdf print-manager sane skanlite hplip avahi nss-mdns
-  firefox steam krita godot obs-studio audacity blender kdenlive
+  firefox steam krita godot obs-studio audacity blender kdenlive libreoffice
   python python-pip python-virtualenv php composer nodejs npm docker docker-compose make cmake
   ufw
 )
