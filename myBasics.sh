@@ -48,6 +48,7 @@ aur_packages=(
   gamescope
   plex-desktop
   unityhub
+  adwsteamgtk
 )
 
 echo "Installing AUR packages."
