@@ -22,6 +22,7 @@ official_packages=(
   firefox steam krita godot obs-studio audacity blender kdenlive libreoffice
   python python-pip python-virtualenv php composer nodejs npm docker docker-compose make cmake
   ufw
+  noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu
 )
 
 echo "Installing official packages."
