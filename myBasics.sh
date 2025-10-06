@@ -49,6 +49,7 @@ aur_packages=(
   plex-desktop
   unityhub
   adwsteamgtk
+  mirage
 )
 
 echo "Installing AUR packages."
