@@ -49,6 +49,7 @@ aur_packages=(
   plex-desktop
   unityhub
   adwsteamgtk
+  proton-vpn-gtk-app
 )
 
 echo "Installing AUR packages."
