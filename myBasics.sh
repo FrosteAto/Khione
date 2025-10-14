@@ -20,13 +20,17 @@ official_packages=(
   flatpak git kitty mpv 
   cups cups-pdf print-manager sane skanlite hplip avahi nss-mdns
   firefox steam krita godot obs-studio audacity blender kdenlive libreoffice gwenview btop
-  python python-pip python-virtualenv php composer nodejs npm docker docker-compose make cmake
+  python python-pip python-pipx python-virtualenv php composer nodejs npm docker docker-compose make cmake
   ufw
   noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu
 )
 
 echo "Installing official packages."
 sudo pacman -S --noconfirm "${official_packages[@]}"
+
+pipx ensurepath
+pipx install konsave
+pipx inject konsave setuptools
 
 echo "Installing yay (AUR helper)."
 if ! command -v yay &>/dev/null; then
