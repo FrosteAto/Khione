@@ -18,7 +18,7 @@ fi
 
 official_packages=(
   niri wofi mako waybar kitty swaybg xorg-xwayland xwayland-satellite greetd greetd-tuigreet xdg-desktop-portal
-  xdg-desktop-portal-wlr udiskie polkit plasma-polkit-agent wl-clipboard nemo # minimum essentials for desktop usage
+  xdg-desktop-portal-wlr udiskie polkit polkit-kde-agent, wl-clipboard nemo # minimum essentials for desktop usage
   flatpak # flatpak support, just in case...
   cups cups-pdf print-manager sane skanlite hplip avahi nss-mdns # printing stuff
   firefox steam krita godot obs-studio audacity blender kdenlive libreoffice gwenview btop mpv # multimedia stuff
