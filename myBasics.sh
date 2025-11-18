@@ -56,6 +56,8 @@ aur_packages=(
   adwsteamgtk
   proton-vpn-gtk-app
   kwin-effects-forceblur
+  kwin-effect-rounded-corners-git
+  kwin-scripts-krohnkite-git
 )
 
 echo "Installing AUR packages."
