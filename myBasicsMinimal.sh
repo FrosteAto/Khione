@@ -18,7 +18,7 @@ fi
 
 official_packages=(
   xorg plasma plasma-workspace greetd greetd-tuigreet # Environment
-  ufw nano flatpak kitty # Tools
+  ufw nano flatpak kitty git # Tools
 )
 
 echo "Installing official packages."
