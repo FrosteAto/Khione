@@ -86,7 +86,7 @@ sudo bash -c "cat > /etc/greetd/config.toml" <<EOF
 vt = 1
 
 [default_session]
-command = "tuigreet --remember --remember-session --time --cmd /usr/bin/startplasma-wayland"
+command = "tuigreet --remember --remember-session --time --greeting God created angels to carry his message. What will you have me transmit? --cmd /usr/bin/startplasma-wayland"
 EOF
 
 
