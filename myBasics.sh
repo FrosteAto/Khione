@@ -79,4 +79,15 @@ sudo usermod -aG docker "$arch_user"
 echo "Adding Flathub remote."
 sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
+echo "Configuring greetd"
+
+sudo bash -c "cat > /etc/greetd/config.toml" <<EOF
+[terminal]
+vt = 1
+
+[default_session]
+command = "tuigreet --remember --remember-session --time --cmd /usr/bin/startplasma-wayland"
+EOF
+
+
 echo -e "Setup complete, please reboot."
