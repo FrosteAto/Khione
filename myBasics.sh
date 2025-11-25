@@ -90,5 +90,14 @@ vt = 1
 command = "tuigreet --remember --remember-session --time --time-format '%Y-%m-%d %H:%M:%S' --width 80 --container-padding 2 --greeting 'It is said that God created Angels to carry his message.\nWhat will you have me transmit?' --greeting God created angels to carry his message. What will you have me transmit? --cmd /usr/bin/startplasma-wayland"
 EOF
 
+echo "Installing YAMIS icon theme..."
+
+ICON_URL="https://raw.githubusercontent.com/FrosteAto/Arch-Linux-Setups/main/YAMIS.tar.gz"
+DEST_DIR="/home/$arch_user/.local/share/icons"
+sudo -u "$arch_user" mkdir -p "$DEST_DIR"
+sudo -u "$arch_user" curl -L "$ICON_URL" -o /home/$arch_user/YAMIS.tar.gz
+sudo -u "$arch_user" tar -xzf /home/$arch_user/YAMIS.tar.gz -C "$DEST_DIR"
+rm /home/$arch_user/YAMIS.tar.gz
+sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group Icons --key Theme "YAMIS"
 
 echo -e "Setup complete, please reboot."
