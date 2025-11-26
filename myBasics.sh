@@ -88,7 +88,7 @@ sudo bash -c "cat > /etc/greetd/config.toml" <<EOF
 vt = 1
 
 [default_session]
-command = "tuigreet --remember --remember-session --time --time-format '%Y-%m-%d %H:%M:%S' --width 80 --container-padding 2 --greeting 'It is said that God created Angels to carry his message.\nWhat will you have me transmit?' --greeting God created angels to carry his message. What will you have me transmit? --cmd /usr/bin/startplasma-wayland"
+command = "tuigreet --remember --remember-session --time --time-format '%Y-%m-%d %H:%M:%S' --width 80 --container-padding 2 --greeting 'By your command.' --cmd /usr/bin/startplasma-wayland"
 EOF
 
 echo "Installing YAMIS icon theme..."
@@ -106,12 +106,11 @@ echo "Downloading and applying Konsave profile..."
 KNSV_URL="https://github.com/FrosteAto/Arch-Linux-Setups/releases/download/Main/mysetup.knsv"
 KNSV_PATH="/home/$arch_user/mysetup.knsv"
 sudo -u "$arch_user" curl -L "$KNSV_URL" -o "$KNSV_PATH"
-sudo -u "$arch_user" bash -c '
-export PATH="$HOME/.local/bin:$PATH"
-konsave -i "$HOME/mysetup.knsv"
+konsave -i "$KNSV_PATH"
 konsave -a "mysetup"
-'
 
+echo "Setting wallpaper and colors..."
+sudo -u "$arch_user" plasma-apply-wallpaperimage /home/$arch_user/.local/share/wallpapers/Ina1/wallpaper.jpg
 sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group General --key ColorScheme "CatppuccinMocha"
 
 echo -e "Setup complete, please reboot."
