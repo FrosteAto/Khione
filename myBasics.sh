@@ -110,7 +110,7 @@ konsave -i "$KNSV_PATH"
 konsave -a "mysetup"
 
 echo "Setting wallpaper and colors..."
-sudo -u "$arch_user" plasma-apply-wallpaperimage /home/$arch_user/.local/share/wallpapers/Ina1/wallpaper.jpg
+plasma-apply-wallpaperimage /home/$arch_user/.local/share/wallpapers/Ina1/wallpaper.jpg
 sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group General --key ColorScheme "CatppuccinMocha"
 
 echo -e "Setup complete, please reboot."
