@@ -32,6 +32,7 @@ sudo pacman -S --noconfirm "${official_packages[@]}"
 pipx ensurepath
 pipx install konsave
 pipx inject konsave setuptools
+export PATH="$HOME/.local/bin:$PATH"
 
 echo "Installing yay (AUR helper)."
 if ! command -v yay &>/dev/null; then
@@ -105,8 +106,11 @@ echo "Downloading and applying Konsave profile..."
 KNSV_URL="https://github.com/FrosteAto/Arch-Linux-Setups/releases/download/Main/mysetup.knsv"
 KNSV_PATH="/home/$arch_user/mysetup.knsv"
 sudo -u "$arch_user" curl -L "$KNSV_URL" -o "$KNSV_PATH"
-sudo -u "$arch_user" konsave -i "$KNSV_PATH"
-sudo -u "$arch_user" konsave -a "mysetup"
+sudo -u "$arch_user" bash -c '
+export PATH="$HOME/.local/bin:$PATH"
+konsave -i "$HOME/mysetup.knsv"
+konsave -a "mysetup"
+'
 
 sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group General --key ColorScheme "CatppuccinMocha"
 
