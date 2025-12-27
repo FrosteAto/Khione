@@ -88,7 +88,7 @@ sudo bash -c "cat > /etc/greetd/config.toml" <<EOF
 vt = 1
 
 [default_session]
-command = "tuigreet --remember --remember-session --time --time-format '%Y-%m-%d %H:%M:%S' --width 80 --container-padding 2 --greeting 'Authorise.' --cmd /usr/bin/startplasma-wayland"
+command = "tuigreet --remember --remember-session --time --time-format '%Y-%m-%d %H:%M:%S' --width 80 --container-padding 2 --greeting 'Please authorise, assuming you should be here.' --cmd /usr/bin/startplasma-wayland"
 EOF
 
 echo "Installing YAMIS icon theme..."
@@ -115,16 +115,18 @@ sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group General --key Color
 echo "Configuring PAM for greetd and KWallet..."
 sudo tee /etc/pam.d/greetd >/dev/null <<'EOF'
 #%PAM-1.0
-
+auth       required     pam_securetty.so
+auth       requisite    pam_nologin.so
 auth       include      system-local-login
 auth       optional     pam_kwallet5.so
-
 account    include      system-local-login
-
-password   include      system-local-login
-
 session    include      system-local-login
-session    optional     pam_kwallet5.so auto_start
+session    optional     pam_kwallet5.so auto_start force_run
+EOF
+
+sudo tee /etc/pam.d/login >/dev/null <<'EOF'
+auth            optional        pam_kwallet5.so
+session         optional        pam_kwallet5.so auto_start force_run
 EOF
 
 sudo -u "$arch_user" kwriteconfig6 --file kdeglobals \
