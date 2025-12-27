@@ -17,7 +17,7 @@ if ! grep -q "^\[multilib\]" /etc/pacman.conf; then
 fi
 
 official_packages=(
-  xorg plasma plasma-workspace greetd greetd-tuigreet kwallet kwallet-pam ksshaskpass # Environment
+  xorg plasma plasma-workspace greetd greetd-tuigreet kwallet kwallet-pam libsecret # Environment
   ufw nano btop flatpak kitty # Tools
   firefox steam krita godot obs-studio audacity blender kdenlive libreoffice gwenview mpv easyeffects calf # Programs
   python python-pip python-pipx python-virtualenv php composer nodejs npm docker docker-compose make cmake git # Programming
@@ -88,7 +88,7 @@ sudo bash -c "cat > /etc/greetd/config.toml" <<EOF
 vt = 1
 
 [default_session]
-command = "tuigreet --remember --remember-session --time --time-format '%Y-%m-%d %H:%M:%S' --width 80 --container-padding 2 --greeting 'Please insert password.' --cmd /usr/bin/startplasma-wayland"
+command = "tuigreet --remember --remember-session --time --time-format '%Y-%m-%d %H:%M:%S' --width 80 --container-padding 2 --greeting 'Authorise.' --cmd /usr/bin/startplasma-wayland"
 EOF
 
 echo "Installing YAMIS icon theme..."
@@ -113,7 +113,6 @@ echo "Setting colors..."
 sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group General --key ColorScheme "CatppuccinMocha"
 
 echo "Configuring PAM for greetd and KWallet..."
-
 sudo tee /etc/pam.d/greetd >/dev/null <<'EOF'
 #%PAM-1.0
 
@@ -127,19 +126,6 @@ password   include      system-local-login
 session    include      system-local-login
 session    optional     pam_kwallet5.so auto_start
 EOF
-
-echo "Pre-creating default KWallet..."
-
-sudo -u "$arch_user" bash <<'EOF'
-mkdir -p ~/.local/share/kwalletd
-
-# Force wallet creation on first login
-kwriteconfig5 --file kwalletrc --group Wallet --key Enabled true
-kwriteconfig5 --file kwalletrc --group Wallet --key First Use false
-kwriteconfig5 --file kwalletrc --group Wallet --key DefaultWallet kdewallet
-EOF
-
-echo "Ensuring Plasma uses KWallet backend..."
 
 sudo -u "$arch_user" kwriteconfig6 --file kdeglobals \
   --group KDE \
