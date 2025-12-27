@@ -109,8 +109,7 @@ sudo -u "$arch_user" curl -L "$KNSV_URL" -o "$KNSV_PATH"
 konsave -i "$KNSV_PATH"
 konsave -a "mysetup"
 
-echo "Setting wallpaper and colors..."
-plasma-apply-wallpaperimage /home/$arch_user/.local/share/wallpapers/Ina1/wallpaper.jpg
+echo "Setting colors..."
 sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group General --key ColorScheme "CatppuccinMocha"
 
 echo "Configuring PAM for greetd and KWallet..."
