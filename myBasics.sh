@@ -17,8 +17,8 @@ if ! grep -q "^\[multilib\]" /etc/pacman.conf; then
 fi
 
 official_packages=(
-  xorg plasma plasma-workspace greetd greetd-tuigreet # Environment
-  ufw nano btop flatpak kitty # Tools
+  xorg plasma plasma-workspace greetd greetd-tuigreet kwallet kwallet-pam libsecret # Environment
+  ufw nano btop flatpak kitty dolphin # Tools
   firefox steam krita godot obs-studio audacity blender kdenlive libreoffice gwenview mpv easyeffects calf # Programs
   python python-pip python-pipx python-virtualenv php composer nodejs npm docker docker-compose make cmake git # Programming
   cups cups-pdf print-manager sane skanlite hplip avahi nss-mdns # Printing
@@ -32,6 +32,7 @@ sudo pacman -S --noconfirm "${official_packages[@]}"
 pipx ensurepath
 pipx install konsave
 pipx inject konsave setuptools
+export PATH="$HOME/.local/bin:$PATH"
 
 echo "Installing yay (AUR helper)."
 if ! command -v yay &>/dev/null; then
@@ -87,7 +88,7 @@ sudo bash -c "cat > /etc/greetd/config.toml" <<EOF
 vt = 1
 
 [default_session]
-command = "tuigreet --remember --remember-session --time --time-format '%Y-%m-%d %H:%M:%S' --width 80 --container-padding 2 --greeting 'It is said that God created Angels to carry his message.\nWhat will you have me transmit?' --greeting God created angels to carry his message. What will you have me transmit? --cmd /usr/bin/startplasma-wayland"
+command = "tuigreet --remember --remember-session --time --time-format '%Y-%m-%d %H:%M:%S' --width 80 --container-padding 2 --greeting 'Please authorise, assuming you should be here.' --cmd /usr/bin/startplasma-wayland"
 EOF
 
 echo "Installing YAMIS icon theme..."
@@ -99,5 +100,37 @@ sudo -u "$arch_user" curl -L "$ICON_URL" -o /home/$arch_user/YAMIS.tar.gz
 sudo -u "$arch_user" tar -xzf /home/$arch_user/YAMIS.tar.gz -C "$DEST_DIR"
 rm /home/$arch_user/YAMIS.tar.gz
 sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group Icons --key Theme "YAMIS"
+
+echo "Downloading and applying Konsave profile..."
+
+KNSV_URL="https://github.com/FrosteAto/Arch-Linux-Setups/releases/download/Main/mysetup.knsv"
+KNSV_PATH="/home/$arch_user/mysetup.knsv"
+sudo -u "$arch_user" curl -L "$KNSV_URL" -o "$KNSV_PATH"
+konsave -i "$KNSV_PATH"
+konsave -a "mysetup"
+
+echo "Setting colors..."
+sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group General --key ColorScheme "CatppuccinMocha"
+
+echo "Configuring PAM for greetd and KWallet..."
+sudo tee /etc/pam.d/greetd >/dev/null <<'EOF'
+#%PAM-1.0
+auth       required     pam_securetty.so
+auth       requisite    pam_nologin.so
+auth       include      system-local-login
+auth       optional     pam_kwallet5.so
+account    include      system-local-login
+session    include      system-local-login
+session    optional     pam_kwallet5.so auto_start force_run
+EOF
+
+sudo tee /etc/pam.d/login >/dev/null <<'EOF'
+auth            optional        pam_kwallet5.so
+session         optional        pam_kwallet5.so auto_start force_run
+EOF
+
+sudo -u "$arch_user" kwriteconfig6 --file kdeglobals \
+  --group KDE \
+  --key WalletEnabled true
 
 echo -e "Setup complete, please reboot."
