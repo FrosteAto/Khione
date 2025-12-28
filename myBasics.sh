@@ -116,43 +116,24 @@ REPO_DIR="/home/$arch_user/Arch-Linux-Setups"
 DOTFILES_DIR="$REPO_DIR/arch-dotfiles"
 
 # Clone repo as the user
-if [ ! -d "$REPO_DIR" ]; then
-  sudo -u "$arch_user" git clone "$REPO_URL" "$REPO_DIR"
-else
-  echo "Repo already exists, pulling latest changes."
-  sudo -u "$arch_user" git -C "$REPO_DIR" pull
+echo "Applying dotfiles (fresh system, no backups)..."
+
+DOTFILES_DIR="/home/$arch_user/Arch-Linux-Setups/arch-dotfiles"
+
+# Copy ~/.config apps
+for dir in kitty btop nano mpv easyeffects audacity obs-studio \
+           kdenlive krita blender godot gamescope lsp-plugins calf; do
+  if [ -d "$DOTFILES_DIR/config/$dir" ]; then
+    runuser -u "$arch_user" -- cp -r "$DOTFILES_DIR/config/$dir" "/home/$arch_user/.config/"
+  fi
+done
+
+# Copy ~/.local/share (e.g., Krita)
+if [ -d "$DOTFILES_DIR/local" ]; then
+  runuser -u "$arch_user" -- cp -r "$DOTFILES_DIR/local/"* "/home/$arch_user/.local/"
 fi
 
-# Verify dotfiles exist
-if [ ! -d "$DOTFILES_DIR/config" ]; then
-  echo "Dotfiles directory not found — skipping dotfiles setup."
-else
-  echo "Applying dotfiles..."
-
-  # Backup existing configs
-  BACKUP_DIR="/home/$arch_user/.config.backup.$(date +%s)"
-  sudo -u "$arch_user" mkdir -p "$BACKUP_DIR"
-
-  for dir in kitty btop nano mpv easyeffects audacity obs-studio \
-             kdenlive krita blender godot gamescope lsp-plugins calf; do
-    if [ -d "/home/$arch_user/.config/$dir" ]; then
-      sudo -u "$arch_user" mv "/home/$arch_user/.config/$dir" "$BACKUP_DIR/"
-    fi
-  done
-
-  # Restore ~/.config
-  sudo -u "$arch_user" rsync -a \
-    "$DOTFILES_DIR/config/" \
-    "/home/$arch_user/.config/"
-
-  # Restore ~/.local
-  sudo -u "$arch_user" rsync -a \
-    "$DOTFILES_DIR/local/" \
-    "/home/$arch_user/.local/"
-
-  echo "Dotfiles applied successfully."
-fi
-
+echo "Dotfiles applied successfully."
 
 echo "Setting colors..."
 sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group General --key ColorScheme "CatppuccinMocha"
