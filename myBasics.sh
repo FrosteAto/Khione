@@ -116,24 +116,35 @@ REPO_DIR="/home/$arch_user/Arch-Linux-Setups"
 DOTFILES_DIR="$REPO_DIR/arch-dotfiles"
 
 # Clone repo as the user
-echo "Applying dotfiles (fresh system, no backups)..."
+if [ ! -d "$REPO_DIR" ]; then
+  sudo -u "$arch_user" -- git clone "$REPO_URL" "$REPO_DIR"
+else
+  sudo -u "$arch_user" -- git -C "$REPO_DIR" pull
+fi
 
-DOTFILES_DIR="/home/$arch_user/Arch-Linux-Setups/arch-dotfiles"
+# Ensure config directories exist
+sudo -u "$arch_user" -- mkdir -p "/home/$arch_user/.config"
+sudo -u "$arch_user" -- mkdir -p "/home/$arch_user/.local"
 
-# Copy ~/.config apps
+# Apply ~/.config dotfiles
 for dir in kitty btop nano mpv easyeffects audacity obs-studio \
            kdenlive krita blender godot gamescope lsp-plugins calf; do
   if [ -d "$DOTFILES_DIR/config/$dir" ]; then
-    sudo -u "$arch_user" -- cp -r "$DOTFILES_DIR/config/$dir" "/home/$arch_user/.config/"
+    sudo -u "$arch_user" -- cp -r \
+      "$DOTFILES_DIR/config/$dir" \
+      "/home/$arch_user/.config/"
   fi
 done
 
-# Copy ~/.local/share (e.g., Krita)
+# Apply ~/.local/share dotfiles (e.g. Krita)
 if [ -d "$DOTFILES_DIR/local" ]; then
-  sudo -u "$arch_user" -- cp -r "$DOTFILES_DIR/local/"* "/home/$arch_user/.local/"
+  sudo -u "$arch_user" -- cp -r \
+    "$DOTFILES_DIR/local/"* \
+    "/home/$arch_user/.local/"
 fi
 
 echo "Dotfiles applied successfully."
+
 
 echo "Setting colors..."
 sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group General --key ColorScheme "CatppuccinMocha"
