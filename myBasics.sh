@@ -124,13 +124,13 @@ DOTFILES_DIR="/home/$arch_user/Arch-Linux-Setups/arch-dotfiles"
 for dir in kitty btop nano mpv easyeffects audacity obs-studio \
            kdenlive krita blender godot gamescope lsp-plugins calf; do
   if [ -d "$DOTFILES_DIR/config/$dir" ]; then
-    runuser -u "$arch_user" -- cp -r "$DOTFILES_DIR/config/$dir" "/home/$arch_user/.config/"
+    sudo -u "$arch_user" -- cp -r "$DOTFILES_DIR/config/$dir" "/home/$arch_user/.config/"
   fi
 done
 
 # Copy ~/.local/share (e.g., Krita)
 if [ -d "$DOTFILES_DIR/local" ]; then
-  runuser -u "$arch_user" -- cp -r "$DOTFILES_DIR/local/"* "/home/$arch_user/.local/"
+  sudo -u "$arch_user" -- cp -r "$DOTFILES_DIR/local/"* "/home/$arch_user/.local/"
 fi
 
 echo "Dotfiles applied successfully."
