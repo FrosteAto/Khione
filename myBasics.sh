@@ -19,7 +19,7 @@ fi
 official_packages=(
   xorg plasma plasma-workspace greetd greetd-tuigreet kwallet kwallet-pam libsecret # Environment
   ufw nano btop flatpak kitty dolphin # Tools
-  firefox steam krita godot obs-studio audacity blender kdenlive libreoffice gwenview mpv easyeffects calf # Programs
+  firefox steam krita godot obs-studio audacity blender kdenlive libreoffice gwenview mpv easyeffects calf darktable # Programs
   python python-pip python-pipx python-virtualenv php composer nodejs npm docker docker-compose make cmake git # Programming
   cups cups-pdf print-manager sane skanlite hplip avahi nss-mdns # Printing
   noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu ttf-jetbrains-mono # Fonts
