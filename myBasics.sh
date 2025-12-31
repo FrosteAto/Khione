@@ -24,6 +24,7 @@ official_packages=(
   cups cups-pdf print-manager sane skanlite hplip avahi nss-mdns # Printing
   noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu ttf-jetbrains-mono # Fonts
   papirus-icon-theme # Other
+  sof-firmware # Laptop only, to split out
 )
 
 echo "Installing official packages."
