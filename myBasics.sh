@@ -61,6 +61,7 @@ aur_packages=(
   kwin-effect-rounded-corners-git
   kwin-scripts-krohnkite-git
   lsp-plugins
+  hayase-desktop-bin
 )
 
 echo "Installing AUR packages."
