@@ -75,7 +75,23 @@ There we have it! Enjoy a fully featured, stable, and intuitive arch installatio
 
 # FAQ
 
+## How do I use my programs?
+
+Pressing alt + space will open KRunner, which you can use to type in any program name or category and it will appear.
+
 ## How do I update my programs?
 
 Just type yay into the terminal, it will find and update everything for you. Very handy.
 
+## How do I get new programs?
+
+Google "*program you need or problem to solve* Arch" and and it will probably appear. If it's part of the main Arch repos you can do 
+
+```
+sudo pacman -S *packageName*
+```
+and if it's part of the AUR you can do
+```
+yay -S *packageName*
+```
+to install it.
