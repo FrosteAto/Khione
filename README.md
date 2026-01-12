@@ -33,7 +33,7 @@ In the archinstaller, pick the 'minimal' preset. Do whatever other settings you 
 
 ## Step 2: Boot into Arch and get connected (again)
 
-Once the basic arch install is done, boot into it and get an internet connection. This time, getting your internet connection will be through the NetworkManager CLI though. Peep the basics here -> https://wiki.archlinux.org/title/NetworkManager
+Once the basic arch install is done, boot into it and get an internet connection. This time, setting up your connection will be via the NetworkManager CLI though. Peep the basics here -> https://wiki.archlinux.org/title/NetworkManager
 
 ## Step 3: Download the script
 
