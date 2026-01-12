@@ -22,7 +22,7 @@ official_packages=(
   firefox steam krita godot obs-studio audacity blender kdenlive libreoffice gwenview mpv easyeffects calf darktable # Programs
   python python-pip python-pipx python-virtualenv php composer nodejs npm docker docker-compose make cmake git # Programming
   cups cups-pdf print-manager sane skanlite hplip avahi nss-mdns # Printing
-  linuxwacom libinput libwacom wacomtablet kcm-wacomtablet xf86-input-wacom # Wacom drawing tablet, yeah one of those works idk
+  libinput libwacom wacomtablet xf86-input-wacom # Wacom drawing tablet, yeah one of those works idk
   noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu ttf-jetbrains-mono # Fonts
   papirus-icon-theme # Other
   sof-firmware # Laptop only, to split out
