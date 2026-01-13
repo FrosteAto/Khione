@@ -37,7 +37,7 @@ Once the basic arch install is done, boot into it and get an internet connection
 
 ## Step 3: Download the script
 
-You can now use curl to download the installation script. You will need to know the exact URL eto download the file. Here's one I prepared earlier:
+You can now use curl to download the installation script. You will need to know the exact URL to download the file. Here's one I prepared earlier:
 
 ```
 curl -o myBasics.sh https://raw.githubusercontent.com/FrosteAto/Arch-Linux-Setups/main/myBasics.sh
@@ -46,7 +46,7 @@ curl -o myBasics.sh https://raw.githubusercontent.com/FrosteAto/Arch-Linux-Setup
 
 ## Step 4: Make the script executable
 
-You will probably be in the right folder already, but if not, navigate to the right folder using cd and ls. Once there, make the script executable with the following command:
+You will probably be in the right folder already, but if not, navigate to the right folder using `cd` and `ls`. Once there, make the script executable with the following command:
 
 ```
 sudo chmod +x myBasics.sh
