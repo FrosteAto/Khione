@@ -64,6 +64,7 @@ aur_packages=(
   lsp-plugins
   hayase-desktop-bin
   input-wacom-dkms-git
+  anki
 )
 
 echo "Installing AUR packages."
