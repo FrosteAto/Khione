@@ -1,2 +1,0 @@
-{AMD/AMD Radeon RX 9070 XT (radeonsi, gfx1201, LLVM 20.1.8, DRM 3.64, 6.16.8-arch3-1)/4.6 (Core Profile) Mesa 25.2.3-arch1.2}=SUPPORTED
-{AMD/AMD Radeon RX 9070 XT (radeonsi, gfx1201, LLVM 20.1.8, DRM 3.64, 6.16.10-arch1-1)/4.6 (Core Profile) Mesa 25.2.4-arch1.1}=SUPPORTED
