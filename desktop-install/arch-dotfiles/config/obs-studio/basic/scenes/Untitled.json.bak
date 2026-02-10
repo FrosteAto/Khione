@@ -1,0 +1,244 @@
+{
+    "DesktopAudioDevice1": {
+        "prev_ver": 536870913,
+        "name": "Desktop Audio",
+        "uuid": "8fa24b4d-e157-489e-a721-98fb8e81fc8c",
+        "id": "pulse_output_capture",
+        "versioned_id": "pulse_output_capture",
+        "settings": {
+            "device_id": "default"
+        },
+        "mixers": 255,
+        "sync": 0,
+        "flags": 0,
+        "volume": 1.0,
+        "balance": 0.5,
+        "enabled": true,
+        "muted": false,
+        "push-to-mute": false,
+        "push-to-mute-delay": 0,
+        "push-to-talk": false,
+        "push-to-talk-delay": 0,
+        "hotkeys": {
+            "libobs.mute": [],
+            "libobs.unmute": [],
+            "libobs.push-to-mute": [],
+            "libobs.push-to-talk": []
+        },
+        "deinterlace_mode": 0,
+        "deinterlace_field_order": 0,
+        "monitoring_type": 0,
+        "private_settings": {}
+    },
+    "AuxAudioDevice1": {
+        "prev_ver": 536870913,
+        "name": "Mic/Aux",
+        "uuid": "2f647430-7db5-4a57-85fd-3a6e0f87d841",
+        "id": "pulse_input_capture",
+        "versioned_id": "pulse_input_capture",
+        "settings": {
+            "device_id": "alsa_input.usb-MOTU_M4_M4MA05CEZ2-00.HiFi__Mic1__source"
+        },
+        "mixers": 255,
+        "sync": 0,
+        "flags": 0,
+        "volume": 1.0,
+        "balance": 0.5,
+        "enabled": true,
+        "muted": false,
+        "push-to-mute": false,
+        "push-to-mute-delay": 0,
+        "push-to-talk": false,
+        "push-to-talk-delay": 0,
+        "hotkeys": {
+            "libobs.mute": [],
+            "libobs.unmute": [],
+            "libobs.push-to-mute": [],
+            "libobs.push-to-talk": []
+        },
+        "deinterlace_mode": 0,
+        "deinterlace_field_order": 0,
+        "monitoring_type": 0,
+        "private_settings": {}
+    },
+    "current_scene": "Scene",
+    "current_program_scene": "Scene",
+    "scene_order": [
+        {
+            "name": "Scene"
+        }
+    ],
+    "name": "Untitled",
+    "sources": [
+        {
+            "prev_ver": 536870913,
+            "name": "Scene",
+            "uuid": "80c0ac80-0174-4018-8dea-ac8537a08521",
+            "id": "scene",
+            "versioned_id": "scene",
+            "settings": {
+                "id_counter": 3,
+                "custom_size": false,
+                "items": [
+                    {
+                        "name": "Video Capture Device (PipeWire) (BETA)",
+                        "source_uuid": "f5ce9acf-3c96-4cb6-aa14-ef38c938d097",
+                        "visible": true,
+                        "locked": false,
+                        "rot": 0.0,
+                        "scale_ref": {
+                            "x": 1920.0,
+                            "y": 1080.0
+                        },
+                        "align": 5,
+                        "bounds_type": 0,
+                        "bounds_align": 0,
+                        "bounds_crop": false,
+                        "crop_left": 0,
+                        "crop_top": 0,
+                        "crop_right": 0,
+                        "crop_bottom": 0,
+                        "id": 3,
+                        "group_item_backup": false,
+                        "pos": {
+                            "x": 1694.0,
+                            "y": 0.0
+                        },
+                        "pos_rel": {
+                            "x": 1.3592592477798462,
+                            "y": -1.0
+                        },
+                        "scale": {
+                            "x": -2.25,
+                            "y": 2.25
+                        },
+                        "scale_rel": {
+                            "x": -2.25,
+                            "y": 2.25
+                        },
+                        "bounds": {
+                            "x": 0.0,
+                            "y": 0.0
+                        },
+                        "bounds_rel": {
+                            "x": 0.0,
+                            "y": 0.0
+                        },
+                        "scale_filter": "disable",
+                        "blend_method": "default",
+                        "blend_type": "normal",
+                        "show_transition": {
+                            "duration": 0
+                        },
+                        "hide_transition": {
+                            "duration": 0
+                        },
+                        "private_settings": {}
+                    }
+                ]
+            },
+            "mixers": 0,
+            "sync": 0,
+            "flags": 0,
+            "volume": 1.0,
+            "balance": 0.5,
+            "enabled": true,
+            "muted": false,
+            "push-to-mute": false,
+            "push-to-mute-delay": 0,
+            "push-to-talk": false,
+            "push-to-talk-delay": 0,
+            "hotkeys": {
+                "OBSBasic.SelectScene": [],
+                "libobs.show_scene_item.3": [],
+                "libobs.hide_scene_item.3": []
+            },
+            "deinterlace_mode": 0,
+            "deinterlace_field_order": 0,
+            "monitoring_type": 0,
+            "canvas_uuid": "6c69626f-6273-4c00-9d88-c5136d61696e",
+            "private_settings": {}
+        },
+        {
+            "prev_ver": 536870913,
+            "name": "Video Capture Device (PipeWire) (BETA)",
+            "uuid": "f5ce9acf-3c96-4cb6-aa14-ef38c938d097",
+            "id": "pipewire-camera-source",
+            "versioned_id": "pipewire-camera-source",
+            "settings": {
+                "format": "{\"encoded\":false,\"video_format\":4,\"width\":640,\"height\":480}",
+                "framerate": "{\"framerate\":{\"numerator\":30.0,\"denominator\":1.0}}",
+                "device_id": "v4l2_input.pci-0000_0f_00.4-usb-0_1.2_1.0"
+            },
+            "mixers": 0,
+            "sync": 0,
+            "flags": 0,
+            "volume": 1.0,
+            "balance": 0.5,
+            "enabled": true,
+            "muted": false,
+            "push-to-mute": false,
+            "push-to-mute-delay": 0,
+            "push-to-talk": false,
+            "push-to-talk-delay": 0,
+            "hotkeys": {},
+            "deinterlace_mode": 0,
+            "deinterlace_field_order": 0,
+            "monitoring_type": 0,
+            "private_settings": {}
+        }
+    ],
+    "groups": [],
+    "quick_transitions": [
+        {
+            "name": "Cut",
+            "duration": 300,
+            "hotkeys": [],
+            "id": 1,
+            "fade_to_black": false
+        },
+        {
+            "name": "Fade",
+            "duration": 300,
+            "hotkeys": [],
+            "id": 2,
+            "fade_to_black": false
+        },
+        {
+            "name": "Fade",
+            "duration": 300,
+            "hotkeys": [],
+            "id": 3,
+            "fade_to_black": true
+        }
+    ],
+    "transitions": [],
+    "saved_projectors": [],
+    "canvases": [],
+    "current_transition": "Fade",
+    "transition_duration": 300,
+    "preview_locked": false,
+    "scaling_enabled": true,
+    "scaling_level": -11,
+    "scaling_off_x": 0.0,
+    "scaling_off_y": 0.0,
+    "modules": {
+        "scripts-tool": [],
+        "output-timer": {
+            "streamTimerHours": 0,
+            "streamTimerMinutes": 0,
+            "streamTimerSeconds": 30,
+            "recordTimerHours": 0,
+            "recordTimerMinutes": 0,
+            "recordTimerSeconds": 30,
+            "autoStartStreamTimer": false,
+            "autoStartRecordTimer": false,
+            "pauseRecordTimer": true
+        }
+    },
+    "resolution": {
+        "x": 1920,
+        "y": 1080
+    },
+    "version": 2
+}
