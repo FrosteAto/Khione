@@ -19,7 +19,7 @@ fi
 official_packages=(
   xorg plasma plasma-workspace greetd greetd-tuigreet kwallet kwallet-pam libsecret # Environment
   ufw nano btop flatpak kitty dolphin # Tools
-  firefox steam krita godot obs-studio audacity blender kdenlive libreoffice gwenview mpv easyeffects calf darktable # Programs
+  firefox steam krita godot obs-studio audacity blender kdenlive libreoffice gwenview mpv easyeffects calf darktable anki# Programs
   python python-pip python-pipx python-virtualenv php composer nodejs npm docker docker-compose make cmake git # Programming
   cups cups-pdf print-manager sane skanlite hplip avahi nss-mdns # Printing
   libinput libwacom wacomtablet xf86-input-wacom # Wacom drawing tablet, yeah one of those works idk
@@ -58,11 +58,31 @@ aur_packages=(
   lsp-plugins
   hayase-desktop-bin
   input-wacom-dkms-git
-  anki
 )
 
-echo "Installing AUR packages."
-yay -S --needed --noconfirm "${aur_packages[@]}"
+echo "Installing AUR packages (non-fatal on failure)."
+
+FAILED_AUR_PKGS=()
+
+for pkg in "${aur_packages[@]}"; do
+  echo "→ Installing AUR package: $pkg"
+  if yay -S --needed --noconfirm "$pkg"; then
+    echo "✓ $pkg installed successfully"
+  else
+    echo "✗ Failed to install $pkg — skipping"
+    FAILED_AUR_PKGS+=("$pkg")
+  fi
+done
+
+if [ ${#FAILED_AUR_PKGS[@]} -ne 0 ]; then
+  echo
+  echo "⚠ The following AUR packages failed to install:"
+  for pkg in "${FAILED_AUR_PKGS[@]}"; do
+    echo "  - $pkg"
+  done
+  echo "You can try installing them manually later."
+fi
+
 
 echo "Enabling critical services."
 sudo systemctl enable ufw.service
