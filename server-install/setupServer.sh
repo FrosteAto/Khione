@@ -58,8 +58,29 @@ aur_packages=(
   plex-media-server
 )
 
-echo "Installing AUR packages."
-yay -S --needed --noconfirm "${aur_packages[@]}"
+echo "Installing AUR packages (non-fatal on failure)."
+
+FAILED_AUR_PKGS=()
+
+for pkg in "${aur_packages[@]}"; do
+  echo "→ Installing AUR package: $pkg"
+  if yay -S --needed --noconfirm "$pkg"; then
+    echo "✓ $pkg installed successfully"
+  else
+    echo "✗ Failed to install $pkg — skipping"
+    FAILED_AUR_PKGS+=("$pkg")
+  fi
+done
+
+if [ ${#FAILED_AUR_PKGS[@]} -ne 0 ]; then
+  echo
+  echo "⚠ The following AUR packages failed to install:"
+  for pkg in "${FAILED_AUR_PKGS[@]}"; do
+    echo "  - $pkg"
+  done
+  echo "You can try installing them manually later."
+fi
+
 
 echo "Enabling critical services."
 sudo systemctl enable NetworkManager.service
