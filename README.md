@@ -40,7 +40,12 @@ Once the basic arch install is done, boot into it and get an internet connection
 You can now use curl to download the installation script. You will need to know the exact URL to download the file. Here's one I prepared earlier:
 
 ```
-curl -o myBasics.sh https://raw.githubusercontent.com/FrosteAto/Arch-Linux-Setups/main/myBasics.sh
+curl -o installer.sh https://raw.githubusercontent.com/FrosteAto/Arch-Linux-Setups/main/desktop-install/setupDesktop.sh
+
+```
+OR
+```
+curl -o installer.sh https://raw.githubusercontent.com/FrosteAto/Arch-Linux-Setups/main/server-install/setupServer.sh
 
 ```
 
@@ -49,14 +54,14 @@ curl -o myBasics.sh https://raw.githubusercontent.com/FrosteAto/Arch-Linux-Setup
 You will probably be in the right folder already, but if not, navigate to the right folder using `cd` and `ls`. Once there, make the script executable with the following command:
 
 ```
-sudo chmod +x myBasics.sh
+sudo chmod +x installer.sh
 ```
 ## Step 5: Run the script
 
 You can run shell scripts with the following command. Follow through the script and insert the correct information when prompted. This will take a while and will ask for superuser access a few times. To be fair, it is setting up your whole desktop!
 
 ```
-./myBasics.sh
+./installer.sh
 ```
 
 ## Step 6: Reboot
