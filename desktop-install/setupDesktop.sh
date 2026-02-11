@@ -11,7 +11,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
 
 DOTFILES_DIR="$SCRIPT_DIR/arch-dotfiles"
-ICON_ARCHIVE="$REPO_ROOT/YAMIS.tar_gz"
+ICON_ARCHIVE="$REPO_ROOT/YAMIS.tar.gz"
 KNSV_FILE="$SCRIPT_DIR/desktopSetup.knsv"
 CURSOR_ARCHIVE="$SCRIPT_DIR/Ninomae-Ina-nis.tar.gz"
 
