@@ -34,7 +34,7 @@ KNSV_NAME="desktopSetup"
 
 COLOR_SCHEME="CatppuccinMocha"
 
-ICON_ARCHIVE_REL="YAMIS.tar_gz"
+ICON_ARCHIVE_REL="YAMIS.tar.gz"
 
 # Optional cursor for desktop
 CURSOR_ARCHIVE_REL="desktop-install/Ninomae-Ina-nis.tar.gz"
