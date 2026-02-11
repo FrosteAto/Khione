@@ -18,9 +18,6 @@ CURSOR_ARCHIVE="$SCRIPT_DIR/Ninomae-Ina-nis.tar.gz"
 echo "Updating system..."
 sudo pacman -Syu --noconfirm
 
-echo "Installing git..."
-sudo pacman -S --needed --noconfirm git
-
 if ! grep -q "^\[multilib\]" /etc/pacman.conf; then
   echo "Enabling [multilib]..."
   sudo sed -i '/#\[multilib\]/,/#Include = \/etc\/pacman.d\/mirrorlist/ s/^#//' /etc/pacman.conf
