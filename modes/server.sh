@@ -33,7 +33,7 @@ KNSV_NAME="serverSetup"
 
 COLOR_SCHEME="Miku"
 
-ICON_ARCHIVE_REL="YAMIS.tar_gz"
+ICON_ARCHIVE_REL="YAMIS.tar.gz"
 
 CURSOR_ARCHIVE_REL="server-install/miku-cursor.tar.xz"
 CURSOR_ARCHIVE_TYPE="xz"
