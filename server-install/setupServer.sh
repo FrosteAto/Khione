@@ -19,7 +19,7 @@ fi
 official_packages=(
   linux-lts linux-lts-headers linux-firmware # LTS kernel
   xorg plasma plasma-workspace greetd greetd-tuigreet kwallet kwallet-pam libsecret # Environment
-  ufw nano btop flatpak kitty dolphin # Tools
+  ufw nano btop flatpak kitty dolphin ark # Tools
   firefox # Programs
   python python-pip python-pipx # Programming
   noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu ttf-jetbrains-mono # Fonts
@@ -138,17 +138,17 @@ sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group Icons --key CursorS
 
 echo "Downloading and applying Konsave profile..."
 
-KNSV_URL="https://github.com/FrosteAto/Arch-Linux-Setups/releases/download/Main/desktopSetup.knsv"
-KNSV_PATH="/home/$arch_user/desktopSetup.knsv"
+KNSV_URL="https://github.com/FrosteAto/Arch-Linux-Setups/releases/download/Main/serverSetup.knsv"
+KNSV_PATH="/home/$arch_user/serverSetup.knsv"
 sudo -u "$arch_user" curl -L "$KNSV_URL" -o "$KNSV_PATH"
 konsave -i "$KNSV_PATH"
-konsave -a "desktopSetup"
+konsave -a "serverSetup"
 
 echo "Cloning Arch-Linux-Setups repo and applying dotfiles..."
 
 REPO_URL="https://github.com/FrosteAto/Arch-Linux-Setups.git"
 REPO_DIR="/home/$arch_user/Arch-Linux-Setups"
-DOTFILES_DIR="$REPO_DIR/desktop-install/arch-dotfiles"
+DOTFILES_DIR="$REPO_DIR/server-install/arch-dotfiles"
 
 # Clone repo as the user
 if [ ! -d "$REPO_DIR" ]; then
@@ -181,7 +181,7 @@ echo "Dotfiles applied successfully."
 
 
 echo "Setting colors..."
-sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group General --key ColorScheme "CatppuccinMocha"
+sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group General --key ColorScheme "Miku"
 
 echo "Configuring PAM for greetd and KWallet..."
 sudo tee /etc/pam.d/greetd >/dev/null <<'EOF'
