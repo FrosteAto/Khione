@@ -35,33 +35,41 @@ In the archinstaller, pick the 'minimal' preset. Do whatever other settings you 
 
 Once the basic arch install is done, boot into it and get an internet connection. This time, setting up your connection will be via the NetworkManager CLI though. Peep the basics here -> https://wiki.archlinux.org/title/NetworkManager
 
-## Step 3: Download the script
-
-You can now use curl to download the installation script. You will need to know the exact URL to download the file. Here's one I prepared earlier:
+## Step 3: Install git
 
 ```
-curl -o installer.sh https://raw.githubusercontent.com/FrosteAto/Arch-Linux-Setups/main/desktop-install/setupDesktop.sh
+sudo pacman -S git
+```
 
+## Step 4: Clone the repo
+You can now use git to clone the installation repo. You will need to know the exact URL. Here's one I prepared earlier:
+
+```
+git clone https://github.com/FrosteAto/Arch-Linux-Setups.git
+```
+
+## Step 5: Make the script executable
+
+Make the script executable with the following command:
+
+```
+sudo chmod +x Arch-Linux-Setups/desktop-install/setupDesktop.sh
 ```
 OR
 ```
-curl -o installer.sh https://raw.githubusercontent.com/FrosteAto/Arch-Linux-Setups/main/server-install/setupServer.sh
-
+sudo chmod +x Arch-Linux-Setups/server-install/setupServer.sh
 ```
 
-## Step 4: Make the script executable
-
-You will probably be in the right folder already, but if not, navigate to the right folder using `cd` and `ls`. Once there, make the script executable with the following command:
-
-```
-sudo chmod +x installer.sh
-```
 ## Step 5: Run the script
 
 You can run shell scripts with the following command. Follow through the script and insert the correct information when prompted. This will take a while and will ask for superuser access a few times. To be fair, it is setting up your whole desktop!
 
 ```
-./installer.sh
+./Arch-Linux-Setups/desktop-install/setupDesktop.sh
+```
+OR
+```
+./Arch-Linux-Setups/server-install/setupServer.sh
 ```
 
 ## Step 6: Reboot
