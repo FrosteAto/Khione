@@ -4,7 +4,13 @@ set -euo pipefail
 WALLPAPER="$HOME/.local/share/wallpapers/Ina1/wallpaper.jpg"
 [ -f "$WALLPAPER" ] || exit 0
 
-qdbus org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "
+QDBUS="$(command -v qdbus || true)"
+if [ -z "$QDBUS" ]; then
+  QDBUS="$(command -v qdbus6 || true)"
+fi
+[ -n "$QDBUS" ] || exit 1
+
+"$QDBUS" org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "..."
 var allDesktops = desktops();
 for (i=0;i<allDesktops.length;i++) {
   d = allDesktops[i];
