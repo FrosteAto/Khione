@@ -19,7 +19,7 @@ fi
 official_packages=(
   linux-lts linux-lts-headers linux-firmware # LTS kernel
   xorg plasma plasma-workspace greetd greetd-tuigreet kwallet kwallet-pam libsecret # Environment
-  ufw nano btop flatpak kitty dolphin ark # Tools
+  ufw nano btop flatpak kitty dolphin ark git # Tools
   firefox # Programs
   python python-pip python-pipx # Programming
   noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu ttf-jetbrains-mono # Fonts
@@ -98,9 +98,6 @@ sudo ufw allow 1900/udp
 sudo ufw allow 5353/udp
 sudo ufw --force enable
 
-echo "Adding $arch_user to docker group."
-sudo usermod -aG docker "$arch_user"
-
 echo "Adding Flathub remote."
 sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
@@ -126,13 +123,12 @@ sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group Icons --key Theme "
 
 echo "Installing cursor theme..."
 
-CURSOR_URL="https://raw.githubusercontent.com/FrosteAto/Arch-Linux-Setups/main/server-install/miku-cursor.tar.gz"
+CURSOR_URL="https://raw.githubusercontent.com/FrosteAto/Arch-Linux-Setups/main/server-install/miku-cursor.tar.xz"
 ICON_DIR="/home/$arch_user/.local/share/icons"
-
 sudo -u "$arch_user" mkdir -p "$ICON_DIR"
-sudo -u "$arch_user" curl -L "$CURSOR_URL" -o "/home/$arch_user/MyCursor.tar.gz"
-sudo -u "$arch_user" tar -xzf "/home/$arch_user/MyCursor.tar.gz" -C "$ICON_DIR"
-rm "/home/$arch_user/MyCursor.tar.gz"
+sudo -u "$arch_user" curl -L "$CURSOR_URL" -o "/home/$arch_user/MikuCursor.tar.xz"
+sudo -u "$arch_user" tar -xJf "/home/$arch_user/MikuCursor.tar.xz" -C "$ICON_DIR"
+rm "/home/$arch_user/MikuCursor.tar.xz"
 sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group Icons --key CursorTheme "Miku Cursor"
 sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group Icons --key CursorSize 24
 
@@ -178,7 +174,6 @@ if [ -d "$DOTFILES_DIR/local" ]; then
 fi
 
 echo "Dotfiles applied successfully."
-
 
 echo "Setting colors..."
 sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group General --key ColorScheme "Miku"
