@@ -19,10 +19,9 @@ fi
 official_packages=(
   linux-lts linux-lts-headers linux-firmware # LTS kernel
   xorg plasma plasma-workspace greetd greetd-tuigreet kwallet kwallet-pam libsecret # Environment
-  ufw nano btop flatpak kitty dolphin ark git fastfetch firefox # Tools
+  ufw nano btop flatpak kitty dolphin ark git fastfetch firefox sof-firmware # Tools
   python python-pip python-pipx # Programming
   noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu ttf-jetbrains-mono # Fonts
-  sof-firmware # Laptop thing
 )
 
 echo "Installing official packages."
