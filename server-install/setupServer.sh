@@ -124,6 +124,18 @@ sudo -u "$arch_user" tar -xzf /home/$arch_user/YAMIS.tar.gz -C "$DEST_DIR"
 rm /home/$arch_user/YAMIS.tar.gz
 sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group Icons --key Theme "YAMIS"
 
+echo "Installing cursor theme..."
+
+CURSOR_URL="https://raw.githubusercontent.com/FrosteAto/Arch-Linux-Setups/main/server-install/miku-cursor.tar.gz"
+ICON_DIR="/home/$arch_user/.local/share/icons"
+
+sudo -u "$arch_user" mkdir -p "$ICON_DIR"
+sudo -u "$arch_user" curl -L "$CURSOR_URL" -o "/home/$arch_user/MyCursor.tar.gz"
+sudo -u "$arch_user" tar -xzf "/home/$arch_user/MyCursor.tar.gz" -C "$ICON_DIR"
+rm "/home/$arch_user/MyCursor.tar.gz"
+sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group Icons --key CursorTheme "Miku Cursor"
+sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group Icons --key CursorSize 24
+
 echo "Downloading and applying Konsave profile..."
 
 KNSV_URL="https://github.com/FrosteAto/Arch-Linux-Setups/releases/download/Main/desktopSetup.knsv"
