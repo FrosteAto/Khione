@@ -2,12 +2,12 @@
 
 Hia!!
 
-This is my big ol' script for installing Arch. I use arch as the sole OS for all my computers including servers, so having these ready to go, modular, and easy to use makes my life 50x easier. You can use them too!
+This is my big ol' script for installing Arch. I use Arch as the sole OS for all my computers including servers, so having these ready to go, modular, and easy to use makes my life 50x easier. You can use them too!
 
 There's two main version:
 
-- Desktop edition
-- Server edition
+- Desktop Edition
+- Server Edition
 
 The desktop edition comes with all the programs I expect to use on a daily basis and once in a while, everything from browsers to game launchers to photo editing software. It's super fully featured. 
 
@@ -56,7 +56,7 @@ It's not a perfect just run and go, you need to do a few bits and bobs first.
 
 ## Step 1: Get a super basic arch install
 
-I really do mean the absolute minimum. Grab an Arch ISO, stick it on a USB stick, boot into arch, and use the archinstaller. I've installed Arch enough times to know I really don't need to do all that manually. If you never have, it's worth trying at least once. Follow this, you will need the first couple steps to get an internet connection -> https://wiki.archlinux.org/title/Installation_guide
+I really do mean the absolute minimum. Grab an Arch ISO, stick it on a USB stick, boot into Arch, and use the archinstaller. I've installed Arch enough times to know I really don't need to do all that manually. If you never have, it's worth trying at least once. Follow this, you will need the first couple steps to get an internet connection -> https://wiki.archlinux.org/title/Installation_guide
 
 In the archinstaller, pick the 'minimal' preset. Do whatever other settings you want, but be sure to set up at least one user and use NetworkManager for your internet connection.
 
@@ -93,7 +93,7 @@ Once the script is done, reboot your PC.
 
 ---
 
-There we have it! Enjoy a fully featured, stable, and intuitive arch installation.
+There we have it! Enjoy a fully featured, stable, and intuitive Arch installation.
 
 ---
 
@@ -107,7 +107,7 @@ There we have it! Enjoy a fully featured, stable, and intuitive arch installatio
   - Miku :D
 - I can still SSH in
   - Miku :3
-- I wanted an excuse to rice arch again
+- I wanted an excuse to rice Arch again
   - Miku :0
 - I have a staggering skill issue
 
