@@ -25,6 +25,14 @@ if [ ! -f "$MODE_FILE" ]; then
   exit 1
 fi
 
+sudo -v
+TEMP_SUDOERS="/etc/sudoers.d/99-installer-nopasswd-$ARCH_USER"
+sudo tee "$TEMP_SUDOERS" >/dev/null <<EOF
+$ARCH_USER ALL=(ALL) NOPASSWD: /usr/bin/pacman
+EOF
+sudo chmod 440 "$TEMP_SUDOERS"
+
+
 # shellcheck source=/dev/null
 source "$MODE_FILE"
 
@@ -66,5 +74,7 @@ set_color_scheme "$ARCH_USER" "$COLOR_SCHEME"
 apply_konsave "$ARCH_USER" "$KNSV_FILE" "$KNSV_NAME"
 
 install_wallpaper_autostart_required "$ARCH_USER" "$REPO_ROOT/shared/set-wallpaper-once.sh"
+
+sudo rm -f "$TEMP_SUDOERS"
 
 echo "Setup complete, please reboot."
