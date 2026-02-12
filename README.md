@@ -48,37 +48,19 @@ You can now use git to clone the installation repo. You will need to know the ex
 git clone https://github.com/FrosteAto/Arch-Linux-Setups.git
 ```
 
-## Step 5: Make the script executable
-
-Make the script executable with the following command:
-
-```
-sudo chmod +x Arch-Linux-Setups/desktop-install/setupDesktop.sh
-```
-OR
-```
-sudo chmod +x Arch-Linux-Setups/server-install/setupServer.sh
-```
-
-## Step 6: Run the script
+## Step 5: Run the script
 
 You can run shell scripts with the following command. Follow through the script and insert the correct information when prompted. This will take a while and will ask for superuser access a few times. To be fair, it is setting up your whole desktop!
 
 ```
-./Arch-Linux-Setups/desktop-install/setupDesktop.sh
+./Arch-Linux-Setups/install.sh
 ```
-OR
-```
-./Arch-Linux-Setups/server-install/setupServer.sh
-```
+Follow its instructions.
 
-## Step 7: Reboot
 
-Once the script is done, reboot your PC
+## Step 6: Reboot
 
-## Step 8: Final setup
-
-Log in using the username and password you setup during archinstall (It will remember your username for future logins) and set the wallpaper, it should be stored at the bottom of the wallpapers setting in KDE. It sucks but I cannot figure out a way to set it by script, looks like a plasma session needs to be running.
+Once the script is done, reboot your PC.
 
 ---
 
