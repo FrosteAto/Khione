@@ -27,11 +27,15 @@ fi
 
 sudo -v
 TEMP_SUDOERS="/etc/sudoers.d/99-installer-nopasswd-$ARCH_USER"
+cleanup() {
+  sudo rm -f "$TEMP_SUDOERS" 2>/dev/null || true
+}
+trap cleanup EXIT INT TERM
 sudo tee "$TEMP_SUDOERS" >/dev/null <<EOF
 $ARCH_USER ALL=(ALL) NOPASSWD: /usr/bin/pacman
 EOF
 sudo chmod 440 "$TEMP_SUDOERS"
-
+sudo visudo -cf "$TEMP_SUDOERS"
 
 # shellcheck source=/dev/null
 source "$MODE_FILE"
