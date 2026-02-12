@@ -16,6 +16,7 @@ This is my pre-configured Arch Linux rice. It is NOT a featherweight setup, and 
 
 ## To Investigate
 
+- AUR installs each need password inputting
 - Installing FL studio by script, seeing as it can only be run with wine.
 - The above for VOCALOID 6 as well, which is unstable.
 
