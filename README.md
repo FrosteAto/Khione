@@ -1,6 +1,10 @@
 # Desktop Wayland KDE Arch Setup
 
-This is my pre-configured Arch Linux rice. It is NOT a featherweight setup, and comes with all the programs I use regularly on my desktop within reason. It follows the Cattpucin Mocha colour scheme where possible.
+This is my Arch install script. You can select between desktop and server, and it installs and configures the computer for you.
+
+---
+
+# Desktop
 
 <p align="center">
   <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="https://github.com/user-attachments/assets/fc60e021-2757-4e13-b82b-13bc5e129cdf" />
@@ -10,6 +14,20 @@ This is my pre-configured Arch Linux rice. It is NOT a featherweight setup, and 
 
 <p align="center">
   <img width="3440" height="1440" alt="Screenshot_20260112_201312" src="https://github.com/user-attachments/assets/ab8e810a-85cd-45aa-aaff-24e6f034ba0d" />
+</p>
+
+---
+
+# Server
+
+<p align="center">
+  <img width="1920" height="1200" alt="Screenshot_20260212_192443" src="https://github.com/user-attachments/assets/e45968f9-9a16-43d2-a01f-a5e19bfc20ce" />
+</p>
+
+<br>
+
+<p align="center">
+  <img width="1920" height="1200" alt="Screenshot_20260212_192431" src="https://github.com/user-attachments/assets/47e4210e-70f8-428a-aaba-5c6cdefd6b92" />
 </p>
 
 ---
@@ -70,6 +88,17 @@ There we have it! Enjoy a fully featured, stable, and intuitive arch installatio
 ---
 
 # FAQ
+
+## Why not use a headless server?
+
+- No modern hardware has a meaningful loss from having something like plasma running in the background
+- Miku :)
+- Sometimes it's easier to debug on-device and this is running on a spare laptop
+- Miku :D
+- I can still SSH in
+- Miku :3
+- I wanted an excuse to rice arch again
+- Miku :0
 
 ## How do I use my programs?
 
