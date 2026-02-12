@@ -45,7 +45,6 @@ The server edition is a super slimmed down version that also pre-configured Plex
 
 ## To Investigate
 
-- AUR installs each need password inputting
 - Installing FL studio by script, seeing as it can only be run with wine.
 - The above for VOCALOID 6 as well, which is unstable.
 
@@ -103,13 +102,14 @@ There we have it! Enjoy a fully featured, stable, and intuitive arch installatio
 ## Why not use a headless server?
 
 - No modern hardware has a meaningful loss from having something like plasma running in the background
-- Miku :)
+  - Miku :)
 - Sometimes it's easier to debug on-device and this is running on a spare laptop
-- Miku :D
+  - Miku :D
 - I can still SSH in
-- Miku :3
+  - Miku :3
 - I wanted an excuse to rice arch again
-- Miku :0
+  - Miku :0
+- I have a staggering skill issue
 
 ## How do I use my programs?
 
