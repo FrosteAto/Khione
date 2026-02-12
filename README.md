@@ -1,6 +1,17 @@
-# Desktop Wayland KDE Arch Setup
+# FrosteAto's Arch Install Scripts
 
-This is my Arch install script. You can select between desktop and server, and it installs and configures the computer for you.
+Hia!!
+
+This is my big ol' script for installing Arch. I use arch as the sole OS for all my computers including servers, so having these ready to go, modular, and easy to use makes my life 50x easier. You can use them too!
+
+There's two main version:
+
+- Desktop edition
+- Server edition
+
+The desktop edition comes with all the programs I expect to use on a daily basis and once in a while, everything from browsers to game launchers to photo editing software. It's super fully featured. 
+
+The server edition is a super slimmed down version that also pre-configured Plex to be running at all times and with the correct ports open, but still has the minimum for on-device debugging available to you.
 
 ---
 
