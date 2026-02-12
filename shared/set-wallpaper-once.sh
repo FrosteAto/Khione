@@ -10,7 +10,7 @@ if [ -z "$QDBUS" ]; then
 fi
 [ -n "$QDBUS" ] || exit 1
 
-"$QDBUS" org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "..."
+"$QDBUS" org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "
 var allDesktops = desktops();
 for (i=0;i<allDesktops.length;i++) {
   d = allDesktops[i];
