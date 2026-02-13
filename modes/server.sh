@@ -24,7 +24,7 @@ SERVICES_ENABLE=(
 
 SERVICES_MASK=( sleep.target suspend.target hibernate.target hybrid-sleep.target )
 
-FIREWALL_RULES=( 32400/tcp 1900/udp 5353/udp )
+FIREWALL_RULES=( 22/tcp 32400/tcp 1900/udp 5353/udp )
 
 DOTFILES_SUBDIR="server-install/arch-dotfiles"
 
