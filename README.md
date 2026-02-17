@@ -43,8 +43,12 @@ The server edition is a super slimmed down version that also pre-configured Plex
 
 ---
 
-## To Investigate
+## To Investigate / Do
 
+- Include konsave config file in dotfile backups
+- Move images into repo
+- Update desktop images
+- Update desktop konsave / dotfiles
 - Installing FL studio by script, seeing as it can only be run with wine.
 - The above for VOCALOID 6 as well, which is unstable.
 
