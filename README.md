@@ -49,6 +49,7 @@ The server edition is a super slimmed down version that also pre-configured Plex
 - Move images into repo
 - Update desktop images
 - Update desktop konsave / dotfiles
+- Plasma update broke pager widget
 - Installing FL studio by script, seeing as it can only be run with wine.
 - The above for VOCALOID 6 as well, which is unstable.
 
