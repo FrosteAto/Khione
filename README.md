@@ -18,13 +18,13 @@ The server edition is a super slimmed down version that also pre-configured Plex
 # Desktop
 
 <p align="center">
-  <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="https://github.com/user-attachments/assets/fc60e021-2757-4e13-b82b-13bc5e129cdf" />
+  <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="/images/Desktop1.png" />
 </p>
 
 <br>
 
 <p align="center">
-  <img width="3440" height="1440" alt="Screenshot_20260112_201312" src="https://github.com/user-attachments/assets/ab8e810a-85cd-45aa-aaff-24e6f034ba0d" />
+  <img width="3440" height="1440" alt="Screenshot_20260112_201312" src="/images/Desktop2.png" />
 </p>
 
 ---
@@ -32,13 +32,13 @@ The server edition is a super slimmed down version that also pre-configured Plex
 # Server
 
 <p align="center">
-  <img width="1920" height="1200" alt="Screenshot_20260212_192443" src="https://github.com/user-attachments/assets/e45968f9-9a16-43d2-a01f-a5e19bfc20ce" />
+  <img width="1920" height="1200" alt="Screenshot_20260212_192443" src="/images/Server1.png" />
 </p>
 
 <br>
 
 <p align="center">
-  <img width="1920" height="1200" alt="Screenshot_20260212_192431" src="https://github.com/user-attachments/assets/47e4210e-70f8-428a-aaba-5c6cdefd6b92" />
+  <img width="1920" height="1200" alt="Screenshot_20260212_192431" src="/images/Server2.png" />
 </p>
 
 ---
