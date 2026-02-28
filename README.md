@@ -18,13 +18,13 @@ The server edition is a super slimmed down version that also pre-configured Plex
 # Desktop
 
 <p align="center">
-  <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="/images/Desktop1.png" />
+  <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="./images/Desktop1.png" />
 </p>
 
 <br>
 
 <p align="center">
-  <img width="3440" height="1440" alt="Screenshot_20260112_201312" src="/images/Desktop2.png" />
+  <img width="3440" height="1440" alt="Screenshot_20260112_201312" src="./images/Desktop2.png" />
 </p>
 
 ---
@@ -32,13 +32,13 @@ The server edition is a super slimmed down version that also pre-configured Plex
 # Server
 
 <p align="center">
-  <img width="1920" height="1200" alt="Screenshot_20260212_192443" src="/images/Server1.png" />
+  <img width="1920" height="1200" alt="Screenshot_20260212_192443" src="./images/Server1.png" />
 </p>
 
 <br>
 
 <p align="center">
-  <img width="1920" height="1200" alt="Screenshot_20260212_192431" src="/images/Server2.png" />
+  <img width="1920" height="1200" alt="Screenshot_20260212_192431" src="./images/Server2.png" />
 </p>
 
 ---
