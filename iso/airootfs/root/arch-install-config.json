@@ -7,17 +7,6 @@
     "uki": false
   },
 
-  "disk_config": {
-    "config_type": "default_layout",
-    "device_modifications": [
-      {
-        "device": "AUTO",
-        "wipe": true,
-        "partitions": "AUTO"
-      }
-    ]
-  },
-
   "hostname": "FrosteArch PC",
 
   "kernels": ["linux"],
@@ -53,8 +42,12 @@
 
   "timezone": "Europe/London",
 
+  "packages": [
+    "git"
+  ],
+
   "custom_commands": [
-  "git clone https://github.com/FrosteAto/Arch-Linux-Setups.git /root/installer",
-  "bash /root/installer/install.sh"
+    "git clone https://github.com/FrosteAto/Arch-Linux-Setups.git /root/installer",
+    "bash /root/installer/install.sh"
   ]
 }
