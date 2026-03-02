@@ -26,3 +26,4 @@ Thumbs.db
 **/sys/**
 **/dev/**
 **/run/**
+iso/airootfs/root/installer/
