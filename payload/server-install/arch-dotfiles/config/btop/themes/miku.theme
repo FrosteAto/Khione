@@ -1,0 +1,89 @@
+# ===============================
+#  Miku btop – Pink Accent
+# ===============================
+
+# Base
+theme[main_bg]="#2E3238"
+theme[main_fg]="#F5F8FA"
+
+# Titles (cyan keeps it readable)
+theme[title]="#5CD6D6"
+
+# Keyboard highlight (pink!)
+theme[hi_fg]="#FF8FA3"
+
+# Selected process (pink pop)
+theme[selected_bg]="#4A3A40"
+theme[selected_fg]="#FF8FA3"
+
+# Inactive text
+theme[inactive_fg]="#A0A8B4"
+
+# Graph overlay text
+theme[graph_text]="#F5F8FA"
+
+# Meter background
+theme[meter_bg]="#3A3E44"
+
+# Process misc
+theme[proc_misc]="#A0A8B4"
+
+# Box outlines
+theme[cpu_box]="#FF8FA3"    # 💖 CPU = pink
+theme[mem_box]="#82A5FF"    # Blue
+theme[net_box]="#5CD6D6"    # Cyan
+theme[proc_box]="#FF8FA3"   # Pink
+
+# Dividers (soft cyan so pink stands out)
+theme[div_line]="#5CD6D6"
+
+# -------------------------------
+# Temperature (Pink-forward)
+# -------------------------------
+theme[temp_start]="#82A5FF"
+theme[temp_mid]="#FF8FA3"
+theme[temp_end]="#FF6F91"   # extra bold pink peak
+
+# -------------------------------
+# CPU graph (Cyan → PINK)
+# -------------------------------
+theme[cpu_start]="#5CD6D6"
+theme[cpu_mid]="#82A5FF"
+theme[cpu_end]="#FF8FA3"
+
+# -------------------------------
+# Memory / Disk meters
+# -------------------------------
+theme[free_start]="#5CD6D6"
+theme[free_mid]="#82A5FF"
+theme[free_end]="#FF8FA3"
+
+theme[cached_start]="#74C7EC"
+theme[cached_mid]="#82A5FF"
+theme[cached_end]="#FF8FA3"
+
+theme[available_start]="#82A5FF"
+theme[available_mid]="#FF8FA3"
+theme[available_end]="#FF6F91"
+
+theme[used_start]="#5CD6D6"
+theme[used_mid]="#82A5FF"
+theme[used_end]="#FF8FA3"
+
+# -------------------------------
+# Network graphs
+# -------------------------------
+theme[download_start]="#82A5FF"
+theme[download_mid]="#FF8FA3"
+theme[download_end]="#FF6F91"
+
+theme[upload_start]="#5CD6D6"
+theme[upload_mid]="#82A5FF"
+theme[upload_end]="#FF8FA3"
+
+# -------------------------------
+# Process usage gradient
+# -------------------------------
+theme[process_start]="#82A5FF"
+theme[process_mid]="#FF8FA3"
+theme[process_end]="#FF6F91"
