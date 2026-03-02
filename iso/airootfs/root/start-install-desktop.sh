@@ -8,4 +8,4 @@ echo "Starting Arch installer with recommended defaults."
 echo "You can change disk layout, users, locale, etc. in the UI."
 echo
 
-archinstall --config "$SCRIPT_DIR/arch-install-config.json"
+archinstall --config "$SCRIPT_DIR/arch-install-config-desktop.json"

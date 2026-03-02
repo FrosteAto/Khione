@@ -3,21 +3,31 @@ set -euo pipefail
 
 REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
-# shellcheck source=/dev/null
 source "$REPO_ROOT/lib/common.sh"
 
-read -rp "Enter the name of your user (must already exist): " ARCH_USER
+MODE="${MODE:-desktop}"
+ARCH_USER="${ARCH_USER:-}"
+
+detect_user() {
+  awk -F: '$3 >= 1000 && $3 < 65534 {print $1; exit}' /etc/passwd
+}
+
+if [[ -z "$ARCH_USER" ]]; then
+  ARCH_USER="$(detect_user || true)"
+fi
+
+if [[ -z "$ARCH_USER" ]]; then
+  echo "ERROR: Could not auto-detect a non-root user (UID >= 1000)."
+  echo "Create a user during archinstall, or run with ARCH_USER=username."
+  exit 1
+fi
+
 require_user "$ARCH_USER"
 
-echo "Select setup:"
-echo "  1) Desktop"
-echo "  2) Server"
-read -rp "Enter 1 or 2: " CHOICE
-
-case "$CHOICE" in
-  1) MODE_FILE="$REPO_ROOT/modes/desktop.sh" ;;
-  2) MODE_FILE="$REPO_ROOT/modes/server.sh" ;;
-  *) echo "Invalid choice."; exit 1 ;;
+case "$MODE" in
+  desktop) MODE_FILE="$REPO_ROOT/modes/desktop.sh" ;;
+  server)  MODE_FILE="$REPO_ROOT/modes/server.sh" ;;
+  *) echo "ERROR: MODE must be 'desktop' or 'server' (got: $MODE)"; exit 1 ;;
 esac
 
 if [ ! -f "$MODE_FILE" ]; then
@@ -25,33 +35,46 @@ if [ ! -f "$MODE_FILE" ]; then
   exit 1
 fi
 
-sudo -v
 TEMP_SUDOERS="/etc/sudoers.d/99-installer-nopasswd-$ARCH_USER"
 cleanup() {
-  sudo rm -f "$TEMP_SUDOERS" 2>/dev/null || true
+  if [[ "$(id -u)" -eq 0 ]]; then
+    rm -f "$TEMP_SUDOERS" 2>/dev/null || true
+  else
+    sudo rm -f "$TEMP_SUDOERS" 2>/dev/null || true
+  fi
 }
 trap cleanup EXIT INT TERM
-sudo tee "$TEMP_SUDOERS" >/dev/null <<EOF
-$ARCH_USER ALL=(ALL) NOPASSWD: /usr/bin/pacman
-EOF
-sudo chmod 440 "$TEMP_SUDOERS"
-sudo visudo -cf "$TEMP_SUDOERS"
 
-# shellcheck source=/dev/null
+if [[ "$(id -u)" -ne 0 ]]; then
+  sudo -v
+fi
+
+write_sudoers_rule() {
+  local content
+  content="$ARCH_USER ALL=(ALL) NOPASSWD: /usr/bin/pacman"
+
+  if [[ "$(id -u)" -eq 0 ]]; then
+    printf '%s\n' "$content" >"$TEMP_SUDOERS"
+    chmod 440 "$TEMP_SUDOERS"
+    visudo -cf "$TEMP_SUDOERS"
+  else
+    printf '%s\n' "$content" | sudo tee "$TEMP_SUDOERS" >/dev/null
+    sudo chmod 440 "$TEMP_SUDOERS"
+    sudo visudo -cf "$TEMP_SUDOERS"
+  fi
+}
+
+write_sudoers_rule
+
 source "$MODE_FILE"
-
-# Mode file must set:
-# MODE_NAME, OFFICIAL_PACKAGES[], AUR_PACKAGES[], DOTFILES_SUBDIR,
-# KNSV_REL, KNSV_NAME, COLOR_SCHEME, FIREWALL_RULES[], SERVICES_ENABLE[], SERVICES_MASK[],
-# ICON_ARCHIVE_REL, and optionally CURSOR_ARCHIVE_REL + CURSOR_THEME_NAME + CURSOR_SIZE
 
 init_paths "$REPO_ROOT" "$ARCH_USER"
 
 system_update
 enable_multilib
 ensure_git
-install_official_packages OFFICIAL_PACKAGES
 
+install_official_packages OFFICIAL_PACKAGES
 install_yay "$ARCH_USER"
 install_aur_packages "$ARCH_USER" AUR_PACKAGES
 
@@ -59,7 +82,6 @@ enable_services SERVICES_ENABLE
 mask_services SERVICES_MASK
 configure_firewall FIREWALL_RULES
 
-add_flathub
 configure_greetd
 configure_pam_kwallet
 set_wallet_enabled "$ARCH_USER"
@@ -68,17 +90,17 @@ install_icon_theme "$ARCH_USER" "$ICON_ARCHIVE"
 set_icon_theme "$ARCH_USER" "YAMIS"
 
 if [ -n "${CURSOR_ARCHIVE:-}" ]; then
-  install_cursor_theme "$ARCH_USER" "$CURSOR_ARCHIVE" "$CURSOR_ARCHIVE_TYPE"
-  set_cursor_theme "$ARCH_USER" "$CURSOR_THEME_NAME" "$CURSOR_SIZE"
+  install_cursor_theme "$ARCH_USER" "$CURSOR_ARCHIVE" "${CURSOR_ARCHIVE_TYPE:-xz}"
+  set_cursor_theme "$ARCH_USER" "${CURSOR_THEME_NAME:-Miku Cursor}" "${CURSOR_SIZE:-24}"
 fi
 
 apply_dotfiles "$ARCH_USER" "$DOTFILES_DIR"
 set_color_scheme "$ARCH_USER" "$COLOR_SCHEME"
-
 apply_konsave "$ARCH_USER" "$KNSV_FILE" "$KNSV_NAME"
 
-install_wallpaper_autostart_required "$ARCH_USER" "$REPO_ROOT/shared/set-wallpaper-once.sh"
+install_wallpaper_autostart_required \
+  "$ARCH_USER" "$REPO_ROOT/shared/set-wallpaper-once.sh"
 
-sudo rm -f "$TEMP_SUDOERS"
+echo "Installation complete."
 
-echo "Setup complete, please reboot."
+reboot

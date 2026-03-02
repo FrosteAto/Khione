@@ -48,9 +48,6 @@
 
   "custom_commands": [
     "git clone https://github.com/FrosteAto/Arch-Linux-Setups.git /root/installer",
-    "install -Dm755 /root/installer/payload/firstboot.sh /usr/local/bin/arch-linux-setups-firstboot",
-    "install -Dm644 /root/installer/payload/firstboot.service /etc/systemd/system/arch-linux-setups-firstboot.service",
-    "systemctl enable arch-linux-setups-firstboot.service",
-    "systemctl reboot"
+    "MODE=server bash /root/installer/install.sh"
   ]
 }
