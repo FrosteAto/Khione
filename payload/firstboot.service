@@ -1,0 +1,17 @@
+[Unit]
+Description=Arch-Linux-Setups first boot installer
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+StandardInput=tty
+TTYPath=/dev/tty1
+TTYReset=yes
+TTYVHangup=yes
+TTYVTDisallocate=yes
+ExecStart=/usr/local/bin/arch-linux-setups-firstboot
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
