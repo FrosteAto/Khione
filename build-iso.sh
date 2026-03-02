@@ -19,7 +19,7 @@ fi
 
 echo "==> Preparing ISO filesystem..."
 rm -rf "$INSTALLER_DEST"
-mkdir -p "$INSTALLER_DEST"
+mkdir -p "$INSTALLER_DEST"s
 
 # Copy repo into ISO at /root/installer
 rsync -a --delete \
@@ -27,7 +27,7 @@ rsync -a --delete \
   --exclude 'iso' \
   --exclude '*.iso' \
   "$REPO_ROOT/" "$INSTALLER_DEST/"
-
+  
 echo "==> Building ISO..."
 sudo mkarchiso -v -w "$WORK_DIR" -o "$OUT_DIR" "$ISO_DIR"
 
