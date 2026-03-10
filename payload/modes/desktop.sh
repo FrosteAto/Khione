@@ -16,8 +16,7 @@ OFFICIAL_PACKAGES=(
 
 AUR_PACKAGES=(
   discord spotify visual-studio-code-bin
-  wine winetricks protontricks
-  lutris gamescope plex-desktop unityhub adwsteamgtk proton-vpn-gtk-app
+  bottles gamescope plex-desktop unityhub adwsteamgtk proton-vpn-gtk-app
   kwin-effects-forceblur kwin-effect-rounded-corners-git kwin-scripts-krohnkite-git
   lsp-plugins hayase-desktop-bin input-wacom-dkms-git
 )
