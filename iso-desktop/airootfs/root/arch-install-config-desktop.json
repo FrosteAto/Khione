@@ -48,6 +48,6 @@
 
 "custom_commands": [
   "git clone https://github.com/FrosteAto/Arch-Linux-Setups.git /root/installer",
-  "bash -lc 'set -euo pipefail; mkdir -p /var/log/arch-linux-setups; LOG=/var/log/arch-linux-setups/install-$(date +%F_%H-%M-%S).log; echo \"==> Running installer (MODE=desktop)\"; echo \"==> Logging to $LOG\"; stdbuf -oL -eL MODE=desktop bash /root/installer/install.sh 2>&1 | tee -a \"$LOG\"'"
+  "bash -lc 'set -euo pipefail; mkdir -p /var/log/arch-linux-setups; LOG=/var/log/arch-linux-setups/install-$(date +%F_%H-%M-%S).log; echo \"==> Running installer (MODE=desktop)\"; echo \"==> Logging to $LOG\"; env MODE=desktop stdbuf -oL -eL bash /root/installer/install.sh 2>&1 | tee -a \"$LOG\"'"
 ]
 }
