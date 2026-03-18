@@ -12,13 +12,26 @@ section() {
   echo
 }
 
+LOG_DIR="/var/log/arch-linux-setups"
+mkdir -p "$LOG_DIR"
+LOG_FILE="$LOG_DIR/install-$(date +%F_%H-%M-%S).log"
+
+if [[ -w /dev/tty1 ]]; then
+  exec > >(tee -a "$LOG_FILE" /dev/tty1) 2>&1
+else
+  exec > >(tee -a "$LOG_FILE") 2>&1
+fi
+
+log "Running installer"
+log "Logging to $LOG_FILE"
+
 TEMP_SUDOERS=""
 
 on_error() {
   local rc=$?
   echo
   echo "[$(timestamp)] ❌ Installer failed (exit $rc)."
-  echo "Check logs in /var/log/arch-linux-setups/ if present."
+  echo "Check log: $LOG_FILE"
   exit "$rc"
 }
 
