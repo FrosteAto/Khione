@@ -55,13 +55,44 @@ install_official_packages() {
 
 install_yay() {
   local arch_user="$1"
-  echo "Installing yay..."
+
+  log "Installing yay..."
+
   if command -v yay &>/dev/null; then
+    log "yay already installed. Skipping."
     return 0
   fi
+
+  local -a pacman_cmd=(pacman)
+  if [[ "$(id -u)" -ne 0 ]]; then
+    pacman_cmd=(sudo pacman)
+  fi
+
+  "${pacman_cmd[@]}" -S --needed --noconfirm git base-devel fakeroot
+  if "${pacman_cmd[@]}" -Si debugedit &>/dev/null; then
+    "${pacman_cmd[@]}" -S --needed --noconfirm debugedit
+  fi
+
+  if ! command -v fakeroot &>/dev/null; then
+    echo "ERROR: fakeroot is missing after dependency install."
+    exit 1
+  fi
+
+  rm -rf /tmp/yay
   sudo -u "$arch_user" git clone https://aur.archlinux.org/yay.git /tmp/yay
   pushd /tmp/yay >/dev/null
-  sudo -u "$arch_user" makepkg -si --noconfirm
+
+  sudo -u "$arch_user" env HOME="/home/$arch_user" PATH="/usr/local/sbin:/usr/local/bin:/usr/bin:/usr/sbin:/sbin" makepkg -s --noconfirm
+
+  local pkg_file
+  pkg_file="$(find /tmp/yay -maxdepth 1 -type f -name 'yay-[0-9]*-*.pkg.tar.*' ! -name '*.sig' | sort | head -n 1)"
+  if [[ -z "$pkg_file" ]]; then
+    echo "ERROR: Built yay package not found in /tmp/yay"
+    exit 1
+  fi
+
+  "${pacman_cmd[@]}" -U --noconfirm "$pkg_file"
+
   popd >/dev/null
   rm -rf /tmp/yay
 }
