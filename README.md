@@ -1,17 +1,13 @@
 <h1 align="center">FrosteArch</h1>
 
-<p align="center"><strong>Community-built Arch setup, shaped in the open</strong></p>
+FrosteArch is a custom Arch Linux distro project built around a practical, opinionated setup for both desktop and server use.
 
-FrosteArch is a community-led Arch Linux distro project built around a practical, opinionated setup for both desktop and server use.
-
-Everything in this repo is open source and versioned publicly. Issues, ideas, and pull requests are welcome.
-
-Right now there are two editions:
+There are two editions to choose:
 
 - Desktop Edition
 - Server Edition
 
-FrosteArch Desktop is a full daily-driver environment with programming, productivity, gaming, and creative tools already .
+FrosteArch Desktop is a full daily-driver environment with programming, productivity, gaming, and creative tools already installed.
 
 FrosteArch Server is a lean profile tuned for long-running services, including Plex defaults and enough local tooling to debug directly on the machine.
 
@@ -45,7 +41,7 @@ FrosteArch Server is a lean profile tuned for long-running services, including P
 
 ---
 
-<h2 align="center">What We're Working On</h2>
+<h2 align="center">Roadmap</h2>
 
 - Include konsave config file in dotfile backups
 - Move images into repo
@@ -102,7 +98,7 @@ If it does not auto-start, run one of these manually:
 /root/start-install-server.sh
 ```
 
-## Step 4: Complete Archinstall choices
+## Step 4: Complete Archinstall base configuration
 
 In Archinstall, configure the basics:
 
