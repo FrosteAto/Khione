@@ -1,17 +1,19 @@
 <h1 align="center">FrosteArch</h1>
 
-<p align="center"><strong>Official Installation Media and Provisioning Toolkit</strong></p>
+<p align="center"><strong>Community-built Arch setup, shaped in the open</strong></p>
 
-FrosteArch is a curated Arch Linux setup designed to deliver a consistent, opinionated experience across desktop and server deployments.
+FrosteArch is a community-led Arch Linux distro project built around a practical, opinionated setup for both desktop and server use.
 
-It currently ships in two editions:
+Everything in this repo is open source and versioned publicly. Issues, ideas, and pull requests are welcome.
+
+Right now there are two editions:
 
 - Desktop Edition
 - Server Edition
 
-FrosteArch Desktop includes a complete daily-driver environment with programming, productivity, gaming, and creative tooling.
+FrosteArch Desktop is a full daily-driver environment with programming, productivity, gaming, and creative tools already .
 
-FrosteArch Server is a streamlined profile optimized for long-running services, including Plex defaults and practical on-device debugging tools.
+FrosteArch Server is a lean profile tuned for long-running services, including Plex defaults and enough local tooling to debug directly on the machine.
 
 ---
 
@@ -43,7 +45,7 @@ FrosteArch Server is a streamlined profile optimized for long-running services, 
 
 ---
 
-## Roadmap
+<h2 align="center">What We're Working On</h2>
 
 - Include konsave config file in dotfile backups
 - Move images into repo
@@ -57,7 +59,7 @@ FrosteArch Server is a streamlined profile optimized for long-running services, 
 
 <h2 align="center">Installation Guide</h2>
 
-The FrosteArch installation flow is mostly automated, with a few required choices during Archinstall.
+The FrosteArch install flow is mostly automated, while keeping the key Archinstall choices in your hands.
 
 ## Before you begin
 
@@ -100,7 +102,7 @@ If it does not auto-start, run one of these manually:
 /root/start-install-server.sh
 ```
 
-## Step 4: Complete Archinstall base configuration
+## Step 4: Complete Archinstall choices
 
 In Archinstall, configure the basics:
 
@@ -111,9 +113,9 @@ In Archinstall, configure the basics:
 
 Then let Archinstall complete the base system installation.
 
-## Step 5: Let FrosteArch provisioning run
+## Step 5: Let FrosteArch finish setup
 
-After Archinstall finishes, the FrosteArch provisioning stage continues automatically and applies packages, services, and system configuration.
+After Archinstall finishes, FrosteArch continues automatically and applies packages, services, and system configuration.
 
 Install output is logged to:
 
@@ -123,7 +125,7 @@ Install output is logged to:
 
 ## Step 6: Reboot into FrosteArch
 
-Once provisioning fully completes:
+Once setup fully completes:
 
 - Reboot
 - Remove the USB when prompted
@@ -147,7 +149,7 @@ ls -1 /var/log/arch-linux-setups/
 
 ---
 
-FrosteArch is now installed and ready for daily use or service deployment.
+FrosteArch is now installed and ready to use, tweak, and build on.
 
 ---
 
