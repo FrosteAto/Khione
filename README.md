@@ -59,42 +59,30 @@ The server edition is a super slimmed down version that also pre-configured Plex
 
 It's not a perfect just run and go, you need to do a few bits and bobs first.
 
-## Step 1: Get a super basic arch install
+## Step 1: Download the ISO
 
-I really do mean the absolute minimum. Grab an Arch ISO, stick it on a USB stick, boot into Arch, and use the archinstaller. I've installed Arch enough times to know I really don't need to do all that manually. If you never have, it's worth trying at least once. Follow this, you will need the first couple steps to get an internet connection -> https://wiki.archlinux.org/title/Installation_guide
+Download the Desktop or Server ISO from the releases section
 
-In the archinstaller, pick the 'minimal' preset. Do whatever other settings you want, but be sure to set up at least one user and use NetworkManager for your internet connection.
+## Step 2: Install the ISO to a USB
 
-## Step 2: Boot into Arch and get connected (again)
+Using a utility USBImager, Balena Etcher, or Rufus, install the ISO to the USB.
 
-Once the basic arch install is done, boot into it and get an internet connection. This time, setting up your connection will be via the NetworkManager CLI though. Peep the basics here -> https://wiki.archlinux.org/title/NetworkManager
+## Step 3: Boot the USB
 
-## Step 3: Install git
+Plug the USB into the PC and boot into it, select the install Arch option
 
-```
-sudo pacman -S git
-```
+## Step 4: Run the script
 
-## Step 4: Clone the repo
-You can now use git to clone the installation repo. You will need to know the exact URL. Here's one I prepared earlier:
+Complete the basic ArchInstall configuration - select your mirror regions, add users / passwords, and set up disk partitions
 
-```
-git clone https://github.com/FrosteAto/Arch-Linux-Setups.git
-```
 
-## Step 5: Run the script
+## Step 5: Let it run
 
-You can run shell scripts with the following command. Follow through the script and insert the correct information when prompted. This will take a while and will ask for superuser access a few times. To be fair, it is setting up your whole desktop!
-
-```
-./Arch-Linux-Setups/install.sh
-```
-Follow its instructions.
-
+Allow Archinstall to install Arch. Once it's done, it will install all the other packages and set up the environment
 
 ## Step 6: Reboot
 
-Once the script is done, reboot your PC.
+Once the script is done, reboot your PC and log in.
 
 ---
 
