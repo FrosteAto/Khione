@@ -132,6 +132,11 @@ source "$MODE_FILE"
 
 init_paths "$REPO_ROOT" "$ARCH_USER"
 
+FIRST_BOOT_DIALOG_TITLE="${FIRST_BOOT_DIALOG_TITLE:-FrosteArch}"
+FIRST_BOOT_DIALOG_MARKDOWN_REL="${FIRST_BOOT_DIALOG_MARKDOWN_REL:-shared/first-boot-message.md}"
+FIRST_BOOT_DIALOG_MARKDOWN_FILE="$REPO_ROOT/$FIRST_BOOT_DIALOG_MARKDOWN_REL"
+FIRST_BOOT_DIALOG_RENDERER_FILE="${FIRST_BOOT_DIALOG_RENDERER_FILE:-$REPO_ROOT/shared/render-first-boot-dialog.py}"
+
 section "System setup"
 system_update
 enable_multilib
@@ -173,9 +178,12 @@ if [[ -n "${CURSOR_ARCHIVE:-}" ]]; then
   set_cursor_theme "$ARCH_USER" "${CURSOR_THEME_NAME:-Miku Cursor}" "${CURSOR_SIZE:-24}"
 fi
 
-section "Installing wallpaper first-login helper"
+section "Configuring first-login experience"
+disable_kde_welcome_popup "$ARCH_USER"
 install_wallpaper_autostart_required \
   "$ARCH_USER" "$REPO_ROOT/shared/set-wallpaper-once.sh"
+install_first_boot_dialog_autostart_required \
+  "$ARCH_USER" "$FIRST_BOOT_DIALOG_MARKDOWN_FILE" "$FIRST_BOOT_DIALOG_TITLE" "$FIRST_BOOT_DIALOG_RENDERER_FILE"
 
 log "Installation complete."
 log "Rebooting in 3 seconds..."
