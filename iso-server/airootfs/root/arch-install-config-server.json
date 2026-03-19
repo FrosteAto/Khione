@@ -7,7 +7,7 @@
     "uki": false
   },
 
-  "hostname": "FrosteArch-PC",
+  "hostname": "FrosteArch-SVR",
 
   "kernels": ["linux-lts"],
 
