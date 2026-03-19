@@ -1,8 +1,6 @@
-# FrosteAto's Arch Install Scripts
+# FrosteArch
 
-Hia!!
-
-This is my big ol' script for installing Arch. I use Arch as the sole OS for all my computers including servers, so having these ready to go, modular, and easy to use makes my life 50x easier. You can use them too!
+Welcome to FrosteArch, an opinionated Arch distro with ease of use in mind. It's the kind of distro that you don't need to revise to use, but will still benefit from all the positives of a bleeding edge setup with deep configuration options.
 
 There's two main version:
 
