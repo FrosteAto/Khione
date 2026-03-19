@@ -7,7 +7,7 @@
     "uki": false
   },
 
-  "hostname": "FrosteArch PC",
+  "hostname": "FrosteArch-PC",
 
   "kernels": ["linux"],
 
@@ -47,7 +47,7 @@
   ],
 
 "custom_commands": [
-  "bash -lc 'set -euo pipefail; rm -rf /root/installer; if [ -d /run/arch-linux-setups-installer ]; then cp -a /run/arch-linux-setups-installer /root/installer; else git clone https://github.com/FrosteAto/Arch-Linux-Setups.git /root/installer; fi'",
-  "bash -lc 'set -euo pipefail; mkdir -p /var/log/arch-linux-setups; LOG=/var/log/arch-linux-setups/install-$(date +%F_%H-%M-%S).log; echo \"==> Running installer (MODE=desktop)\"; echo \"==> Logging to $LOG\"; env MODE=desktop stdbuf -oL -eL bash /root/installer/install.sh 2>&1 | tee -a \"$LOG\"'"
+  "bash -lc 'set -euo pipefail; INSTALLER_DIR=/opt/arch-linux-setups; INSTALLER_SRC=; if [ -d /run/arch-linux-setups-installer ]; then INSTALLER_SRC=/run/arch-linux-setups-installer; elif [ -d /proc/1/root/run/arch-linux-setups-installer ]; then INSTALLER_SRC=/proc/1/root/run/arch-linux-setups-installer; elif [ -d /proc/1/root/root/installer-src ]; then INSTALLER_SRC=/proc/1/root/root/installer-src; fi; rm -rf \"$INSTALLER_DIR\"; if [ -n \"$INSTALLER_SRC\" ]; then echo \"==> Using local staged installer from $INSTALLER_SRC\"; cp -a \"$INSTALLER_SRC\" \"$INSTALLER_DIR\"; else echo \"==> Local staged installer unavailable, using GitHub fallback\"; git clone https://github.com/FrosteAto/Arch-Linux-Setups.git \"$INSTALLER_DIR\"; fi; chmod -R a+rX \"$INSTALLER_DIR\" && find \"$INSTALLER_DIR\" -type f -name \"*.sh\" -exec chmod a+x {} \\;'",
+  "bash -lc 'set -euo pipefail; mkdir -p /var/log/arch-linux-setups; LOG=/var/log/arch-linux-setups/install-$(date +%F_%H-%M-%S).log; echo \"==> Running installer (MODE=desktop)\"; echo \"==> Logging to $LOG\"; env MODE=desktop stdbuf -oL -eL bash /opt/arch-linux-setups/install.sh 2>&1 | tee -a \"$LOG\"'"
 ]
 }

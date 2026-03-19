@@ -136,6 +136,9 @@ mask_services() {
 
 configure_firewall() {
   local -n rules="$1"
+  local kernel_release
+  local in_chroot=0
+
   echo "Configuring firewall..."
   sudo pacman -S --needed --noconfirm ufw
   sudo ufw default deny incoming
@@ -143,7 +146,28 @@ configure_firewall() {
   for r in "${rules[@]}"; do
     sudo ufw allow "$r"
   done
-  sudo ufw --force enable
+
+  if command -v systemd-detect-virt &>/dev/null && systemd-detect-virt --chroot --quiet; then
+    in_chroot=1
+  fi
+
+  if [[ "$in_chroot" -eq 1 ]]; then
+    echo "Skipping immediate UFW activation inside chroot."
+    echo "UFW rules are configured and ufw.service will activate firewall on first boot."
+    return 0
+  fi
+
+  kernel_release="$(uname -r)"
+  if [[ ! -d "/lib/modules/$kernel_release" ]]; then
+    echo "Skipping immediate UFW activation (running kernel modules '$kernel_release' not present in target root)."
+    echo "UFW rules are configured and ufw.service will activate firewall on first boot."
+    return 0
+  fi
+
+  if ! sudo ufw --force enable; then
+    echo "Warning: UFW could not be enabled during install."
+    echo "ufw.service is enabled and will retry activation on first boot."
+  fi
 }
 
 add_flathub() {
