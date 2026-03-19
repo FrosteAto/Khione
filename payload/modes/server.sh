@@ -6,8 +6,9 @@ MODE_NAME="server"
 OFFICIAL_PACKAGES=(
   linux-lts linux-lts-headers linux-firmware
   xorg plasma plasma-workspace greetd greetd-tuigreet kwallet kwallet-pam libsecret
+  kdialog
   ufw nano btop flatpak kitty dolphin ark fastfetch firefox sof-firmware git
-  python python-pip python-pipx
+  python python-markdown python-pip python-pipx
   avahi nss-mdns
   noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu ttf-jetbrains-mono
 )
@@ -39,3 +40,6 @@ CURSOR_ARCHIVE_REL="server-install/miku-cursor.tar.xz"
 CURSOR_ARCHIVE_TYPE="xz"
 CURSOR_THEME_NAME="Miku Cursor"
 CURSOR_SIZE="24"
+
+FIRST_BOOT_DIALOG_TITLE="Welcome to FrosteArch Server"
+FIRST_BOOT_DIALOG_MARKDOWN_REL="shared/first-boot-server.md"

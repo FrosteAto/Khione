@@ -5,9 +5,10 @@ MODE_NAME="desktop"
 
 OFFICIAL_PACKAGES=(
   xorg plasma plasma-workspace greetd greetd-tuigreet kwallet kwallet-pam libsecret
+  kdialog
   ufw nano btop flatpak kitty dolphin
   firefox steam krita godot obs-studio audacity blender kdenlive libreoffice gwenview mpv easyeffects calf darktable anki
-  python python-pip python-pipx python-virtualenv php composer nodejs npm docker docker-compose make cmake git archiso
+  python python-markdown python-pip python-pipx python-virtualenv php composer nodejs npm docker docker-compose make cmake git archiso
   cups cups-pdf print-manager sane skanlite hplip avahi nss-mdns
   libinput libwacom wacomtablet xf86-input-wacom
   noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu ttf-jetbrains-mono
@@ -16,7 +17,7 @@ OFFICIAL_PACKAGES=(
 
 AUR_PACKAGES=(
   discord spotify visual-studio-code-bin
-  bottles gamescope plex-desktop unityhub adwsteamgtk proton-vpn-gtk-app
+  bottles gamescope unityhub adwsteamgtk proton-vpn-gtk-app
   kwin-effects-forceblur kwin-effect-rounded-corners-git kwin-scripts-krohnkite-git
   lsp-plugins hayase-desktop-bin input-wacom-dkms-git
 )
@@ -40,3 +41,6 @@ CURSOR_ARCHIVE_REL="desktop-install/Ninomae-Ina-nis.tar.gz"
 CURSOR_ARCHIVE_TYPE="gz"
 CURSOR_THEME_NAME="Ninomae Ina'nis"
 CURSOR_SIZE="24"
+
+FIRST_BOOT_DIALOG_TITLE="Welcome to FrosteArch Desktop"
+FIRST_BOOT_DIALOG_MARKDOWN_REL="shared/first-boot-desktop.md"

@@ -335,3 +335,120 @@ OnlyShowIn=KDE;
 EOF
 }
 
+disable_kde_welcome_popup() {
+  local arch_user="$1"
+  local autostart_dir="/home/$arch_user/.config/autostart"
+  local override_file="$autostart_dir/org.kde.plasma-welcome.desktop"
+
+  echo "Disabling KDE welcome popup..."
+
+  sudo -u "$arch_user" mkdir -p "$autostart_dir"
+  sudo -u "$arch_user" tee "$override_file" >/dev/null <<'EOF'
+[Desktop Entry]
+Hidden=true
+EOF
+
+  # Plasma Welcome's KDED module reads these values from ~/.config/plasma-welcomerc.
+  sudo -u "$arch_user" kwriteconfig6 --file plasma-welcomerc --group General --key LastSeenVersion "999.0.0" || true
+  sudo -u "$arch_user" kwriteconfig6 --file plasma-welcomerc --group General --key ShowUpdatePage false || true
+  sudo -u "$arch_user" kwriteconfig6 --file plasma-welcomerc --group General --key LiveEnvironment false || true
+
+  # Keep this for older/alternate implementations.
+  sudo -u "$arch_user" kwriteconfig6 --file plasma-welcomerc --group General --key FirstRun false || true
+
+  # Belt-and-suspenders: disable the KDED launcher module if present.
+  sudo -u "$arch_user" kwriteconfig6 --file kded6rc --group Module-plasma-welcome --key autoload false || true
+  sudo -u "$arch_user" kwriteconfig6 --file kded5rc --group Module-plasma-welcome --key autoload false || true
+}
+
+install_first_boot_dialog_autostart_required() {
+  local arch_user="$1"
+  local markdown_file="$2"
+  local dialog_title="${3:-FrosteArch}"
+  local renderer_source="${4:-$(dirname "$markdown_file")/render-first-boot-dialog.py}"
+
+  if [ ! -f "$markdown_file" ]; then
+    echo "Missing required first-boot dialog markdown: $markdown_file"
+    exit 1
+  fi
+
+  if [ ! -f "$renderer_source" ]; then
+    echo "Missing required first-boot renderer helper: $renderer_source"
+    exit 1
+  fi
+
+  echo "Installing first-boot dialog one-shot autostart..."
+
+  local state_dir="/home/$arch_user/.config/frostearch"
+  local message_file="$state_dir/first-boot-dialog.md"
+  local title_file="$state_dir/first-boot-dialog-title.txt"
+  local renderer_script="/home/$arch_user/.local/bin/frostearch-render-first-boot-dialog.py"
+  local user_script="/home/$arch_user/.local/bin/frostearch-first-boot-dialog-once.sh"
+  local autostart_dir="/home/$arch_user/.config/autostart"
+  local desktop_file="$autostart_dir/frostearch-first-boot-dialog.desktop"
+
+  sudo -u "$arch_user" mkdir -p "/home/$arch_user/.local/bin" "$autostart_dir" "$state_dir"
+  sudo -u "$arch_user" cp "$markdown_file" "$message_file"
+  sudo -u "$arch_user" cp "$renderer_source" "$renderer_script"
+  sudo -u "$arch_user" chmod +x "$renderer_script"
+  printf '%s\n' "$dialog_title" | sudo -u "$arch_user" tee "$title_file" >/dev/null
+
+  sudo -u "$arch_user" tee "$user_script" >/dev/null <<'EOF'
+#!/bin/bash
+set -euo pipefail
+
+AUTOSTART_FILE="$HOME/.config/autostart/frostearch-first-boot-dialog.desktop"
+STATE_DIR="$HOME/.config/frostearch"
+STATE_FILE="$STATE_DIR/first-boot-dialog-shown"
+MESSAGE_FILE="$STATE_DIR/first-boot-dialog.md"
+TITLE_FILE="$STATE_DIR/first-boot-dialog-title.txt"
+HTML_FILE="$STATE_DIR/first-boot-dialog.html"
+RENDERER_SCRIPT="$HOME/.local/bin/frostearch-render-first-boot-dialog.py"
+
+mkdir -p "$STATE_DIR"
+
+if [ -f "$STATE_FILE" ]; then
+  rm -f "$AUTOSTART_FILE" "$0"
+  exit 0
+fi
+
+TITLE="FrosteArch"
+if [ -f "$TITLE_FILE" ]; then
+  TITLE="$(cat "$TITLE_FILE")"
+fi
+
+if [ ! -f "$MESSAGE_FILE" ]; then
+  printf '%s\n' "Welcome to FrosteArch." >"$MESSAGE_FILE"
+fi
+
+if command -v kdialog >/dev/null 2>&1; then
+  PYTHON_BIN="$(command -v python3 || command -v python || true)"
+
+  if [ -n "$PYTHON_BIN" ] && [ -f "$RENDERER_SCRIPT" ] && "$PYTHON_BIN" "$RENDERER_SCRIPT" "$MESSAGE_FILE" "$HTML_FILE"; then
+    HTML_CONTENT="$(cat "$HTML_FILE")"
+    kdialog --title "$TITLE" --msgbox "$HTML_CONTENT" || kdialog --title "$TITLE" --textbox "$MESSAGE_FILE" 700 520 || true
+  else
+    kdialog --title "$TITLE" --textbox "$MESSAGE_FILE" 700 520 || true
+  fi
+elif command -v zenity >/dev/null 2>&1; then
+  zenity --text-info --title="$TITLE" --filename="$MESSAGE_FILE" --width=700 --height=520 || true
+elif command -v notify-send >/dev/null 2>&1; then
+  notify-send "$TITLE" "$(head -n 6 "$MESSAGE_FILE" | tr '\n' ' ')" || true
+fi
+
+touch "$STATE_FILE"
+rm -f "$AUTOSTART_FILE" "$HTML_FILE" "$0"
+EOF
+
+  sudo -u "$arch_user" chmod +x "$user_script"
+
+  sudo -u "$arch_user" tee "$desktop_file" >/dev/null <<EOF
+[Desktop Entry]
+Type=Application
+Name=FrosteArch First Boot Message
+Exec=$user_script
+X-KDE-autostart-after=plasma-desktop
+OnlyShowIn=KDE;
+EOF
+}
+
