@@ -26,6 +26,7 @@ log "Running installer"
 log "Logging to $LOG_FILE"
 
 TEMP_SUDOERS=""
+SUDO_KEEPALIVE_PID=""
 
 on_error() {
   local rc=$?
@@ -36,6 +37,11 @@ on_error() {
 }
 
 cleanup() {
+  if [[ -n "$SUDO_KEEPALIVE_PID" ]]; then
+    kill "$SUDO_KEEPALIVE_PID" 2>/dev/null || true
+    wait "$SUDO_KEEPALIVE_PID" 2>/dev/null || true
+  fi
+
   if [[ -n "$TEMP_SUDOERS" ]]; then
     if [[ "$(id -u)" -eq 0 ]]; then
       rm -f "$TEMP_SUDOERS" 2>/dev/null || true
@@ -94,6 +100,14 @@ TEMP_SUDOERS="/etc/sudoers.d/99-installer-nopasswd-$ARCH_USER"
 
 if [[ "$(id -u)" -ne 0 ]]; then
   sudo -v
+
+  (
+    while true; do
+      sleep 60
+      sudo -n true >/dev/null 2>&1 || exit 0
+    done
+  ) &
+  SUDO_KEEPALIVE_PID="$!"
 fi
 
 write_sudoers_rule() {
@@ -144,17 +158,20 @@ set_wallet_enabled "$ARCH_USER"
 
 section "Applying icons and cursor theme"
 install_icon_theme "$ARCH_USER" "$ICON_ARCHIVE"
-set_icon_theme "$ARCH_USER" "YAMIS"
 
 if [[ -n "${CURSOR_ARCHIVE:-}" ]]; then
   install_cursor_theme "$ARCH_USER" "$CURSOR_ARCHIVE" "${CURSOR_ARCHIVE_TYPE:-xz}"
-  set_cursor_theme "$ARCH_USER" "${CURSOR_THEME_NAME:-Miku Cursor}" "${CURSOR_SIZE:-24}"
 fi
 
 section "Applying dotfiles and desktop configuration"
 apply_dotfiles "$ARCH_USER" "$DOTFILES_DIR"
-set_color_scheme "$ARCH_USER" "$COLOR_SCHEME"
 apply_konsave "$ARCH_USER" "$KNSV_FILE" "$KNSV_NAME"
+set_color_scheme "$ARCH_USER" "$COLOR_SCHEME"
+set_icon_theme "$ARCH_USER" "YAMIS"
+
+if [[ -n "${CURSOR_ARCHIVE:-}" ]]; then
+  set_cursor_theme "$ARCH_USER" "${CURSOR_THEME_NAME:-Miku Cursor}" "${CURSOR_SIZE:-24}"
+fi
 
 section "Installing wallpaper first-login helper"
 install_wallpaper_autostart_required \
