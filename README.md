@@ -1,21 +1,21 @@
-# FrosteAto's Arch Install Scripts
+<h1 align="center">FrosteArch</h1>
 
-Hia!!
+<p align="center"><strong>Official Installation Media and Provisioning Toolkit</strong></p>
 
-This is my big ol' script for installing Arch. I use Arch as the sole OS for all my computers including servers, so having these ready to go, modular, and easy to use makes my life 50x easier. You can use them too!
+FrosteArch is a curated Arch Linux setup designed to deliver a consistent, opinionated experience across desktop and server deployments.
 
-There's two main version:
+It currently ships in two editions:
 
 - Desktop Edition
 - Server Edition
 
-The desktop edition comes with all the programs I expect to use on a daily basis and once in a while, everything from browsers to game launchers to photo editing software. It's super fully featured. 
+FrosteArch Desktop includes a complete daily-driver environment with programming, productivity, gaming, and creative tooling.
 
-The server edition is a super slimmed down version that also pre-configured Plex to be running at all times and with the correct ports open, but still has the minimum for on-device debugging available to you.
+FrosteArch Server is a streamlined profile optimized for long-running services, including Plex defaults and practical on-device debugging tools.
 
 ---
 
-# Desktop
+<h2 align="center">FrosteArch Desktop</h2>
 
 <p align="center">
   <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="./payload/images/Desktop1.png" />
@@ -29,7 +29,7 @@ The server edition is a super slimmed down version that also pre-configured Plex
 
 ---
 
-# Server
+<h2 align="center">FrosteArch Server</h2>
 
 <p align="center">
   <img width="1920" height="1200" alt="Screenshot_20260212_192443" src="./payload/images/Server1.png" />
@@ -43,50 +43,111 @@ The server edition is a super slimmed down version that also pre-configured Plex
 
 ---
 
-## To Investigate / Do
+## Roadmap
 
 - Include konsave config file in dotfile backups
 - Move images into repo
 - Update desktop images
 - Update desktop konsave / dotfiles
 - Plasma update broke pager widget
-- Installing FL studio by script, seeing as it can only be run with wine.
-- The above for VOCALOID 6 as well, which is unstable.
+- Add automated FL Studio installation support through Wine.
+- Add automated VOCALOID 6 installation support and improve stability.
 
 ---
 
-# Usage
+<h2 align="center">Installation Guide</h2>
 
-It's not a perfect just run and go, you need to do a few bits and bobs first.
+The FrosteArch installation flow is mostly automated, with a few required choices during Archinstall.
+
+## Before you begin
+
+- Use a stable internet connection during install.
+- Decide which ISO you want:
+  - Desktop Edition: full daily-driver setup.
+  - Server Edition: lightweight setup with server defaults.
 
 ## Step 1: Download the ISO
 
-Download the Desktop or Server ISO from the releases section
+Download the Desktop or Server ISO from the Releases page.
 
-## Step 2: Install the ISO to a USB
+Optional but recommended checksum verification:
 
-Using a utility USBImager, Balena Etcher, or Rufus, install the ISO to the USB.
+```bash
+sha256sum <your-iso-file>.iso
+```
 
-## Step 3: Boot the USB
+## Step 2: Write the ISO to a USB
 
-Plug the USB into the PC and boot into it, select the install Arch option
+Use USBImager, Balena Etcher, or Rufus.
 
-## Step 4: Run the script
+If you are on Linux and want to use `dd`:
 
-Complete the basic ArchInstall configuration - select your mirror regions, add users / passwords, and set up disk partitions
+```bash
+sudo dd if=<your-iso-file>.iso of=/dev/<usb-device> bs=4M status=progress oflag=sync
+```
 
+## Step 3: Boot from the USB
 
-## Step 5: Let it run
+- Boot the target machine from the USB.
+- Select the FrosteArch install option in the boot menu.
+- The installer launcher should auto-start on tty1.
 
-Allow Archinstall to install Arch. Once it's done, it will install all the other packages and set up the environment
+If it does not auto-start, run one of these manually:
 
-## Step 6: Reboot
+```bash
+/root/start-install-desktop.sh
+# or
+/root/start-install-server.sh
+```
 
-Once the script is done, reboot your PC and log in.
+## Step 4: Complete Archinstall base configuration
+
+In Archinstall, configure the basics:
+
+- Mirror region
+- Disk layout and mount points
+- User account(s) and passwords
+- Timezone and locale
+
+Then let Archinstall complete the base system installation.
+
+## Step 5: Let FrosteArch provisioning run
+
+After Archinstall finishes, the FrosteArch provisioning stage continues automatically and applies packages, services, and system configuration.
+
+Install output is logged to:
+
+```bash
+/var/log/arch-linux-setups/install-<timestamp>.log
+```
+
+## Step 6: Reboot into FrosteArch
+
+Once provisioning fully completes:
+
+- Reboot
+- Remove the USB when prompted
+- Log into your new system
+
+## Step 7: Quick post-install checks
+
+- Confirm networking is up
+- Run updates
+
+```bash
+yay
+```
+
+For troubleshooting logs:
+
+```bash
+cat /var/log/archinstall/install.log
+ls -1 /var/log/arch-linux-setups/
+```
 
 ---
 
-There we have it! Enjoy a fully featured, stable, and intuitive Arch installation.
+FrosteArch is now installed and ready for daily use or service deployment.
 
 ---
 
