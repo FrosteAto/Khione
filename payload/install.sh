@@ -136,6 +136,8 @@ FIRST_BOOT_DIALOG_TITLE="${FIRST_BOOT_DIALOG_TITLE:-FrosteArch}"
 FIRST_BOOT_DIALOG_MARKDOWN_REL="${FIRST_BOOT_DIALOG_MARKDOWN_REL:-shared/first-boot-message.md}"
 FIRST_BOOT_DIALOG_MARKDOWN_FILE="$REPO_ROOT/$FIRST_BOOT_DIALOG_MARKDOWN_REL"
 FIRST_BOOT_DIALOG_RENDERER_FILE="${FIRST_BOOT_DIALOG_RENDERER_FILE:-$REPO_ROOT/shared/render-first-boot-dialog.py}"
+KARA_GIT_URL="${KARA_GIT_URL:-https://github.com/dhruv8sh/kara.git}"
+KARA_GIT_REF="${KARA_GIT_REF:-v1.0.0}"
 
 section "System setup"
 system_update
@@ -177,6 +179,9 @@ set_icon_theme "$ARCH_USER" "YAMIS"
 if [[ -n "${CURSOR_ARCHIVE:-}" ]]; then
   set_cursor_theme "$ARCH_USER" "${CURSOR_THEME_NAME:-Miku Cursor}" "${CURSOR_SIZE:-24}"
 fi
+
+section "Installing Kara pager"
+install_kara_pager_from_source "$ARCH_USER" "$KARA_GIT_URL" "$KARA_GIT_REF"
 
 section "Configuring first-login experience"
 disable_kde_welcome_popup "$ARCH_USER"
