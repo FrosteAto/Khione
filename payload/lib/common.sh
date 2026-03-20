@@ -306,6 +306,47 @@ apply_konsave() {
   sudo -u "$arch_user" "$konsave_bin" -a "$knsv_name"
 }
 
+install_kara_pager_from_source() {
+  local arch_user="$1"
+  local kara_git_url="${2:-https://github.com/dhruv8sh/kara.git}"
+  local kara_git_ref="${3:-v1.0.0}"
+  local source_dir="/home/$arch_user/.local/src/kara"
+  local plasmoid_dir="/home/$arch_user/.local/share/plasma/plasmoids/org.dhruv8sh.kara"
+
+  echo "Installing Kara pager from source..."
+
+  sudo pacman -S --needed --noconfirm \
+    base-devel cmake extra-cmake-modules git \
+    qt6-base qt6-declarative kwin libplasma plasma-activities plasma-workspace
+
+  sudo -u "$arch_user" mkdir -p "/home/$arch_user/.local/src"
+  if [ -d "$source_dir/.git" ]; then
+    sudo -u "$arch_user" git -C "$source_dir" fetch --tags --prune
+  else
+    sudo -u "$arch_user" git clone "$kara_git_url" "$source_dir"
+  fi
+
+  sudo -u "$arch_user" git -C "$source_dir" checkout --force "$kara_git_ref"
+
+  # Konsave can restore an older Kara plasmoid snapshot. Clear it before reinstall.
+  sudo -u "$arch_user" rm -rf "$plasmoid_dir"
+
+  # Run upstream installer flow because Kara currently expects this path setup.
+  sudo -u "$arch_user" env HOME="/home/$arch_user" bash -lc "
+set -euo pipefail
+cd '$source_dir'
+bash ./install.sh
+"
+
+  # Refresh KDE cache so the new plugin paths/modules are discovered.
+  sudo -u "$arch_user" env HOME="/home/$arch_user" bash -lc "
+set -euo pipefail
+if command -v kbuildsycoca6 >/dev/null 2>&1; then
+  kbuildsycoca6 || true
+fi
+"
+}
+
 install_wallpaper_autostart_required() {
   local arch_user="$1"
   local helper="$2"
