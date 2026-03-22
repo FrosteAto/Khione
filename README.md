@@ -1,4 +1,6 @@
-<h1 align="center">FrosteArch</h1>
+<p align="center">
+  <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="./payload/images/FrosteArch Logo 2.png" />
+</p>
 
 FrosteArch is a custom Arch Linux distro project built around a practical, opinionated setup for both desktop and server use.
 
