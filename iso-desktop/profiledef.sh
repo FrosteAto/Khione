@@ -3,8 +3,8 @@
 
 iso_name="FrosteArch-desktop"
 iso_label="FROSTEARCH_DSK"
-iso_publisher="Arch Linux <https://archlinux.org>"
-iso_application="Arch Linux Live/Rescue DVD"
+iso_publisher="FrosteArch <https://github.com/FrosteAto/Arch-Linux-Setups> Based On Arch Linux <https://archlinux.org>"
+iso_application="FrosteArch Linux Live/Rescue DVD"
 iso_version="$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y.%m.%d)"
 install_dir="arch"
 buildmodes=('iso')
