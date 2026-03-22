@@ -181,3 +181,17 @@ and if it's part of the AUR you can do
 yay -S *packageName*
 ```
 to install it.
+
+# Credit where credit is due
+
+## Arch Linux
+
+Obviously, this is built on top of Arch Linux. Thank you for every maintainer for their hard work!
+
+`https://archlinux.org/`
+
+## Archinstall
+
+My scripts and changes are stapled onto & around Archinstall. Without their incredible work this wouldn't be possible. Love you!
+
+`https://archinstall.archlinux.page/`
