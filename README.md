@@ -2,7 +2,7 @@
   <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="./payload/images/FrosteArch Logo 2.png" />
 </p>
 
-FrosteArch is a custom Arch Linux distro project built around a practical, opinionated setup for both desktop and server use.
+FrosteArch is a custom Arch Linux distro built around a practical, opinionated setup for both desktop and server use.
 
 There are two editions to choose:
 
@@ -143,13 +143,14 @@ cat /var/log/archinstall/install.log
 ls -1 /var/log/arch-linux-setups/
 ```
 
----
+## Step 8: Success!
 
 FrosteArch is now installed and ready to use, tweak, and build on.
 
 ---
 
-# FAQ
+<h2 align="center">FAQ</h2>
+
 
 ## Why not use a headless server?
 
@@ -184,7 +185,9 @@ yay -S *packageName*
 ```
 to install it.
 
-# Credit where credit is due
+---
+
+<h2 align="center">Credit where credit is due</h2>
 
 ## Arch Linux
 
