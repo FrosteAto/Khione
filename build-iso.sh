@@ -42,4 +42,22 @@ prepare_profile "$REPO_ROOT/iso-server" "$TMP_PROFILE_ROOT/iso-server"
 sudo mkarchiso -v -w /tmp/work-desktop -o "$OUT_DIR" "$TMP_PROFILE_ROOT/iso-desktop"
 sudo mkarchiso -v -w /tmp/work-server  -o "$OUT_DIR" "$TMP_PROFILE_ROOT/iso-server"
 
+rename_iso() {
+	local pattern="$1"
+	local target_name="$2"
+	local source_iso
+
+	source_iso="$(ls -1t "$OUT_DIR"/$pattern 2>/dev/null | head -n 1 || true)"
+	if [[ -z "$source_iso" ]]; then
+		echo "WARNING: No ISO matched pattern '$pattern' in $OUT_DIR"
+		return 0
+	fi
+
+	rm -f "$OUT_DIR/$target_name"
+	mv "$source_iso" "$OUT_DIR/$target_name"
+}
+
+rename_iso "FrosteArch-desktop-*.iso" "FrosteArch_Desktop.iso"
+rename_iso "FrosteArch-server-*.iso" "FrosteArch_Server.iso"
+
 ls -lah "$OUT_DIR"
