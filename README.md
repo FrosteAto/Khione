@@ -192,6 +192,6 @@ Obviously, this is built on top of Arch Linux. Thank you for every maintainer fo
 
 ## Archinstall
 
-My scripts and changes are stapled onto & around Archinstall. Without their incredible work this wouldn't be possible. Love you!
+My scripts and changes are stapled onto & around Archinstall. Without their incredible work this wouldn't be possible. Thanks!
 
 `https://archinstall.archlinux.page/`
