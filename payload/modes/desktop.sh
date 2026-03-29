@@ -32,15 +32,5 @@ DOTFILES_SUBDIR="desktop-install/arch-dotfiles"
 KNSV_REL="desktop-install/desktopSetup.knsv"
 KNSV_NAME="desktopSetup"
 
-COLOR_SCHEME="CatppuccinMocha"
-
-ICON_ARCHIVE_REL="YAMIS.tar.gz"
-
-# Optional cursor for desktop
-CURSOR_ARCHIVE_REL="desktop-install/Ninomae-Ina-nis.tar.gz"
-CURSOR_ARCHIVE_TYPE="gz"
-CURSOR_THEME_NAME="Ninomae Ina'nis"
-CURSOR_SIZE="24"
-
 FIRST_BOOT_DIALOG_TITLE="Welcome to FrosteArch Desktop"
 FIRST_BOOT_DIALOG_MARKDOWN_REL="shared/first-boot-desktop.md"

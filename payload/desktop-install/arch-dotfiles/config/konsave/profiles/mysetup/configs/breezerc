@@ -1,0 +1,7 @@
+[Common]
+OutlineIntensity=OutlineMedium
+ShadowColor=44,35,51
+ShadowSize=ShadowNone
+
+[Windeco]
+DrawBorderOnMaximizedWindows=true

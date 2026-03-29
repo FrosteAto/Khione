@@ -13,20 +13,12 @@ init_paths() {
   local repo_root="$1"
   local arch_user="$2"
 
-  ICON_ARCHIVE="$repo_root/$ICON_ARCHIVE_REL"
   DOTFILES_DIR="$repo_root/$DOTFILES_SUBDIR"
   KNSV_FILE="$repo_root/$KNSV_REL"
-
-  if [ -n "${CURSOR_ARCHIVE_REL:-}" ]; then
-    CURSOR_ARCHIVE="$repo_root/$CURSOR_ARCHIVE_REL"
-  else
-    CURSOR_ARCHIVE=""
-  fi
 
   USER_HOME="/home/$arch_user"
   USER_CONFIG="$USER_HOME/.config"
   USER_LOCAL="$USER_HOME/.local"
-  USER_ICONS="$USER_LOCAL/share/icons"
 }
 
 system_update() {
