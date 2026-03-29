@@ -1,0 +1,154 @@
+18:18:09.260: Platform: Wayland
+18:18:09.260: CPU Name: AMD Ryzen 7 9700X 8-Core Processor
+18:18:09.260: CPU Speed: 5358.719MHz
+18:18:09.261: Physical Cores: 8, Logical Cores: 16
+18:18:09.261: Physical Memory: 61935MB Total, 42431MB Free
+18:18:09.261: Kernel Version: Linux 6.18.7-arch1-1
+18:18:09.261: Distribution: "Arch Linux" Unknown
+18:18:09.261: Desktop Environment: KDE (KDE)
+18:18:09.261: Session Type: wayland
+18:18:09.261: Current Date/Time: 2026-02-01, 18:18:09
+18:18:09.261: Browser Hardware Acceleration: true
+18:18:09.261: Qt Version: 6.10.2 (runtime), 6.10.1 (compiled)
+18:18:09.261: Portable mode: false
+18:18:09.287: OBS 32.0.4 (linux)
+18:18:09.287: ---------------------------------
+18:18:09.288: ---------------------------------
+18:18:09.288: audio settings reset:
+18:18:09.288: 	samples per sec: 48000
+18:18:09.288: 	speakers:        2
+18:18:09.288: 	max buffering:   960 milliseconds
+18:18:09.288: 	buffering type:  dynamically increasing
+18:18:09.289: ---------------------------------
+18:18:09.289: Initializing OpenGL...
+18:18:09.289: Using EGL/Wayland
+18:18:09.293: Initialized EGL 1.5
+18:18:09.299: Loading up OpenGL on adapter AMD AMD Radeon RX 9070 XT (radeonsi, gfx1201, LLVM 21.1.6, DRM 3.64, 6.18.7-arch1-1)
+18:18:09.299: OpenGL loaded successfully, version 4.6 (Core Profile) Mesa 25.3.4-arch1.1, shading language 4.60
+18:18:09.315: ---------------------------------
+18:18:09.315: video settings reset:
+18:18:09.315: 	base resolution:   1920x1080
+18:18:09.315: 	output resolution: 1920x1080
+18:18:09.315: 	downscale filter:  Bicubic
+18:18:09.315: 	fps:               30/1
+18:18:09.315: 	format:            NV12
+18:18:09.315: 	YUV mode:          Rec. 709/Partial
+18:18:09.315: NV12 texture support enabled
+18:18:09.315: P010 texture support not available
+18:18:09.316: Audio monitoring device:
+18:18:09.316: 	name: Default
+18:18:09.316: 	id: default
+18:18:09.320: ---------------------------------
+18:18:09.321: Failed to load 'en-US' text for module: 'decklink-captions.so'
+18:18:09.321: Failed to load 'en-US' text for module: 'decklink-output-ui.so'
+18:18:09.322: A DeckLink iterator could not be created.  The DeckLink drivers may not be installed
+18:18:09.322: Failed to initialize module 'decklink.so'
+18:18:09.377: [pipewire] Available capture sources:
+18:18:09.377: [pipewire]     - Monitor source
+18:18:09.377: [pipewire]     - Window source
+18:18:09.379: v4l2loopback not installed, virtual camera not registered
+18:18:09.388: VAAPI: API version 1.22
+18:18:09.388: FFmpeg VAAPI H264 encoding supported
+18:18:09.391: FFmpeg VAAPI AV1 encoding supported
+18:18:09.393: FFmpeg VAAPI HEVC encoding supported
+18:18:09.394: os_dlopen(libnvidia-encode.so.1->libnvidia-encode.so.1): libnvidia-encode.so.1: cannot open shared object file: No such file or directory
+18:18:09.394: 
+18:18:09.394: NVENC not supported
+18:18:09.394: Failed to initialize module 'obs-nvenc.so'
+18:18:09.411: [obs-websocket] [obs_module_load] you can haz websockets (Version: 5.6.3 | RPC Version: 1)
+18:18:09.411: [obs-websocket] [obs_module_load] Qt version (compile-time): 6.10.1 | Qt version (run-time): 6.10.2
+18:18:09.411: [obs-websocket] [obs_module_load] Linked ASIO Version: 103600
+18:18:09.415: [obs-websocket] [obs_module_load] Module loaded.
+18:18:09.416: ---------------------------------
+18:18:09.416:   Loaded Modules:
+18:18:09.416:     text-freetype2.so
+18:18:09.416:     rtmp-services.so
+18:18:09.416:     obs-x264.so
+18:18:09.416:     obs-websocket.so
+18:18:09.416:     obs-webrtc.so
+18:18:09.416:     obs-vst.so
+18:18:09.416:     obs-transitions.so
+18:18:09.416:     obs-qsv11.so
+18:18:09.416:     obs-outputs.so
+18:18:09.416:     obs-libfdk.so
+18:18:09.416:     obs-filters.so
+18:18:09.416:     obs-ffmpeg.so
+18:18:09.416:     linux-v4l2.so
+18:18:09.416:     linux-pulseaudio.so
+18:18:09.416:     linux-pipewire.so
+18:18:09.416:     linux-jack.so
+18:18:09.416:     linux-capture.so
+18:18:09.416:     linux-alsa.so
+18:18:09.416:     image-source.so
+18:18:09.416:     frontend-tools.so
+18:18:09.416:     decklink-output-ui.so
+18:18:09.416:     decklink-captions.so
+18:18:09.416: ---------------------------------
+18:18:09.416: ---------------------------------
+18:18:09.416: Available Encoders:
+18:18:09.416:   Video Encoders:
+18:18:09.416: 	- ffmpeg_svt_av1 (SVT-AV1)
+18:18:09.416: 	- ffmpeg_aom_av1 (AOM AV1)
+18:18:09.416: 	- ffmpeg_vaapi_tex (FFmpeg VAAPI H.264)
+18:18:09.416: 	- av1_ffmpeg_vaapi_tex (FFmpeg VAAPI AV1)
+18:18:09.416: 	- hevc_ffmpeg_vaapi_tex (FFmpeg VAAPI HEVC)
+18:18:09.416: 	- obs_x264 (x264)
+18:18:09.416:   Audio Encoders:
+18:18:09.416: 	- ffmpeg_aac (FFmpeg AAC)
+18:18:09.416: 	- ffmpeg_opus (FFmpeg Opus)
+18:18:09.416: 	- ffmpeg_pcm_s16le (FFmpeg PCM (16-bit))
+18:18:09.416: 	- ffmpeg_pcm_s24le (FFmpeg PCM (24-bit))
+18:18:09.417: 	- ffmpeg_pcm_f32le (FFmpeg PCM (32-bit float))
+18:18:09.417: 	- ffmpeg_alac (FFmpeg ALAC (24-bit))
+18:18:09.417: 	- ffmpeg_flac (FFmpeg FLAC (16-bit))
+18:18:09.417: 	- libfdk_aac (libfdk AAC)
+18:18:09.417: ==== Startup complete ===============================================
+18:18:09.459: Failed to register with host portal QDBusError("org.freedesktop.portal.Error.Failed", "Could not register app ID: Connection already associated with an application ID")
+18:18:09.459: All scene data cleared
+18:18:09.459: ------------------------------------------------
+18:18:09.463: Device for 'Audio Output Capture' source Desktop Audio is also used for audio monitoring.
+18:18:09.463: Deduplication logic is being applied to all monitored sources.
+18:18:09.463: pulse-input: Server name: 'PulseAudio (on PipeWire 1.4.10) 15.0.0'
+18:18:09.463: pulse-input: Audio format: float32le, 48000 Hz, 2 channels
+18:18:09.463: pulse-input: Started recording from 'alsa_output.usb-MOTU_M4_M4MA05CEZ2-00.HiFi__Line1__sink.monitor' (default)
+18:18:09.463: [Loaded global audio device]: 'Desktop Audio'
+18:18:09.463: pulse-input: Server name: 'PulseAudio (on PipeWire 1.4.10) 15.0.0'
+18:18:09.463: pulse-input: Audio format: float32le, 48000 Hz, 1 channels
+18:18:09.463: pulse-input: Started recording from 'alsa_input.usb-MOTU_M4_M4MA05CEZ2-00.HiFi__Mic1__source'
+18:18:09.463: [Loaded global audio device]: 'Mic/Aux'
+18:18:09.465: Switched to scene 'Scene'
+18:18:09.465: ------------------------------------------------
+18:18:09.465: Loaded scenes:
+18:18:09.465: - scene 'Scene':
+18:18:09.465:     - source: 'Video Capture Device (PipeWire) (BETA)' (pipewire-camera-source)
+18:18:09.465: ------------------------------------------------
+18:18:09.481: [camera-portal] Successfully accessed cameras
+18:18:09.485: Device for 'Audio Output Capture' source Desktop Audio is also used for audio monitoring.
+18:18:09.485: Deduplication logic is being applied to all monitored sources.
+18:18:09.498: [pipewire] Server version: 1.4.10
+18:18:09.498: [pipewire] Library version: 1.4.10
+18:18:09.498: [pipewire] Header version: 1.4.9
+18:18:09.498: [pipewire] Created registry 0x55cbc73f1800
+18:18:09.498: [camera-portal] Found device v4l2_input.pci-0000_0f_00.4-usb-0_1.2_1.0
+18:18:09.498: [camera-portal] streaming camera 'v4l2_input.pci-0000_0f_00.4-usb-0_1.2_1.0'
+18:18:09.498: [pipewire] Created stream 0x7f3960002e50
+18:18:09.498: [pipewire] Stream 0x7f3960002e50 state: "connecting" (error: none)
+18:18:09.498: [pipewire] Playing stream 0x7f3960002e50
+18:18:09.499: [pipewire] Stream 0x7f3960002e50 state: "paused" (error: none)
+18:18:09.564: [pipewire] Negotiated format:
+18:18:09.564: [pipewire]     Format: 4 (Spa:Enum:VideoFormat:YUY2)
+18:18:09.564: [pipewire]     Size: 640x480
+18:18:09.564: [pipewire]     Framerate: 30/1
+18:18:09.565: [pipewire] Stream 0x7f3960002e50 state: "streaming" (error: none)
+18:18:10.013: adding 42 milliseconds of audio buffering, total audio buffering is now 42 milliseconds (source: Desktop Audio)
+18:18:10.013: 
+18:20:23.684: ==== Shutting down ==================================================
+18:20:23.686: pulse-input: Stopped recording from 'alsa_output.usb-MOTU_M4_M4MA05CEZ2-00.HiFi__Line1__sink.monitor'
+18:20:23.686: pulse-input: Got 5368 packets with 6441600 frames
+18:20:23.686: Deduplication logic stopped.
+18:20:23.686: pulse-input: Stopped recording from 'alsa_input.usb-MOTU_M4_M4MA05CEZ2-00.HiFi__Mic1__source'
+18:20:23.686: pulse-input: Got 5368 packets with 6441600 frames
+18:20:23.686: [pipewire] Stream 0x7f3960002e50 state: "paused" (error: none)
+18:20:23.686: [pipewire] Stream 0x7f3960002e50 state: "unconnected" (error: none)
+18:20:23.734: All scene data cleared
+18:20:23.734: ------------------------------------------------

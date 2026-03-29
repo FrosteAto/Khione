@@ -1,6 +1,6 @@
 {
     "DesktopAudioDevice1": {
-        "prev_ver": 536870914,
+        "prev_ver": 536870916,
         "name": "Desktop Audio",
         "uuid": "8fa24b4d-e157-489e-a721-98fb8e81fc8c",
         "id": "pulse_output_capture",
@@ -31,7 +31,7 @@
         "private_settings": {}
     },
     "AuxAudioDevice1": {
-        "prev_ver": 536870914,
+        "prev_ver": 536870916,
         "name": "Mic/Aux",
         "uuid": "2f647430-7db5-4a57-85fd-3a6e0f87d841",
         "id": "pulse_input_capture",
@@ -71,19 +71,19 @@
     "name": "Untitled",
     "sources": [
         {
-            "prev_ver": 536870914,
+            "prev_ver": 536870916,
             "name": "Scene",
             "uuid": "80c0ac80-0174-4018-8dea-ac8537a08521",
             "id": "scene",
             "versioned_id": "scene",
             "settings": {
-                "id_counter": 3,
+                "id_counter": 4,
                 "custom_size": false,
                 "items": [
                     {
                         "name": "Video Capture Device (PipeWire) (BETA)",
                         "source_uuid": "f5ce9acf-3c96-4cb6-aa14-ef38c938d097",
-                        "visible": true,
+                        "visible": false,
                         "locked": false,
                         "rot": 0.0,
                         "scale_ref": {
@@ -134,6 +134,61 @@
                             "duration": 0
                         },
                         "private_settings": {}
+                    },
+                    {
+                        "name": "Screen Capture (PipeWire)",
+                        "source_uuid": "bd4079b1-2e90-490b-97a1-ad79a6e75514",
+                        "visible": true,
+                        "locked": false,
+                        "rot": 0.0,
+                        "scale_ref": {
+                            "x": 1920.0,
+                            "y": 1080.0
+                        },
+                        "align": 5,
+                        "bounds_type": 0,
+                        "bounds_align": 0,
+                        "bounds_crop": false,
+                        "crop_left": 0,
+                        "crop_top": 0,
+                        "crop_right": 0,
+                        "crop_bottom": 0,
+                        "id": 4,
+                        "group_item_backup": false,
+                        "pos": {
+                            "x": -431.0,
+                            "y": 0.0
+                        },
+                        "pos_rel": {
+                            "x": -2.575925827026367,
+                            "y": -1.0
+                        },
+                        "scale": {
+                            "x": 0.7029069662094116,
+                            "y": 0.7027778029441833
+                        },
+                        "scale_rel": {
+                            "x": 0.7029069662094116,
+                            "y": 0.7027778029441833
+                        },
+                        "bounds": {
+                            "x": 0.0,
+                            "y": 0.0
+                        },
+                        "bounds_rel": {
+                            "x": 0.0,
+                            "y": 0.0
+                        },
+                        "scale_filter": "disable",
+                        "blend_method": "default",
+                        "blend_type": "normal",
+                        "show_transition": {
+                            "duration": 0
+                        },
+                        "hide_transition": {
+                            "duration": 0
+                        },
+                        "private_settings": {}
                     }
                 ]
             },
@@ -151,7 +206,9 @@
             "hotkeys": {
                 "OBSBasic.SelectScene": [],
                 "libobs.show_scene_item.3": [],
-                "libobs.hide_scene_item.3": []
+                "libobs.hide_scene_item.3": [],
+                "libobs.show_scene_item.4": [],
+                "libobs.hide_scene_item.4": []
             },
             "deinterlace_mode": 0,
             "deinterlace_field_order": 0,
@@ -160,7 +217,7 @@
             "private_settings": {}
         },
         {
-            "prev_ver": 536870914,
+            "prev_ver": 536870916,
             "name": "Video Capture Device (PipeWire) (BETA)",
             "uuid": "f5ce9acf-3c96-4cb6-aa14-ef38c938d097",
             "id": "pipewire-camera-source",
@@ -169,6 +226,32 @@
                 "format": "{\"encoded\":false,\"video_format\":4,\"width\":640,\"height\":480}",
                 "framerate": "{\"framerate\":{\"numerator\":30.0,\"denominator\":1.0}}",
                 "device_id": "v4l2_input.pci-0000_0f_00.4-usb-0_1.2_1.0"
+            },
+            "mixers": 0,
+            "sync": 0,
+            "flags": 0,
+            "volume": 1.0,
+            "balance": 0.5,
+            "enabled": true,
+            "muted": false,
+            "push-to-mute": false,
+            "push-to-mute-delay": 0,
+            "push-to-talk": false,
+            "push-to-talk-delay": 0,
+            "hotkeys": {},
+            "deinterlace_mode": 0,
+            "deinterlace_field_order": 0,
+            "monitoring_type": 0,
+            "private_settings": {}
+        },
+        {
+            "prev_ver": 536870916,
+            "name": "Screen Capture (PipeWire)",
+            "uuid": "bd4079b1-2e90-490b-97a1-ad79a6e75514",
+            "id": "pipewire-screen-capture-source",
+            "versioned_id": "pipewire-screen-capture-source",
+            "settings": {
+                "RestoreToken": "f693f0f6-d137-40f1-9966-b18459498930"
             },
             "mixers": 0,
             "sync": 0,

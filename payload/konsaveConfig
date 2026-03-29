@@ -32,40 +32,59 @@
 # The best example for this is the "*.default-release" folder of firefox.
 # ${BEGINS_WITH="text"}: for folders with different names on different computers whose names start with the same thing.
 
+# IMPORTANT: Before running 'konsave -s <profile>' to update a profile, ensure
+# your live system has ColorScheme=<name> set in ~/.config/kdeglobals under
+# [General]. You can do this via System Settings > Colors & Themes > Colors,
+# or: kwriteconfig6 --file kdeglobals --group General --key ColorScheme <name>
+# This allows the installer to drop its separate set_color_scheme step entirely.
+
 save:
     configs:
         location: "$CONFIG_DIR"
         entries:
+            # GTK theming
             - gtk-2.0
             - gtk-3.0
             - gtk-4.0
-            - kate
+            - gtkrc
+            - gtkrc-2.0
             - Kvantum
-            - latte
-            - dolphinrc
-            - katerc
-            - konsolerc
-            - kcminputrc
-            - kdeglobals
-            - kglobalshortcutsrc
-            - klipperrc
-            - krunnerrc
-            - kscreenlockerrc
-            - ksmserverrc
+            # KDE window manager & compositor
             - kwinrc
             - kwinrulesrc
+            # KDE Plasma shell & panel layout
             - plasma-org.kde.plasma.desktop-appletsrc
             - plasmarc
             - plasmashellrc
-            - gtkrc
-            - gtkrc-2.0
-            - lattedockrc
+            # Appearance: colors, icons, cursor, fonts, splash
+            # kdeglobals carries: ColorScheme, Icons/Theme, CursorTheme,
+            # CursorSize, accent color, and system fonts.
+            # Make sure ColorScheme= is present before exporting (see note above).
+            - kdeglobals
+            # kcminputrc carries: cursor theme + size ([Mouse] section),
+            # and all libinput device-level pointer settings.
+            - kcminputrc
             - breezerc
             - oxygenrc
             - lightlyrc
             - ksplashrc
+            - kscreenlockerrc
+            # fontconfig stores per-user font rendering preferences (hinting, subpixel, etc.)
+            - fontconfig
+            # KDE app configs
+            - dolphinrc
+            - katerc
+            - konsolerc
+            - kate
+            - krunnerrc
+            - ksmserverrc
+            - kglobalshortcutsrc
+            - klipperrc
             - khotkeysrc
             - fastfetch
+            # Legacy / optional panel docks
+            - latte
+            - lattedockrc
 
     app_layouts:
         location: "$HOME/.local/share/kxmlgui5"
@@ -91,20 +110,33 @@ export:
     share_folder:
         location: "$SHARE_DIR"
         entries:
+            # Plasma plasmoids, look-and-feel packages, layout templates
             - plasma
+            # KWin scripts and effect configs
             - kwin
+            # Konsole color schemes and profiles
             - konsole
+            # User-installed fonts
             - fonts
+            # KDE color scheme .colors files (e.g. CatppuccinMocha.colors)
             - color-schemes
+            # Window decoration themes (Aurorae)
             - aurorae
+            # Icon packs (YAMIS, etc.) and cursor themes installed to share/icons
             - icons
+            # Wallpapers
             - wallpapers
+            # GTK themes installed to ~/.local/share/themes
+            - themes
 
     home_folder:
         location: "$HOME/"
         entries:
+            # User fonts in legacy location
             - .fonts
+            # GTK themes in legacy location
             - .themes
+            # Cursor themes installed to ~/.icons (e.g. Ninomae-Ina'nis)
             - .icons
     
         
