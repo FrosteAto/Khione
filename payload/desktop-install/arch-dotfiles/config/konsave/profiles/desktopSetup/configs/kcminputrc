@@ -1,0 +1,14 @@
+[Libinput][1133][50509][Logitech USB Receiver]
+PointerAccelerationProfile=1
+
+[Libinput][12851][4114][Ducky Ducky Origin]
+PointerAccelerationProfile=1
+
+[Libinput][1386][884][Wacom Intuos S Pen]
+OutputArea=0.25549548479087447,0,0.7445045152091255,1
+OutputName=DP-3
+OutputUuid=eae46d10-c9f5-4d44-9017-f926cb2f0c0b
+
+[Mouse]
+cursorSize=42
+cursorTheme=Ninomae-Ina'nis

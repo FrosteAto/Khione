@@ -163,22 +163,9 @@ configure_greetd
 configure_pam_kwallet
 set_wallet_enabled "$ARCH_USER"
 
-section "Applying icons and cursor theme"
-install_icon_theme "$ARCH_USER" "$ICON_ARCHIVE"
-
-if [[ -n "${CURSOR_ARCHIVE:-}" ]]; then
-  install_cursor_theme "$ARCH_USER" "$CURSOR_ARCHIVE" "${CURSOR_ARCHIVE_TYPE:-xz}"
-fi
-
 section "Applying dotfiles and desktop configuration"
 apply_dotfiles "$ARCH_USER" "$DOTFILES_DIR"
 apply_konsave "$ARCH_USER" "$KNSV_FILE" "$KNSV_NAME"
-set_color_scheme "$ARCH_USER" "$COLOR_SCHEME"
-set_icon_theme "$ARCH_USER" "YAMIS"
-
-if [[ -n "${CURSOR_ARCHIVE:-}" ]]; then
-  set_cursor_theme "$ARCH_USER" "${CURSOR_THEME_NAME:-Miku Cursor}" "${CURSOR_SIZE:-24}"
-fi
 
 section "Installing Kara pager"
 install_kara_pager_from_source "$ARCH_USER" "$KARA_GIT_URL" "$KARA_GIT_REF"

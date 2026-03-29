@@ -32,14 +32,5 @@ DOTFILES_SUBDIR="server-install/arch-dotfiles"
 KNSV_REL="server-install/serverSetup.knsv"
 KNSV_NAME="serverSetup"
 
-COLOR_SCHEME="Miku"
-
-ICON_ARCHIVE_REL="YAMIS.tar.gz"
-
-CURSOR_ARCHIVE_REL="server-install/miku-cursor.tar.xz"
-CURSOR_ARCHIVE_TYPE="xz"
-CURSOR_THEME_NAME="Miku Cursor"
-CURSOR_SIZE="24"
-
 FIRST_BOOT_DIALOG_TITLE="Welcome to FrosteArch Server"
 FIRST_BOOT_DIALOG_MARKDOWN_REL="shared/first-boot-server.md"

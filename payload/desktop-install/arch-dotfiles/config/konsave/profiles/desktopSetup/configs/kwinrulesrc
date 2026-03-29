@@ -1,0 +1,31 @@
+[General]
+count=3
+rules=b6348317-be26-44d9-81ee-8ac7887070d3,b95e3424-5d9f-4044-ab11-5c739b336a45,f7d1ea3c-28da-4953-8904-94d1dab2c395
+
+[b6348317-be26-44d9-81ee-8ac7887070d3]
+Description=Settings for Code
+opacityactive=90
+opacityactiverule=2
+opacityinactive=90
+opacityinactiverule=2
+wmclass=code code
+wmclasscomplete=true
+wmclassmatch=1
+
+[b95e3424-5d9f-4044-ab11-5c739b336a45]
+Description=New window settings
+Enabled=false
+opacityactive=85
+opacityactiverule=2
+opacityinactive=85
+opacityinactiverule=2
+
+[f7d1ea3c-28da-4953-8904-94d1dab2c395]
+Description=Settings for dolphin org.kde.dolphin
+opacityactive=90
+opacityactiverule=2
+opacityinactive=90
+opacityinactiverule=2
+wmclass=dolphin org.kde.dolphin
+wmclasscomplete=true
+wmclassmatch=1
