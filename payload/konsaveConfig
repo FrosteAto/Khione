@@ -32,11 +32,9 @@
 # The best example for this is the "*.default-release" folder of firefox.
 # ${BEGINS_WITH="text"}: for folders with different names on different computers whose names start with the same thing.
 
-# IMPORTANT: Before running 'konsave -s <profile>' to update a profile, ensure
-# your live system has ColorScheme=<name> set in ~/.config/kdeglobals under
-# [General]. You can do this via System Settings > Colors & Themes > Colors,
-# or: kwriteconfig6 --file kdeglobals --group General --key ColorScheme <name>
-# This allows the installer to drop its separate set_color_scheme step entirely.
+# NOTE: Color scheme activation is handled by the installer via set_color_scheme()
+# after konsave is applied. Konsave's role here is to export the scheme assets
+# (for example color-schemes/) and baseline KDE config files.
 
 save:
     configs:
