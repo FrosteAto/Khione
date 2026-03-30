@@ -129,11 +129,11 @@ def extract_code_blocks(source, block_bg_css, border_css):
         token = f"__FROSTEARCH_CODE_BLOCK_{len(blocks)}__"
         blocks[token] = (
             '<table role="presentation" cellspacing="0" cellpadding="0" width="100%" '
-            'style="margin: 0.5em 0 1.1em 0; border-collapse: collapse;">'
+            'style="margin: 0.5em 0 1.1em 0; border-collapse: collapse; table-layout: fixed;">'
             '<tr><td style="padding: 0.65em 0.85em; border-radius: 6px; '
-            f'background-color: {block_bg_css}; border: 1px solid {border_css};">'
+            f'background-color: {block_bg_css}; border: 1px solid {border_css}; overflow-wrap: anywhere; word-break: break-word;">'
             f'<pre style="margin: 0; white-space: pre-wrap;"><code{code_attrs} '
-            'style="font-family: monospace; font-size: 0.95em;">'
+            'style="font-family: monospace; font-size: 0.95em; white-space: pre-wrap; overflow-wrap: anywhere; word-break: break-word;">'
             f"{code_content}</code></pre></td></tr></table>"
         )
         return token
@@ -143,8 +143,8 @@ def extract_code_blocks(source, block_bg_css, border_css):
 
 def build_document(body):
     return (
-        '<html><body style="line-height: 1.5; margin: 0;">'
-        '<div style="margin: 8px 10px 8px 10px;">'
+        '<html><body style="line-height: 1.5; margin: 0; overflow-wrap: anywhere; word-break: break-word;">'
+        '<div style="margin: 8px auto; padding: 0 10px; max-width: 92ch;">'
         + body
         + "</div></body></html>"
     )
@@ -172,7 +172,7 @@ def main():
     body = style_open_tag(
         body,
         "code",
-        "font-family: monospace; font-size: 0.95em; padding: 0.08em 0.30em; border-radius: 4px; "
+        "font-family: monospace; font-size: 0.95em; padding: 0.08em 0.30em; border-radius: 4px; overflow-wrap: anywhere; word-break: break-word; "
         + f"background-color: {inline_bg_css};",
     )
     for token, html_block in code_blocks.items():
