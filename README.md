@@ -200,3 +200,8 @@ Obviously, this is built on top of Arch Linux. Thank you for every maintainer fo
 My scripts and changes are stapled onto & around Archinstall. Without their incredible work this wouldn't be possible. Thanks!
 
 `https://archinstall.archlinux.page/`
+
+## Wallpapers
+
+- Ina: https://www.pixiv.net/en/artworks/103938068
+- Miku: https://www.pixiv.net/en/artworks/73597952
