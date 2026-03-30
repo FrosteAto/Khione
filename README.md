@@ -45,9 +45,8 @@ FrosteArch Server is a lean profile tuned for long-running services, including P
 
 <h2 align="center">Roadmap</h2>
 
-- Include konsave config file in dotfile backups
 - Update desktop images
-- Update desktop konsave / dotfiles
+- Update server konsave / dotfiles
 - Add automated FL Studio installation support through Wine.
 - Add automated VOCALOID 6 installation support and improve stability.
 - Nvidia support
