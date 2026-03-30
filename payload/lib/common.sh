@@ -277,7 +277,11 @@ apply_dotfiles() {
 set_color_scheme() {
   local arch_user="$1"
   local scheme="$2"
+  # kwriteconfig6 is pure file I/O — safe inside a chroot (no Qt platform needed).
+  # Set the scheme name, then delete any stale ColorSchemeHash so KDE recomputes
+  # it on first login rather than rolling back due to a hash mismatch.
   sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group General --key ColorScheme "$scheme"
+  sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group General --key ColorSchemeHash --delete
 }
 
 apply_konsave() {
@@ -454,17 +458,41 @@ if [ ! -f "$MESSAGE_FILE" ]; then
   printf '%s\n' "Welcome to FrosteArch." >"$MESSAGE_FILE"
 fi
 
+calc_dialog_size() {
+  local size sw sh
+  DIALOG_WIDTH=960
+  DIALOG_HEIGHT=680
+
+  if command -v xrandr >/dev/null 2>&1; then
+    size="$(xrandr 2>/dev/null | awk '/\*/{print $1; exit}')"
+    if [[ "$size" =~ ^([0-9]+)x([0-9]+)$ ]]; then
+      sw="${BASH_REMATCH[1]}"
+      sh="${BASH_REMATCH[2]}"
+
+      DIALOG_WIDTH=$((sw * 72 / 100))
+      DIALOG_HEIGHT=$((sh * 76 / 100))
+
+      (( DIALOG_WIDTH < 760 )) && DIALOG_WIDTH=760
+      (( DIALOG_WIDTH > 1320 )) && DIALOG_WIDTH=1320
+      (( DIALOG_HEIGHT < 520 )) && DIALOG_HEIGHT=520
+      (( DIALOG_HEIGHT > 920 )) && DIALOG_HEIGHT=920
+    fi
+  fi
+}
+
+calc_dialog_size
+
 if command -v kdialog >/dev/null 2>&1; then
   PYTHON_BIN="$(command -v python3 || command -v python || true)"
 
   if [ -n "$PYTHON_BIN" ] && [ -f "$RENDERER_SCRIPT" ] && "$PYTHON_BIN" "$RENDERER_SCRIPT" "$MESSAGE_FILE" "$HTML_FILE"; then
     HTML_CONTENT="$(cat "$HTML_FILE")"
-    kdialog --title "$TITLE" --msgbox "$HTML_CONTENT" || kdialog --title "$TITLE" --textbox "$MESSAGE_FILE" 700 520 || true
+    kdialog --title "$TITLE" --msgbox "$HTML_CONTENT" || kdialog --title "$TITLE" --textbox "$MESSAGE_FILE" "$DIALOG_WIDTH" "$DIALOG_HEIGHT" || true
   else
-    kdialog --title "$TITLE" --textbox "$MESSAGE_FILE" 700 520 || true
+    kdialog --title "$TITLE" --textbox "$MESSAGE_FILE" "$DIALOG_WIDTH" "$DIALOG_HEIGHT" || true
   fi
 elif command -v zenity >/dev/null 2>&1; then
-  zenity --text-info --title="$TITLE" --filename="$MESSAGE_FILE" --width=700 --height=520 || true
+  zenity --text-info --title="$TITLE" --filename="$MESSAGE_FILE" --width="$DIALOG_WIDTH" --height="$DIALOG_HEIGHT" || true
 elif command -v notify-send >/dev/null 2>&1; then
   notify-send "$TITLE" "$(head -n 6 "$MESSAGE_FILE" | tr '\n' ' ')" || true
 fi
@@ -482,6 +510,73 @@ Name=FrosteArch First Boot Message
 Exec=$user_script
 X-KDE-autostart-after=plasma-desktop
 OnlyShowIn=KDE;
+EOF
+}
+
+install_theme_switcher_required() {
+  local arch_user="$1"
+  local profiles_source_dir="$2"
+  local metadata_source_file="$3"
+  local switcher_source="$4"
+  local wallpapers_source_dir="$5"
+
+  if [ ! -d "$profiles_source_dir" ]; then
+    echo "Missing required theme profile directory: $profiles_source_dir"
+    exit 1
+  fi
+
+  if ! find "$profiles_source_dir" -maxdepth 1 -type f -name '*.knsv' | grep -q .; then
+    echo "No .knsv profiles found in required directory: $profiles_source_dir"
+    exit 1
+  fi
+
+  if [ ! -f "$switcher_source" ]; then
+    echo "Missing required theme switcher helper: $switcher_source"
+    exit 1
+  fi
+
+  if [ ! -f "$metadata_source_file" ]; then
+    echo "Missing required theme metadata file: $metadata_source_file"
+    exit 1
+  fi
+
+  if [ ! -d "$wallpapers_source_dir" ]; then
+    echo "Missing required wallpaper source directory: $wallpapers_source_dir"
+    exit 1
+  fi
+
+  echo "Installing theme switcher..."
+
+  local user_home="/home/$arch_user"
+  local user_bin="$user_home/.local/bin"
+  local user_data_dir="$user_home/.local/share/frostearch"
+  local user_profiles_dir="$user_data_dir/konsave-profiles"
+  local user_metadata_file="$user_data_dir/theme-profiles.json"
+  local user_wallpapers_dir="$user_data_dir/wallpapers"
+  local switcher_script="$user_bin/frostearch-theme-switcher"
+  local app_dir="$user_home/.local/share/applications"
+  local desktop_file="$app_dir/frostearch-theme-switcher.desktop"
+  sudo -u "$arch_user" mkdir -p "$user_bin" "$user_profiles_dir" "$user_wallpapers_dir" "$app_dir"
+  sudo -u "$arch_user" cp "$switcher_source" "$switcher_script"
+  sudo -u "$arch_user" chmod +x "$switcher_script"
+
+  sudo -u "$arch_user" find "$user_profiles_dir" -maxdepth 1 -type f -name '*.knsv' -delete
+  sudo -u "$arch_user" cp "$profiles_source_dir"/*.knsv "$user_profiles_dir/"
+  sudo -u "$arch_user" cp "$metadata_source_file" "$user_metadata_file"
+
+  # Keep wallpaper assets in a stable location for the theme switcher.
+  sudo -u "$arch_user" find "$user_wallpapers_dir" -maxdepth 1 -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \) -delete
+  sudo -u "$arch_user" find "$wallpapers_source_dir" -maxdepth 1 -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \) -exec cp -f {} "$user_wallpapers_dir/" \;
+
+  sudo -u "$arch_user" tee "$desktop_file" >/dev/null <<EOF
+[Desktop Entry]
+Type=Application
+Name=FrosteArch Theme Switcher
+Comment=Apply a saved KDE/Konsave profile
+Exec=$switcher_script
+Icon=preferences-desktop-theme
+Terminal=false
+Categories=Settings;DesktopSettings;
 EOF
 }
 

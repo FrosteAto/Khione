@@ -1,0 +1,22 @@
+{
+  "profiles": [
+    {
+      "id": "desktop",
+      "name": "FrosteArch Desktop",
+      "description": "Catppuccin desktop profile",
+      "knsv": "desktopSetup.knsv",
+      "profileName": "desktopSetup",
+      "colorScheme": "CatppuccinMocha",
+      "wallpaper": "Desktop1.png"
+    },
+    {
+      "id": "server",
+      "name": "FrosteArch Server",
+      "description": "Miku server profile",
+      "knsv": "serverSetup.knsv",
+      "profileName": "serverSetup",
+      "colorScheme": "Miku",
+      "wallpaper": "Server1.png"
+    }
+  ]
+}

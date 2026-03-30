@@ -51,6 +51,28 @@ if [[ ! -f "$RENDERER_SCRIPT" ]]; then
   exit 1
 fi
 
+calc_dialog_size() {
+  local screen size sw sh
+  DIALOG_WIDTH=960
+  DIALOG_HEIGHT=680
+
+  if command -v xrandr >/dev/null 2>&1; then
+    size="$(xrandr 2>/dev/null | awk '/\*/{print $1; exit}')"
+    if [[ "$size" =~ ^([0-9]+)x([0-9]+)$ ]]; then
+      sw="${BASH_REMATCH[1]}"
+      sh="${BASH_REMATCH[2]}"
+
+      DIALOG_WIDTH=$((sw * 72 / 100))
+      DIALOG_HEIGHT=$((sh * 76 / 100))
+
+      (( DIALOG_WIDTH < 760 )) && DIALOG_WIDTH=760
+      (( DIALOG_WIDTH > 1320 )) && DIALOG_WIDTH=1320
+      (( DIALOG_HEIGHT < 520 )) && DIALOG_HEIGHT=520
+      (( DIALOG_HEIGHT > 920 )) && DIALOG_HEIGHT=920
+    fi
+  fi
+}
+
 PYTHON_BIN="$(command -v python3 || command -v python || true)"
 if [[ -z "$PYTHON_BIN" ]]; then
   echo "Python is required for markdown rendering preview."
@@ -68,9 +90,11 @@ if ! command -v kdialog >/dev/null 2>&1; then
   exit 1
 fi
 
+calc_dialog_size
+
 if [[ -s "$HTML_FILE" ]]; then
   HTML_CONTENT="$(cat "$HTML_FILE")"
-  kdialog --title "$TITLE" --msgbox "$HTML_CONTENT" || kdialog --title "$TITLE" --textbox "$MESSAGE_FILE" 700 520 || true
+  kdialog --title "$TITLE" --msgbox "$HTML_CONTENT" || kdialog --title "$TITLE" --textbox "$MESSAGE_FILE" "$DIALOG_WIDTH" "$DIALOG_HEIGHT" || true
 else
-  kdialog --title "$TITLE" --textbox "$MESSAGE_FILE" 700 520 || true
+  kdialog --title "$TITLE" --textbox "$MESSAGE_FILE" "$DIALOG_WIDTH" "$DIALOG_HEIGHT" || true
 fi
