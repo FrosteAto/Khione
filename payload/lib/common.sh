@@ -14,11 +14,11 @@ init_paths() {
   local arch_user="$2"
 
   DOTFILES_DIR="$repo_root/$DOTFILES_SUBDIR"
-  KNSV_FILE="$repo_root/$KNSV_REL"
 
   USER_HOME="/home/$arch_user"
   USER_CONFIG="$USER_HOME/.config"
   USER_LOCAL="$USER_HOME/.local"
+  USER_ICONS="$USER_HOME/.icons"
 }
 
 system_update() {
@@ -162,12 +162,6 @@ configure_firewall() {
   fi
 }
 
-add_flathub() {
-  echo "Adding Flathub..."
-  sudo pacman -S --needed --noconfirm flatpak
-  sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-}
-
 configure_greetd() {
   echo "Configuring greetd..."
   sudo tee /etc/greetd/config.toml >/dev/null <<EOF
@@ -203,25 +197,6 @@ set_wallet_enabled() {
   sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group KDE --key WalletEnabled true
 }
 
-install_icon_theme() {
-  local arch_user="$1"
-  local archive="$2"
-
-  echo "Installing icon theme..."
-  if [ ! -f "$archive" ]; then
-    echo "Missing: $archive"
-    exit 1
-  fi
-  sudo -u "$arch_user" mkdir -p "$USER_ICONS"
-  sudo -u "$arch_user" tar -xzf "$archive" -C "$USER_ICONS"
-}
-
-set_icon_theme() {
-  local arch_user="$1"
-  local theme="$2"
-  sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group Icons --key Theme "$theme"
-}
-
 install_cursor_theme() {
   local arch_user="$1"
   local archive="$2"
@@ -244,14 +219,6 @@ install_cursor_theme() {
   esac
 }
 
-set_cursor_theme() {
-  local arch_user="$1"
-  local theme="$2"
-  local size="$3"
-  sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group Icons --key CursorTheme "$theme"
-  sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group Icons --key CursorSize "$size"
-}
-
 apply_dotfiles() {
   local arch_user="$1"
   local src="$2"
@@ -270,36 +237,14 @@ apply_dotfiles() {
   done
 
   if [ -d "$src/local" ]; then
-    sudo -u "$arch_user" cp -r "$src/local/"* "$USER_LOCAL/"
+    # Avoid failing when local/ exists but is empty.
+    shopt -s nullglob dotglob
+    local -a local_entries=("$src/local/"*)
+    shopt -u nullglob dotglob
+    if [ "${#local_entries[@]}" -gt 0 ]; then
+      sudo -u "$arch_user" cp -r "${local_entries[@]}" "$USER_LOCAL/"
+    fi
   fi
-}
-
-set_color_scheme() {
-  local arch_user="$1"
-  local scheme="$2"
-  # kwriteconfig6 is pure file I/O — safe inside a chroot (no Qt platform needed).
-  # Set the scheme name, then delete any stale ColorSchemeHash so KDE recomputes
-  # it on first login rather than rolling back due to a hash mismatch.
-  sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group General --key ColorScheme "$scheme"
-  sudo -u "$arch_user" kwriteconfig6 --file kdeglobals --group General --key ColorSchemeHash --delete
-}
-
-apply_konsave() {
-  local arch_user="$1"
-  local knsv_file="$2"
-  local knsv_name="$3"
-
-  echo "Applying Konsave..."
-  if [ ! -f "$knsv_file" ]; then
-    echo "Missing: $knsv_file"
-    exit 1
-  fi
-
-  sudo pacman -S --needed --noconfirm python-pipx
-  sudo -u "$arch_user" pipx install --force konsave
-  local konsave_bin="/home/$arch_user/.local/bin/konsave"
-  sudo -u "$arch_user" "$konsave_bin" -i "$knsv_file"
-  sudo -u "$arch_user" "$konsave_bin" -a "$knsv_name"
 }
 
 install_kara_pager_from_source() {
@@ -341,35 +286,16 @@ if command -v kbuildsycoca6 >/dev/null 2>&1; then
   kbuildsycoca6 || true
 fi
 "
-}
 
-install_wallpaper_autostart_required() {
-  local arch_user="$1"
-  local helper="$2"
-
-  if [ ! -f "$helper" ]; then
-    echo "Missing required wallpaper helper: $helper"
-    exit 1
+  # Back up the freshly compiled plasmoid so the theme switcher can restore it
+  # after konsave -a clobbers it with a stale QML-only snapshot from the .knsv.
+  local kara_backup_dir="/home/$arch_user/.local/share/frostearch/kara-plasmoid-backup"
+  if [ -d "$plasmoid_dir" ]; then
+    sudo -u "$arch_user" rm -rf "$kara_backup_dir"
+    sudo -u "$arch_user" mkdir -p "$(dirname "$kara_backup_dir")"
+    sudo -u "$arch_user" cp -a "$plasmoid_dir" "$kara_backup_dir"
+    echo "Kara plasmoid backed up to $kara_backup_dir"
   fi
-
-  echo "Installing wallpaper one-shot autostart..."
-
-  local user_script="/home/$arch_user/.local/bin/set-wallpaper-once.sh"
-  local autostart_dir="/home/$arch_user/.config/autostart"
-  local desktop_file="$autostart_dir/set-wallpaper-once.desktop"
-
-  sudo -u "$arch_user" mkdir -p "/home/$arch_user/.local/bin" "$autostart_dir"
-  sudo -u "$arch_user" cp "$helper" "$user_script"
-  sudo -u "$arch_user" chmod +x "$user_script"
-
-  sudo -u "$arch_user" tee "$desktop_file" >/dev/null <<EOF
-[Desktop Entry]
-Type=Application
-Name=Set Wallpaper Once
-Exec=$user_script
-X-KDE-autostart-after=plasma-desktop
-OnlyShowIn=KDE;
-EOF
 }
 
 disable_kde_welcome_popup() {
@@ -519,14 +445,11 @@ install_theme_switcher_required() {
   local metadata_source_file="$3"
   local switcher_source="$4"
   local wallpapers_source_dir="$5"
+  local metadata_helper_source="$6"
+  local entry_sep=$'\x1f'
 
   if [ ! -d "$profiles_source_dir" ]; then
     echo "Missing required theme profile directory: $profiles_source_dir"
-    exit 1
-  fi
-
-  if ! find "$profiles_source_dir" -maxdepth 1 -type f -name '*.knsv' | grep -q .; then
-    echo "No .knsv profiles found in required directory: $profiles_source_dir"
     exit 1
   fi
 
@@ -545,6 +468,41 @@ install_theme_switcher_required() {
     exit 1
   fi
 
+  if [ ! -f "$metadata_helper_source" ]; then
+    echo "Missing required theme metadata helper: $metadata_helper_source"
+    exit 1
+  fi
+
+  local python_bin
+  python_bin="$(command -v python3 || command -v python || true)"
+  if [ -z "$python_bin" ]; then
+    echo "python3 or python is required to validate theme metadata."
+    exit 1
+  fi
+
+  local -a metadata_rows=()
+  mapfile -t metadata_rows < <("$python_bin" "$metadata_helper_source" installer-rows "$metadata_source_file")
+
+  if [ "${#metadata_rows[@]}" -eq 0 ]; then
+    echo "No valid profiles found in theme metadata: $metadata_source_file"
+    exit 1
+  fi
+
+  local -a required_knsv_files=()
+  local -a required_wallpapers=()
+  local -a required_dotfiles=()
+  local row id knsv wallpaper dotfiles
+
+  for row in "${metadata_rows[@]}"; do
+    IFS="$entry_sep" read -r id knsv wallpaper dotfiles <<<"$row"
+    required_knsv_files+=("$knsv")
+    required_dotfiles+=("$dotfiles")
+
+    if [ -n "$wallpaper" ]; then
+      required_wallpapers+=("$wallpaper")
+    fi
+  done
+
   echo "Installing theme switcher..."
 
   local user_home="/home/$arch_user"
@@ -553,20 +511,107 @@ install_theme_switcher_required() {
   local user_profiles_dir="$user_data_dir/konsave-profiles"
   local user_metadata_file="$user_data_dir/theme-profiles.json"
   local user_wallpapers_dir="$user_data_dir/wallpapers"
+  local user_dotfiles_dir="$user_data_dir/theme-dotfiles"
   local switcher_script="$user_bin/frostearch-theme-switcher"
+  local metadata_helper_script="$user_bin/frostearch-theme-metadata"
   local app_dir="$user_home/.local/share/applications"
   local desktop_file="$app_dir/frostearch-theme-switcher.desktop"
-  sudo -u "$arch_user" mkdir -p "$user_bin" "$user_profiles_dir" "$user_wallpapers_dir" "$app_dir"
+  sudo -u "$arch_user" mkdir -p "$user_bin" "$user_profiles_dir" "$user_wallpapers_dir" "$user_dotfiles_dir" "$app_dir"
+
+  # konsave is the core dependency of the theme switcher — install it now via pipx
+  # so the switcher can call it at install time and at runtime.
+  echo "Installing konsave via pipx..."
+  sudo pacman -S --needed --noconfirm python-pipx
+  sudo -u "$arch_user" env HOME="$user_home" pipx install --force konsave
+
   sudo -u "$arch_user" cp "$switcher_source" "$switcher_script"
+  sudo -u "$arch_user" cp "$metadata_helper_source" "$metadata_helper_script"
   sudo -u "$arch_user" chmod +x "$switcher_script"
+  sudo -u "$arch_user" chmod +x "$metadata_helper_script"
 
   sudo -u "$arch_user" find "$user_profiles_dir" -maxdepth 1 -type f -name '*.knsv' -delete
-  sudo -u "$arch_user" cp "$profiles_source_dir"/*.knsv "$user_profiles_dir/"
+
+  local src_file
+  local -a matches=()
+  for knsv in "${required_knsv_files[@]}"; do
+    mapfile -t matches < <(find "$profiles_source_dir" -maxdepth 2 -type f -name "$knsv")
+    if [ "${#matches[@]}" -eq 0 ]; then
+      echo "Missing .knsv referenced by metadata: $knsv"
+      exit 1
+    fi
+    if [ "${#matches[@]}" -gt 1 ]; then
+      echo "Ambiguous .knsv filename (found multiple matches): $knsv"
+      printf ' - %s\n' "${matches[@]}"
+      exit 1
+    fi
+    src_file="${matches[0]}"
+    sudo -u "$arch_user" cp -f "$src_file" "$user_profiles_dir/"
+
+    # Install the cursor theme archive if one sits alongside this .knsv.
+    # konsave saves cursor settings by name (in kdeglobals/kcminputrc) but does
+    # not bundle the cursor files themselves — we must install them separately.
+    local knsv_dir
+    knsv_dir="$(dirname "$src_file")"
+    if [ -f "$knsv_dir/cursor.tar.gz" ]; then
+      echo "Installing cursor theme for profile $knsv..."
+      install_cursor_theme "$arch_user" "$knsv_dir/cursor.tar.gz" "gz"
+    elif [ -f "$knsv_dir/cursor.tar.xz" ]; then
+      echo "Installing cursor theme for profile $knsv..."
+      install_cursor_theme "$arch_user" "$knsv_dir/cursor.tar.xz" "xz"
+    fi
+  done
+
   sudo -u "$arch_user" cp "$metadata_source_file" "$user_metadata_file"
 
   # Keep wallpaper assets in a stable location for the theme switcher.
   sudo -u "$arch_user" find "$user_wallpapers_dir" -maxdepth 1 -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \) -delete
-  sudo -u "$arch_user" find "$wallpapers_source_dir" -maxdepth 1 -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \) -exec cp -f {} "$user_wallpapers_dir/" \;
+
+  for wallpaper in "${required_wallpapers[@]}"; do
+    mapfile -t matches < <(find "$wallpapers_source_dir" -maxdepth 2 -type f -name "$wallpaper")
+    if [ "${#matches[@]}" -eq 0 ]; then
+      echo "Missing wallpaper referenced by metadata: $wallpaper"
+      exit 1
+    fi
+    if [ "${#matches[@]}" -gt 1 ]; then
+      echo "Ambiguous wallpaper filename (found multiple matches): $wallpaper"
+      printf ' - %s\n' "${matches[@]}"
+      exit 1
+    fi
+    src_file="${matches[0]}"
+    sudo -u "$arch_user" cp -f "$src_file" "$user_wallpapers_dir/"
+  done
+
+  # Keep per-theme dotfiles in a stable location for theme switches.
+  sudo -u "$arch_user" find "$user_dotfiles_dir" -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} +
+
+  local -A copied_dotfiles=()
+  local dotfiles_key dotfiles_source dotfiles_dest
+  for dotfiles_key in "${required_dotfiles[@]}"; do
+    if [ -n "${copied_dotfiles[$dotfiles_key]:-}" ]; then
+      continue
+    fi
+    copied_dotfiles[$dotfiles_key]=1
+
+    dotfiles_source="$profiles_source_dir/$dotfiles_key/dotfiles"
+    if [ ! -d "$dotfiles_source" ]; then
+      echo "Missing dotfiles directory referenced by metadata: $dotfiles_source"
+      exit 1
+    fi
+
+    dotfiles_dest="$user_dotfiles_dir/$dotfiles_key"
+    sudo -u "$arch_user" mkdir -p "$dotfiles_dest"
+
+    if [ -d "$dotfiles_source/config" ]; then
+      sudo -u "$arch_user" cp -a "$dotfiles_source/config" "$dotfiles_dest/"
+    fi
+    if [ -d "$dotfiles_source/local" ]; then
+      sudo -u "$arch_user" cp -a "$dotfiles_source/local" "$dotfiles_dest/"
+    fi
+    if [ ! -d "$dotfiles_dest/config" ] && [ ! -d "$dotfiles_dest/local" ]; then
+      echo "Dotfiles directory has no config/ or local/ payload: $dotfiles_source"
+      exit 1
+    fi
+  done
 
   sudo -u "$arch_user" tee "$desktop_file" >/dev/null <<EOF
 [Desktop Entry]
@@ -577,6 +622,158 @@ Exec=$switcher_script
 Icon=preferences-desktop-theme
 Terminal=false
 Categories=Settings;DesktopSettings;
+EOF
+}
+
+apply_theme_via_switcher_required() {
+  local arch_user="$1"
+  local theme_id="$2"
+
+  local user_home="/home/$arch_user"
+  local switcher_script="$user_home/.local/bin/frostearch-theme-switcher"
+  local metadata_helper_script="$user_home/.local/bin/frostearch-theme-metadata"
+  local user_data_dir="$user_home/.local/share/frostearch"
+  local user_profiles_dir="$user_data_dir/konsave-profiles"
+  local user_metadata_file="$user_data_dir/theme-profiles.json"
+  local user_wallpapers_dir="$user_data_dir/wallpapers"
+  local user_dotfiles_dir="$user_data_dir/theme-dotfiles"
+
+  if [ ! -x "$switcher_script" ]; then
+    echo "Theme switcher script not found: $switcher_script"
+    exit 1
+  fi
+
+  if [ ! -f "$metadata_helper_script" ]; then
+    echo "Theme metadata helper script not found: $metadata_helper_script"
+    exit 1
+  fi
+
+  echo "Applying default theme via theme switcher logic..."
+
+  sudo -u "$arch_user" env \
+    HOME="$user_home" \
+    FROSTEARCH_KNSV_DIR="$user_profiles_dir" \
+    FROSTEARCH_THEME_CONFIG="$user_metadata_file" \
+    FROSTEARCH_WALLPAPER_DIR="$user_wallpapers_dir" \
+    FROSTEARCH_DOTFILES_DIR="$user_dotfiles_dir" \
+    FROSTEARCH_THEME_METADATA_HELPER="$metadata_helper_script" \
+    "$switcher_script" --apply-id "$theme_id" --no-reload
+
+  # Resolve the absolute wallpaper path for this theme so we can install a
+  # first-login autostart that applies it via Plasma's live scripting API.
+  local python_bin wallpaper_rel wallpaper_abs
+  python_bin="$(command -v python3 || command -v python || true)"
+  if [ -n "$python_bin" ] && [ -f "$user_metadata_file" ] && [ -f "$metadata_helper_script" ]; then
+    wallpaper_rel="$("$python_bin" "$metadata_helper_script" installer-rows "$user_metadata_file" \
+                      | awk -F$'\x1f' -v tid="$theme_id" '$1==tid{print $3}')"
+    if [ -n "$wallpaper_rel" ]; then
+      wallpaper_abs="$user_wallpapers_dir/$wallpaper_rel"
+      if [ -f "$wallpaper_abs" ]; then
+        install_wallpaper_autostart "$arch_user" "$wallpaper_abs"
+      fi
+    fi
+  fi
+}
+
+install_wallpaper_autostart() {
+  local arch_user="$1"
+  local wallpaper_abs="$2"
+
+  local user_home="/home/$arch_user"
+  local state_dir="$user_home/.config/frostearch"
+  local wallpaper_state="$state_dir/pending-wallpaper.txt"
+  local user_script="$user_home/.local/bin/frostearch-set-wallpaper-once.sh"
+  local autostart_dir="$user_home/.config/autostart"
+  local desktop_file="$autostart_dir/frostearch-set-wallpaper.desktop"
+
+  echo "Installing first-login wallpaper autostart..."
+
+  sudo -u "$arch_user" mkdir -p "$autostart_dir" "$state_dir" "$(dirname "$user_script")"
+
+  # Write the wallpaper path to a state file so the autostart script knows
+  # which image to apply.
+  printf '%s\n' "$wallpaper_abs" | sudo -u "$arch_user" tee "$wallpaper_state" >/dev/null
+
+  sudo -u "$arch_user" tee "$user_script" >/dev/null <<'SCRIPT'
+#!/bin/bash
+set -euo pipefail
+
+# First-login one-shot: apply wallpaper via Plasma's live scripting API.
+# Removes itself after a successful run.
+
+STATE_DIR="$HOME/.config/frostearch"
+WALLPAPER_STATE="$STATE_DIR/pending-wallpaper.txt"
+AUTOSTART_FILE="$HOME/.config/autostart/frostearch-set-wallpaper.desktop"
+SELF="$0"
+
+if [ ! -f "$WALLPAPER_STATE" ]; then
+  # Nothing to do — clean up and exit.
+  rm -f "$AUTOSTART_FILE" "$SELF"
+  exit 0
+fi
+
+WALLPAPER_PATH="$(cat "$WALLPAPER_STATE")"
+if [ ! -f "$WALLPAPER_PATH" ]; then
+  echo "FrosteArch wallpaper autostart: wallpaper file missing: $WALLPAPER_PATH" >&2
+  rm -f "$WALLPAPER_STATE" "$AUTOSTART_FILE" "$SELF"
+  exit 0
+fi
+
+# Locate qdbus (Plasma 6 ships qdbus6; some systems alias it as qdbus).
+QDBUS=""
+for candidate in qdbus6 qdbus; do
+  if command -v "$candidate" >/dev/null 2>&1; then
+    QDBUS="$candidate"
+    break
+  fi
+done
+if [ -z "$QDBUS" ]; then
+  echo "FrosteArch wallpaper autostart: qdbus/qdbus6 not found" >&2
+  exit 0
+fi
+
+WALLPAPER_URL="file://$WALLPAPER_PATH"
+
+# Use Plasma's JavaScript scripting API to set the wallpaper on every desktop.
+# desktops() returns one Desktop object per screen × activity, so this covers
+# all monitors and all activities.
+JS_SCRIPT="$(cat <<EOF
+var ds = desktops();
+for (var i = 0; i < ds.length; i++) {
+    var d = ds[i];
+    d.wallpaperPlugin = "org.kde.image";
+    d.currentConfigGroup = Array("Wallpaper", "org.kde.image", "General");
+    d.writeConfig("Image", "$WALLPAPER_URL");
+}
+EOF
+)"
+
+# Plasma may not be fully ready immediately on first login.  Retry a few times
+# with a short delay.
+MAX_RETRIES=10
+DELAY=3
+for attempt in $(seq 1 "$MAX_RETRIES"); do
+  if "$QDBUS" org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "$JS_SCRIPT" 2>/dev/null; then
+    echo "FrosteArch: wallpaper applied successfully."
+    rm -f "$WALLPAPER_STATE" "$AUTOSTART_FILE" "$SELF"
+    exit 0
+  fi
+  sleep "$DELAY"
+done
+
+echo "FrosteArch wallpaper autostart: all retries exhausted" >&2
+# Leave the autostart in place so it retries on next login.
+SCRIPT
+
+  sudo -u "$arch_user" chmod +x "$user_script"
+
+  sudo -u "$arch_user" tee "$desktop_file" >/dev/null <<EOF
+[Desktop Entry]
+Type=Application
+Name=FrosteArch Wallpaper Setup
+Exec=$user_script
+X-KDE-autostart-after=plasma-desktop
+OnlyShowIn=KDE;
 EOF
 }
 
