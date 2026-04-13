@@ -7,7 +7,8 @@
       "knsv": "desktopSetup.knsv",
       "profileName": "desktopSetup",
       "colorScheme": "CatppuccinMocha",
-      "wallpaper": "Desktop1.png"
+      "wallpaper": "desktop-wallpaper.png",
+      "dotfiles": "desktop"
     },
     {
       "id": "server",
@@ -16,7 +17,8 @@
       "knsv": "serverSetup.knsv",
       "profileName": "serverSetup",
       "colorScheme": "Miku",
-      "wallpaper": "Server1.png"
+      "wallpaper": "server-wallpaper.png",
+      "dotfiles": "server"
     }
   ]
 }

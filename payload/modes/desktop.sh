@@ -27,12 +27,7 @@ SERVICES_MASK=()
 
 FIREWALL_RULES=()
 
-DOTFILES_SUBDIR="desktop-install/arch-dotfiles"
-
-KNSV_REL="shared/konsave-profiles/desktopSetup.knsv"
-KNSV_NAME="desktopSetup"
-
-COLOR_SCHEME="CatppuccinMocha"
+DOTFILES_SUBDIR="themes/desktop/dotfiles"
 
 FIRST_BOOT_DIALOG_TITLE="Welcome to FrosteArch Desktop"
 FIRST_BOOT_DIALOG_MARKDOWN_REL="shared/first-boot-desktop.md"

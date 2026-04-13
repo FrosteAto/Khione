@@ -27,12 +27,7 @@ SERVICES_MASK=( sleep.target suspend.target hibernate.target hybrid-sleep.target
 
 FIREWALL_RULES=( 22/tcp 32400/tcp 1900/udp 5353/udp )
 
-DOTFILES_SUBDIR="server-install/arch-dotfiles"
-
-KNSV_REL="shared/konsave-profiles/serverSetup.knsv"
-KNSV_NAME="serverSetup"
-
-COLOR_SCHEME="Miku"
+DOTFILES_SUBDIR="themes/server/dotfiles"
 
 FIRST_BOOT_DIALOG_TITLE="Welcome to FrosteArch Server"
 FIRST_BOOT_DIALOG_MARKDOWN_REL="shared/first-boot-server.md"
