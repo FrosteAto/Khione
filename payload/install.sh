@@ -136,12 +136,17 @@ FIRST_BOOT_DIALOG_TITLE="${FIRST_BOOT_DIALOG_TITLE:-FrosteArch}"
 FIRST_BOOT_DIALOG_MARKDOWN_REL="${FIRST_BOOT_DIALOG_MARKDOWN_REL:-shared/first-boot-message.md}"
 FIRST_BOOT_DIALOG_MARKDOWN_FILE="$REPO_ROOT/$FIRST_BOOT_DIALOG_MARKDOWN_REL"
 FIRST_BOOT_DIALOG_RENDERER_FILE="${FIRST_BOOT_DIALOG_RENDERER_FILE:-$REPO_ROOT/shared/render-first-boot-dialog.py}"
-THEME_PROFILES_DIR="${THEME_PROFILES_DIR:-$REPO_ROOT/shared/konsave-profiles}"
+THEME_PROFILES_DIR="${THEME_PROFILES_DIR:-$REPO_ROOT/themes}"
 THEME_METADATA_FILE="${THEME_METADATA_FILE:-$REPO_ROOT/shared/theme-profiles.json}"
 THEME_SWITCHER_FILE="${THEME_SWITCHER_FILE:-$REPO_ROOT/shared/frostearch-theme-switcher.sh}"
-THEME_WALLPAPERS_DIR="${THEME_WALLPAPERS_DIR:-$REPO_ROOT/images}"
+THEME_METADATA_HELPER_FILE="${THEME_METADATA_HELPER_FILE:-$REPO_ROOT/shared/theme-metadata-tool.py}"
+THEME_WALLPAPERS_DIR="${THEME_WALLPAPERS_DIR:-$REPO_ROOT/themes}"
+THEME_DEFAULT_ID="${THEME_DEFAULT_ID:-$MODE_NAME}"
 KARA_GIT_URL="${KARA_GIT_URL:-https://github.com/dhruv8sh/kara.git}"
 KARA_GIT_REF="${KARA_GIT_REF:-v1.0.0}"
+
+log "Theme profiles source: $THEME_PROFILES_DIR"
+log "Theme wallpapers source: $THEME_WALLPAPERS_DIR"
 
 section "System setup"
 system_update
@@ -150,6 +155,7 @@ ensure_git
 
 section "Installing official packages"
 install_official_packages OFFICIAL_PACKAGES
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo || true
 
 section "Installing yay"
 install_yay "$ARCH_USER"
@@ -165,23 +171,25 @@ configure_firewall FIREWALL_RULES
 section "Configuring greetd and PAM"
 configure_greetd
 configure_pam_kwallet
-set_wallet_enabled "$ARCH_USER"
 
-section "Applying dotfiles and desktop configuration"
+section "Applying dotfiles"
 apply_dotfiles "$ARCH_USER" "$DOTFILES_DIR"
-apply_konsave "$ARCH_USER" "$KNSV_FILE" "$KNSV_NAME"
-set_color_scheme "$ARCH_USER" "$COLOR_SCHEME"
 
 section "Installing Kara pager"
 install_kara_pager_from_source "$ARCH_USER" "$KARA_GIT_URL" "$KARA_GIT_REF"
 
 section "Installing theme switcher"
-install_theme_switcher_required "$ARCH_USER" "$THEME_PROFILES_DIR" "$THEME_METADATA_FILE" "$THEME_SWITCHER_FILE" "$THEME_WALLPAPERS_DIR"
+install_theme_switcher_required "$ARCH_USER" "$THEME_PROFILES_DIR" "$THEME_METADATA_FILE" "$THEME_SWITCHER_FILE" "$THEME_WALLPAPERS_DIR" "$THEME_METADATA_HELPER_FILE"
+
+section "Applying default theme"
+apply_theme_via_switcher_required "$ARCH_USER" "$THEME_DEFAULT_ID"
+
+# KWallet must be enabled after konsave has restored kdeglobals so it is
+# not clobbered when the profile overwrites that file.
+set_wallet_enabled "$ARCH_USER"
 
 section "Configuring first-login experience"
 disable_kde_welcome_popup "$ARCH_USER"
-install_wallpaper_autostart_required \
-  "$ARCH_USER" "$REPO_ROOT/shared/set-wallpaper-once.sh"
 install_first_boot_dialog_autostart_required \
   "$ARCH_USER" "$FIRST_BOOT_DIALOG_MARKDOWN_FILE" "$FIRST_BOOT_DIALOG_TITLE" "$FIRST_BOOT_DIALOG_RENDERER_FILE"
 

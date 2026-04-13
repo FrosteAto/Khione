@@ -32,8 +32,8 @@
 # The best example for this is the "*.default-release" folder of firefox.
 # ${BEGINS_WITH="text"}: for folders with different names on different computers whose names start with the same thing.
 
-# NOTE: Color scheme activation is handled by the installer via set_color_scheme()
-# after konsave is applied. Konsave's role here is to export the scheme assets
+# NOTE: Color scheme activation is handled by frostearch-theme-switcher after
+# konsave is applied. Konsave's role here is to export the scheme assets
 # (for example color-schemes/) and baseline KDE config files.
 
 save:
@@ -122,8 +122,6 @@ export:
             - aurorae
             # Icon packs (YAMIS, etc.) and cursor themes installed to share/icons
             - icons
-            # Wallpapers
-            - wallpapers
             # GTK themes installed to ~/.local/share/themes
             - themes
 
