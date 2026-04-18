@@ -116,7 +116,7 @@ After Archinstall finishes, FrosteArch continues automatically and applies packa
 Install output is logged to:
 
 ```bash
-/var/log/arch-linux-setups/install-<timestamp>.log
+/var/log/frostearch/install-<timestamp>.log
 ```
 
 ## Step 6: Reboot into FrosteArch
@@ -140,7 +140,7 @@ For troubleshooting logs:
 
 ```bash
 cat /var/log/archinstall/install.log
-ls -1 /var/log/arch-linux-setups/
+ls -1 /var/log/frostearch/
 ```
 
 ## Step 8: Success!

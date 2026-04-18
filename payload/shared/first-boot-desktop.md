@@ -22,7 +22,7 @@ yay
 - Review installation logs if needed:
 
 ```bash
-ls -1 /var/log/arch-linux-setups/
+ls -1 /var/log/frostearch/
 cat /var/log/archinstall/install.log
 ```
 
