@@ -12,7 +12,7 @@ section() {
   echo
 }
 
-LOG_DIR="/var/log/arch-linux-setups"
+LOG_DIR="/var/log/frostearch"
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/install-$(date +%F_%H-%M-%S).log"
 

@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 SNAPSHOT_SRC="/root/installer-src"
-SNAPSHOT_RUN="/run/arch-linux-setups-installer"
+SNAPSHOT_RUN="/run/frostearch-installer"
 
 echo
 echo "Starting Arch installer with recommended defaults."
