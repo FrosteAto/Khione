@@ -3,7 +3,7 @@
 
 iso_name="FrosteArch-server"
 iso_label="FROSTEARCH_SRV"
-iso_publisher="FrosteArch <https://github.com/FrosteAto/Arch-Linux-Setups> Based On Arch Linux <https://archlinux.org>"
+iso_publisher="FrosteArch <https://github.com/FrosteAto/FrosteArch> Based On Arch Linux <https://archlinux.org>"
 iso_application="FrosteArch Linux Live/Rescue DVD"
 iso_version="$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y.%m.%d)"
 install_dir="arch"
