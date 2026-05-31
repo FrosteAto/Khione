@@ -7,7 +7,7 @@ OFFICIAL_PACKAGES=(
   linux-lts linux-lts-headers linux-firmware
   xorg plasma plasma-workspace greetd greetd-tuigreet kwallet kwallet-pam libsecret
   kdialog
-  ufw nano btop flatpak kitty dolphin ark fastfetch firefox sof-firmware git partitionmanager
+  ufw nano btop flatpak kitty dolphin ark fastfetch firefox sof-firmware git partitionmanager p7zip
   python python-markdown python-pip python-pipx
   avahi nss-mdns
   noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu ttf-jetbrains-mono
