@@ -6,29 +6,36 @@
 #
 # What this script does:
 #   1. Creates the dedicated Wine prefix at FL_MIKU_PREFIX
-#   2. Sets Windows version to Windows 10
+#   2. Sets Windows version to Windows 11
 #   3. Installs winetricks components required by FL Studio 25 (allfonts, webview2)
 #   4. Disables Wine file-type hijacking in this prefix
 #   5. Creates VST2/VST3 plugin directories inside the prefix
 #   6. Downloads the FL Studio installer from Image-Line and runs it
 #   7. Extracts the SonicWire Miku V4X zip (requires p7zip) if present
-#   8. Runs the three Miku installers in order:
+#   8. Runs the three Miku V4X installers in order:
 #        Crypton Software Installer (64bit) — Piapro Studio VST
 #        MIKU V4X Installer                — V4X voicebank
 #        MIKU V4 English Installer         — English voicebank (optional)
 #      NOTE: Hatsune Miku V6 / Vocaloid 6 is NOT included in the full setup —
 #            it is currently broken on Linux under Wine.
-#   9. Writes wrapper launcher scripts to ~/.local/bin
-#  10. Writes .desktop entries so FL Studio / winecfg / kill appear in KRunner
+#   9. Runs the two VOCALOID6 / Miku V6 installers:
+#        VOCALOID6_Editor_Installer.exe    — VOCALOID6 editor (standalone + VST3)
+#        HATSUNE_MIKU_V6_for_VOCALOID_Installer.exe — Miku V6 voicebank
+#  10. Writes wrapper launcher scripts to ~/.local/bin
+#  11. Writes .desktop entries so FL Studio / winecfg / kill appear in KRunner
 #
 # Before running:
 #   - Place the SonicWire Miku V4X zip in: ~/Installers/Audio/MikuV4X/
 #     (zip64 format — must be extracted with 7z, which this script handles)
+#   - Place the VOCALOID6 installers in: ~/Installers/Audio/MikuV6/
+#       VOCALOID6_Editor_Installer.exe
+#       HATSUNE_MIKU_V6_for_VOCALOID_Installer.exe
 #
 # After this script finishes, you must manually:
 #   - Activate FL Studio (sign in to your Image-Line account)
 #   - In FL Studio: Options → Manage plugins → add C:\VST2 and C:\VST3
 #   - Run a plugin scan to detect Piapro Studio
+#   - Activate VOCALOID6 online (first launch requires internet authentication)
 
 set -euo pipefail
 
@@ -48,6 +55,12 @@ FL_INSTALLER_FILE="$FL_INSTALLER_DIR/flstudio_installer.exe"
 # Directory where the SonicWire Miku V4X zip (or its extracted contents) should be placed.
 # The zip is zip64 format — this script will extract it automatically using 7z (p7zip).
 MIKU_INSTALLER_DIR="${MIKU_INSTALLER_DIR:-$HOME/Installers/Audio/MikuV4X}"
+
+# Directory containing the VOCALOID6 editor and Miku V6 voicebank installers.
+# Place these two files there before running with the V6 option:
+#   VOCALOID6_Editor_Installer.exe
+#   HATSUNE_MIKU_V6_for_VOCALOID_Installer.exe
+MIKU_V6_INSTALLER_DIR="${MIKU_V6_INSTALLER_DIR:-$HOME/Installers/Audio/MikuV6}"
 
 BIN_DIR="$HOME/.local/bin"
 APP_DIR="$HOME/.local/share/applications"
@@ -73,11 +86,11 @@ require_display() {
 
 require_tools() {
   local missing=()
-  command -v wine       >/dev/null 2>&1 || missing+=(wine)
+  command -v wine       >/dev/null 2>&1 || missing+=(wine-staging)
   command -v winetricks >/dev/null 2>&1 || missing+=(winetricks)
-  command -v wineserver >/dev/null 2>&1 || missing+=(wineserver)
+  command -v wineserver >/dev/null 2>&1 || missing+=(wine-staging)
   if [[ "${#missing[@]}" -gt 0 ]]; then
-    die "Missing required tools: ${missing[*]}. Install them with: sudo pacman -S ${missing[*]}"
+    die "Missing required tools: ${missing[*]}. Install with: sudo pacman -S ${missing[*]}"
   fi
 }
 
@@ -125,8 +138,8 @@ select_install_mode() {
   echo "  5) Hatsune Miku V4 English voicebank"
   echo "  6) All Miku components  (Piapro + V4X + V4 English; excludes V6)"
   echo "  7) Recreate launcher scripts and desktop entries only"
-  echo "  8) Activate voicebank licences  (find and run Crypton/Vocaloid license tools)"
-  echo "  9) Hatsune Miku V6 / Vocaloid 6  (currently broken on Linux — not recommended)"
+  echo "  8) VOCALOID6 Editor (currently broken on Linux — not recommended)"
+  echo "  9) Hatsune Miku V6 (currently broken on Linux — not recommended)"
   echo
   local choice
   while true; do
@@ -159,7 +172,7 @@ select_install_mode() {
         return 0
         ;;
       6)
-        log "Will install: All Miku components"
+        log "Will install: All Miku V4X components"
         INSTALL_COMPONENTS=(piapro miku_v4x miku_v4_en)
         return 0
         ;;
@@ -169,17 +182,17 @@ select_install_mode() {
         return 0
         ;;
       8)
-        log "Will run: Voicebank licence activation"
-        INSTALL_COMPONENTS=(activate)
+        log "Will install: VOCALOID6 Editor (currently broken on Linux)"
+        INSTALL_COMPONENTS=(vocaloid6_editor)
         return 0
         ;;
       9)
-        log "Will attempt: Hatsune Miku V6 / Vocaloid 6 (currently broken on Linux)"
+        log "Will install: Hatsune Miku V6 voicebank (currently broken on Linux)"
         INSTALL_COMPONENTS=(miku_v6)
         return 0
         ;;
     esac
-    echo "Please enter a number from 1 to 9."
+    echo "Please enter a number from 1 to 8."
   done
 }
 
@@ -214,6 +227,20 @@ miku_v4x_installed() {
 
 miku_v4_english_installed() {
   prefix_has_path "*Crypton*Hatsune Miku V4 English*" || prefix_has_path "*Miku V4 English*"
+}
+
+vocaloid6_editor_installed() {
+  # VOCALOID6 editor installs to C:\Program Files\VOCALOID6\ (64-bit installer).
+  find "$FL_MIKU_PREFIX/drive_c/Program Files" -maxdepth 2 \
+    \( -iname 'VOCALOID6Editor.exe' -o -iname 'VOCALOID6.exe' \) 2>/dev/null | grep -q . || \
+  find "$FL_MIKU_PREFIX/drive_c/Program Files" -maxdepth 1 -type d -iname 'VOCALOID6' 2>/dev/null | grep -q .
+}
+
+miku_v6_installed() {
+  # Miku V6 voicebank registers under the VOCALOID6 voicebank directory.
+  prefix_has_path "*VOCALOID6*Hatsune Miku*" || \
+  prefix_has_path "*VoiceBank*Hatsune Miku V6*" || \
+  prefix_has_path "*VOCALOID*Miku V6*"
 }
 
 step_state_path() {
@@ -256,6 +283,26 @@ wipe_everything() {
   remove_if_exists "$APP_DIR/fl-miku-winecfg.desktop"
   remove_if_exists "$APP_DIR/fl-miku-kill.desktop"
 
+  # Remove Wine-generated desktop entries that reference this prefix.
+  # winemenubuilder writes these to ~/.local/share/applications/wine/ during
+  # app installation regardless of our file-association disable setting.
+  log "Removing Wine-generated desktop entries that reference this prefix..."
+  local wine_apps_dir="$HOME/.local/share/applications/wine"
+  if [[ -d "$wine_apps_dir" ]]; then
+    # Find and delete any .desktop file whose Exec line references our prefix.
+    while IFS= read -r -d '' f; do
+      rm -f "$f"
+    done < <(grep -rlZ "$FL_MIKU_PREFIX" "$wine_apps_dir" 2>/dev/null)
+    # Remove empty subdirectories left behind.
+    find "$wine_apps_dir" -mindepth 1 -type d -empty -delete 2>/dev/null || true
+  fi
+
+  # Rebuild KDE's application database so KRunner stops showing the deleted entries.
+  if command -v kbuildsycoca6 >/dev/null 2>&1; then
+    log "Rebuilding KDE application cache (kbuildsycoca6)..."
+    kbuildsycoca6 --noincremental 2>/dev/null || true
+  fi
+
   log "Removing setup state directory: $STATE_DIR"
   rm -rf "$STATE_DIR"
 
@@ -263,8 +310,17 @@ wipe_everything() {
   log "Full cleanup complete."
 }
 
-prompt_startup_choice_existing() {
-  echo "  1) Continue using the existing prefix"
+prompt_startup_choice() {
+  echo
+  log "What do you want to do?"
+  local prefix_exists=false
+  [[ -e "$FL_MIKU_PREFIX" ]] && prefix_exists=true
+
+  if $prefix_exists; then
+    echo "  1) Continue setup  (resume or re-run steps on existing prefix)"
+  else
+    echo "  1) Start setup  (no existing prefix found)"
+  fi
   echo "  2) Wipe everything and start from scratch"
   echo "  3) Quit"
 
@@ -273,12 +329,25 @@ prompt_startup_choice_existing() {
     read -r -p "Select an option: " choice
     case "$choice" in
       1)
-        log "Continuing with the existing prefix."
+        if $prefix_exists; then
+          log "Continuing with the existing prefix."
+        else
+          log "Starting setup from scratch."
+        fi
         return 0
         ;;
       2)
         wipe_everything
-        return 0
+        echo
+        log "Wipe complete."
+        read -r -p "Start a fresh setup now? [Y/n]: " _restart
+        if [[ -z "$_restart" || "$_restart" =~ ^[Yy] ]]; then
+          log "Starting fresh setup..."
+          return 0
+        else
+          log "Exiting. Re-run the script whenever you're ready."
+          exit 0
+        fi
         ;;
       3)
         log "Exiting without making changes."
@@ -287,32 +356,6 @@ prompt_startup_choice_existing() {
     esac
     echo "Please enter one of the listed numbers."
   done
-}
-
-prompt_startup_choice() {
-  echo
-  log "What do you want to do?"
-  if [[ -e "$FL_MIKU_PREFIX" ]]; then
-    prompt_startup_choice_existing
-  else
-    echo "  1) Start setup"
-    echo "  2) Quit"
-    local choice
-    while true; do
-      read -r -p "Select an option: " choice
-      case "$choice" in
-        1)
-          log "Starting setup from scratch."
-          return 0
-          ;;
-        2)
-          log "Exiting without making changes."
-          exit 0
-          ;;
-      esac
-      echo "Please enter one of the listed numbers."
-    done
-  fi
 }
 
 # ---------------------------------------------------------------------------
@@ -336,15 +379,15 @@ init_prefix() {
 }
 
 set_windows_version() {
-  if winetricks_has_installed_verb win10 || step_done win10; then
-    log "Windows version already set to Windows 10 — skipping."
-    mark_step_done win10
+  if winetricks_has_installed_verb win11 || step_done win11; then
+    log "Windows version already set to Windows 11 — skipping."
+    mark_step_done win11
     return 0
   fi
 
-  step "Setting Windows version to Windows 10"
-  WINEPREFIX="$FL_MIKU_PREFIX" WINEDEBUG=-all winetricks -q win10
-  mark_step_done win10
+  step "Setting Windows version to Windows 11"
+  WINEPREFIX="$FL_MIKU_PREFIX" WINEDEBUG=-all winetricks -q win11
+  mark_step_done win11
 }
 
 # ---------------------------------------------------------------------------
@@ -769,88 +812,89 @@ run_miku_v4_en_installer() {
 }
 
 # ---------------------------------------------------------------------------
-# Hatsune Miku V6 / Vocaloid 6 — currently broken on Linux under Wine
-# ---------------------------------------------------------------------------
-# Vocaloid 6 relies on a hardware-accelerated audio engine and DRM that does
-# not function correctly under Wine at this time.  This stub exists so the
-# menu option can warn the user rather than silently doing nothing.
-# ---------------------------------------------------------------------------
-run_miku_v6_installer() {
-  step "Hatsune Miku V6 / Vocaloid 6  (currently broken on Linux)"
-  log "WARNING: Hatsune Miku V6 / Vocaloid 6 is currently broken on Linux under Wine."
-  log "Installation is not supported at this time."
-  log "Use Hatsune Miku V4X or V4 English instead."
-  log "Check back later for Wine compatibility updates."
-}
-
-# ---------------------------------------------------------------------------
 # Voicebank licence activation
 # ---------------------------------------------------------------------------
 # After installing the Crypton voicebanks the licences default to trial mode.
 # Activation is done by running the Crypton/Vocaloid license manager that was
 # placed inside the prefix by the voicebank installer.
 # ---------------------------------------------------------------------------
-run_voicebank_activation() {
-  step "Voicebank licence activation"
+run_vocaloid6_editor_installer() {
+  step "Installing VOCALOID6 Editor"
 
-  # Known activation executable name patterns from Crypton/Yamaha installers.
-  local -a candidates
-  mapfile -t candidates < <(
-    find "$FL_MIKU_PREFIX/drive_c" \
-      \( -iname '*license*manager*.exe' \
-         -o -iname '*licensemanager*.exe' \
-         -o -iname '*activation*.exe' \
-         -o -iname 'Activate4.exe' \
-         -o -iname 'Activate*.exe' \
-         -o -iname '*vocaloid*license*.exe' \
-         -o -iname '*crypton*license*.exe' \
-         -o -iname 'VocaloidActivation.exe' \
-         -o -iname 'VA4License.exe' \
-         -o -iname 'piaprolicense*.exe' \) \
-      2>/dev/null | sort
-  )
+  local installer
+  installer="$(find "$MIKU_V6_INSTALLER_DIR" -maxdepth 1 \
+    -iname 'VOCALOID6_Editor_Installer.exe' 2>/dev/null | head -1 || true)"
 
-  if [[ "${#candidates[@]}" -eq 0 ]]; then
-    log "No Crypton/Vocaloid licence manager executables found in the prefix."
-    log "The voicebank may activate from within Piapro Studio itself."
-    log "Open Piapro Studio, go to Help → License / Activate and enter your serial."
-    log "Or use fl-miku-run-exe to run a specific tool:"
-    log "  fl-miku-run-exe '/path/inside/drive_c/...'" 
-    log "You can browse the prefix at: $FL_MIKU_PREFIX/drive_c"
+  if [[ -z "$installer" ]]; then
+    log "VOCALOID6_Editor_Installer.exe not found — skipping."
+    log "Place it in: $MIKU_V6_INSTALLER_DIR"
     return 0
   fi
 
-  if [[ "${#candidates[@]}" -eq 1 ]]; then
-    log "Found licence tool: ${candidates[0]}"
-    log "Launching it now — enter your serial key in the window that opens."
-    WINEPREFIX="$FL_MIKU_PREFIX" WINEDEBUG=-all wine "${candidates[0]}" || true
-    wait_for_wine_exit "licence activation tool" 300
+  if step_done vocaloid6_editor_installer || vocaloid6_editor_installed; then
+    log "VOCALOID6 Editor already installed — skipping."
+    mark_step_done vocaloid6_editor_installer
     return 0
   fi
 
-  # Multiple candidates — let the user pick.
-  echo
-  log "Multiple licence-related executables found. Pick one to run:"
-  local i
-  for i in "${!candidates[@]}"; do
-    echo "  $((i+1))) ${candidates[$i]}"
-  done
-  echo "  q) Cancel"
-  echo
+  log "Running VOCALOID6 Editor installer..."
+  log "Path: $installer"
+  log "This is a large installer (~678 MB) — it will take several minutes."
+  WINEPREFIX="$FL_MIKU_PREFIX" WINEDEBUG=-all wine "$installer" || \
+    log "WARNING: VOCALOID6 Editor installer exited non-zero — check for errors above."
+  wait_for_wine_exit "VOCALOID6 Editor installer" 120
 
-  local choice
-  while true; do
-    read -r -p "Select an option: " choice
-    [[ "$choice" == "q" || "$choice" == "Q" ]] && return 0
-    if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#candidates[@]} )); then
-      local selected="${candidates[$((choice-1))]}"
-      log "Launching: $selected"
-      WINEPREFIX="$FL_MIKU_PREFIX" WINEDEBUG=-all wine "$selected" || true
-      wait_for_wine_exit "licence activation tool" 300
-      return 0
-    fi
-    echo "Please enter a number between 1 and ${#candidates[@]}, or q to cancel."
-  done
+  if vocaloid6_editor_installed; then
+    log "VOCALOID6 Editor installed successfully."
+    mark_step_done vocaloid6_editor_installer
+  else
+    log "WARNING: VOCALOID6 Editor does not appear to be installed yet."
+    log "If the installer completed but the check failed, the binary may be at:"
+    log "  $FL_MIKU_PREFIX/drive_c/Program Files/VOCALOID6/"
+  fi
+}
+
+run_miku_v6_installer() {
+  step "Installing Hatsune Miku V6 voicebank"
+
+  local installer
+  installer="$(find "$MIKU_V6_INSTALLER_DIR" -maxdepth 1 \
+    -iname 'HATSUNE_MIKU_V6_for_VOCALOID_Installer.exe' 2>/dev/null | head -1 || true)"
+
+  if [[ -z "$installer" ]]; then
+    log "HATSUNE_MIKU_V6_for_VOCALOID_Installer.exe not found — skipping."
+    log "Place it in: $MIKU_V6_INSTALLER_DIR"
+    return 0
+  fi
+
+  if step_done miku_v6_installer || miku_v6_installed; then
+    log "Hatsune Miku V6 voicebank already installed — skipping."
+    mark_step_done miku_v6_installer
+    return 0
+  fi
+
+  # The voicebank installer requires VOCALOID6 Editor to be installed first.
+  if ! vocaloid6_editor_installed && ! step_done vocaloid6_editor_installer; then
+    log "WARNING: VOCALOID6 Editor does not appear to be installed."
+    log "The Miku V6 voicebank requires the VOCALOID6 Editor."
+    log "Install the VOCALOID6 Editor first (option 9), then run this step again."
+    return 1
+  fi
+
+  log "Running Hatsune Miku V6 voicebank installer..."
+  log "Path: $installer"
+  WINEPREFIX="$FL_MIKU_PREFIX" WINEDEBUG=-all wine "$installer" || \
+    log "WARNING: Miku V6 installer exited non-zero — check for errors above."
+  wait_for_wine_exit "Miku V6 voicebank installer" 60
+
+  if miku_v6_installed; then
+    log "Hatsune Miku V6 voicebank installed successfully."
+    mark_step_done miku_v6_installer
+  else
+    log "WARNING: Miku V6 voicebank does not appear to be installed yet."
+    log "If the installer completed, check under:"
+    log "  $FL_MIKU_PREFIX/drive_c/Program Files/VOCALOID6/VoiceBank/"
+  fi
 }
 
 # ---------------------------------------------------------------------------
@@ -1038,6 +1082,9 @@ Keywords=wine;kill;fl;miku;stop;
 DESKTOP
 
   update-desktop-database "$APP_DIR" 2>/dev/null || true
+  if command -v kbuildsycoca6 >/dev/null 2>&1; then
+    kbuildsycoca6 --noincremental 2>/dev/null || true
+  fi
   log "Desktop entries written to $APP_DIR"
   mark_step_done desktop_entries
 }
@@ -1071,11 +1118,9 @@ print_next_steps() {
   echo
   log "  3. Run a plugin scan in FL Studio to detect Piapro Studio."
   echo
-  log "  4. Activate your Crypton voicebank licences (Hatsune Miku V4X / V4 English)"
-  log "     if they show a trial expiry date in Piapro Studio:"
-  log "     Re-run this script and select option 8 — Activate voicebank licences."
-  log "     This searches the prefix for the Crypton/Vocaloid license manager and"
-  log "     launches it so you can enter your serial key."
+  log "  4. Activate VOCALOID6 (if installed):"
+  log "     The VOCALOID6 Editor will prompt you to sign in with your Yamaha"
+  log "     account on first use — a browser window will open automatically."
   echo
   log "  If Piapro Studio or Miku installers were not found, place the SonicWire"
   log "  Miku V4X zip in: $MIKU_INSTALLER_DIR"
@@ -1125,16 +1170,16 @@ main() {
     fi
   fi
 
-  # Extract the Miku zip before any Miku installer that needs it.
+  # Extract the Miku zip before any V4X installer that needs it.
   if should_install "piapro" || should_install "miku_v4x" || should_install "miku_v4_en"; then
     extract_miku_zip
   fi
 
-  if should_install "piapro";    then run_piapro_installer;     fi
-  if should_install "miku_v4x";  then run_miku_v4x_installer;   fi
-  if should_install "miku_v4_en"; then run_miku_v4_en_installer; fi
+  if should_install "piapro";         then run_piapro_installer;           fi
+  if should_install "miku_v4x";       then run_miku_v4x_installer;         fi
+  if should_install "miku_v4_en";     then run_miku_v4_en_installer;       fi
   if should_install "miku_v6";   then run_miku_v6_installer;    fi  # currently broken on Linux
-  if should_install "activate";  then run_voicebank_activation;  fi
+  if should_install "vocaloid6_editor"; then run_vocaloid6_editor_installer; fi
 
   # ── Launchers always recreated / updated at the end ───────────────────────
   create_launcher_scripts
