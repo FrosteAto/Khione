@@ -5,29 +5,27 @@
 # Safe to re-run (idempotent where possible).
 #
 # What this script does:
-#   1. Creates the dedicated Wine prefix at FL_MIKU_PREFIX
-#   2. Sets Windows version to Windows 11
-#   3. Installs winetricks components required by FL Studio 25 (allfonts, webview2)
-#   4. Disables Wine file-type hijacking in this prefix
-#   5. Creates VST2/VST3 plugin directories inside the prefix
-#   6. Downloads the FL Studio installer from Image-Line and runs it
-#   7. Extracts the SonicWire Miku V4X zip (requires p7zip) if present
-#   8. Runs the three Miku V4X installers in order:
-#        Crypton Software Installer (64bit) — Piapro Studio VST
-#        MIKU V4X Installer                — V4X voicebank
-#        MIKU V4 English Installer         — English voicebank (optional)
-#      NOTE: Hatsune Miku V6 / Vocaloid 6 is NOT included in the full setup —
-#            it is currently broken on Linux under Wine.
-#   9. Runs the two VOCALOID6 / Miku V6 installers:
-#        VOCALOID6_Editor_Installer.exe    — VOCALOID6 editor (standalone + VST3)
-#        HATSUNE_MIKU_V6_for_VOCALOID_Installer.exe — Miku V6 voicebank
-#  10. Writes wrapper launcher scripts to ~/.local/bin
-#  11. Writes .desktop entries so FL Studio / winecfg / kill appear in KRunner
+#   1.  Creates the dedicated Wine prefix at FL_MIKU_PREFIX
+#   2.  Sets Windows version to Windows 11
+#   3.  Installs winetricks components required by FL Studio 25 (allfonts, webview2)
+#   4.  Disables Wine file-type hijacking in this prefix
+#   5.  Creates VST2/VST3 plugin directories inside the prefix
+#   6.  Downloads the FL Studio installer from Image-Line and runs it
+#   7.  Extracts the SonicWire Miku V4X zip (requires p7zip) if present
+#   8.  Runs the Miku V4X installers in order:
+#         Crypton Software Installer (64bit) — Piapro Studio VST
+#         MIKU V4X Installer                — V4X voicebank
+#         MIKU V4 English Installer         — English voicebank (optional)
+#   9.  Writes wrapper launcher scripts to ~/.local/bin
+#  10.  Writes .desktop entries so FL Studio / winecfg / kill appear in KRunner
+#
+# VOCALOID6 / Hatsune Miku V6 support exists as separate menu options but is
+# currently broken on Linux under Wine and is excluded from the full setup.
 #
 # Before running:
 #   - Place the SonicWire Miku V4X zip in: ~/Installers/Audio/MikuV4X/
 #     (zip64 format — must be extracted with 7z, which this script handles)
-#   - Place the VOCALOID6 installers in: ~/Installers/Audio/MikuV6/
+#   - For V6 (optional): place installers in ~/Installers/Audio/MikuV6/
 #       VOCALOID6_Editor_Installer.exe
 #       HATSUNE_MIKU_V6_for_VOCALOID_Installer.exe
 #
@@ -35,7 +33,7 @@
 #   - Activate FL Studio (sign in to your Image-Line account)
 #   - In FL Studio: Options → Manage plugins → add C:\VST2 and C:\VST3
 #   - Run a plugin scan to detect Piapro Studio
-#   - Activate VOCALOID6 online (first launch requires internet authentication)
+#   - If VOCALOID6 was installed: activate online on first launch
 
 set -euo pipefail
 
@@ -105,15 +103,11 @@ winetricks_has_installed_verb() {
 }
 
 run_wine_jp() {
-  # No LANG/LC_ALL override here — those are host-shell locale vars that do NOT
-  # affect Wine's internal Windows environment and cause '\' → '¥' rendering in
-  # the terminal.  Japanese codepage and locale are set in the prefix registry
-  # by configure_font_substitutes instead.
+  # LANG/LC_ALL don't affect Wine's Windows env — Japanese locale is set via registry.
   WINEPREFIX="$FL_MIKU_PREFIX" WINEDEBUG=-all "$@"
 }
 
-# Returns 0 if the given component should be installed in the current run.
-# An empty INSTALL_COMPONENTS array means "full setup" (install everything).
+# Empty INSTALL_COMPONENTS means full setup — install everything.
 should_install() {
   local component="$1"
   if [[ "${#INSTALL_COMPONENTS[@]}" -eq 0 ]]; then
@@ -192,7 +186,7 @@ select_install_mode() {
         return 0
         ;;
     esac
-    echo "Please enter a number from 1 to 8."
+    echo "Please enter a number from 1 to 9."
   done
 }
 
@@ -283,9 +277,7 @@ wipe_everything() {
   remove_if_exists "$APP_DIR/fl-miku-winecfg.desktop"
   remove_if_exists "$APP_DIR/fl-miku-kill.desktop"
 
-  # Remove Wine-generated desktop entries that reference this prefix.
-  # winemenubuilder writes these to ~/.local/share/applications/wine/ during
-  # app installation regardless of our file-association disable setting.
+  # winemenubuilder writes .desktop files here regardless of our disable setting.
   log "Removing Wine-generated desktop entries that reference this prefix..."
   local wine_apps_dir="$HOME/.local/share/applications/wine"
   if [[ -d "$wine_apps_dir" ]]; then
@@ -371,8 +363,7 @@ init_prefix() {
   step "Initialising Wine prefix"
   log "Path: $FL_MIKU_PREFIX"
   mkdir -p "$FL_MIKU_PREFIX"
-  # wine-mono and wine-gecko are installed as system packages, so Wine will
-  # not prompt to download them during initialisation.
+  # wine-mono/gecko are system packages — no download prompts during init.
   WINEPREFIX="$FL_MIKU_PREFIX" WINEDEBUG=-all wineboot -u
   log "Prefix ready."
   mark_step_done prefix_init
@@ -481,10 +472,7 @@ install_winetricks_deps() {
 }
 
 configure_font_substitutes() {
-  # State key v3 — forces re-run on prefixes with earlier versions.
-  # v3 changes: targets Noto Sans CJK JP (guaranteed on Arch via noto-fonts-cjk)
-  # instead of Meiryo (winetricks meiryo often fails to download), and adds
-  # MS UI Gothic / MS PGothic which many Japanese MSI dialog templates request.
+  # v3 state key — forces re-run on older prefixes.
   if step_done font_substitutes_v3; then
     log "Wine font substitution rules already configured (v3) — skipping."
     return 0
@@ -492,10 +480,8 @@ configure_font_substitutes() {
 
   step "Configuring Wine Japanese locale and font substitutions"
 
-  # ── 1. Set ANSI/OEM codepage to 932 (Shift-JIS) ────────────────────────────
-  # Without ACP=932, Win32 control text encoded as Shift-JIS bytes is decoded
-  # with the default Western (1252) codepage, producing squares regardless of
-  # which fonts are installed.  This is the primary cause of tofu on buttons.
+  # ── 1. Set ANSI/OEM codepage to 932 (Shift-JIS) ──────────────────────────
+  # Without ACP=932, Japanese text in Win32 controls renders as squares.
   WINEPREFIX="$FL_MIKU_PREFIX" WINEDEBUG=-all \
     wine reg add "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\Nls\\CodePage" \
       /v "ACP"   /t REG_SZ /d "932" /f >/dev/null 2>&1 || true
@@ -527,16 +513,8 @@ configure_font_substitutes() {
       /v "sCountry"  /t REG_SZ /d "Japan"     /f >/dev/null 2>&1 || true
 
   # ── 3. Font substitutes ────────────────────────────────────────────────────
-  # Target font: Noto Sans CJK JP (from noto-fonts-cjk, symlinked into
-  # drive_c/windows/Fonts/ by install_japanese_fonts_from_system above).
-  # This is chosen over Meiryo because winetricks meiryo silently fails to
-  # download from Microsoft servers on many systems, leaving no Meiryo fonts
-  # installed — making any Meiryo-targeted substitute a dead end.
-  #
-  # Key names include charset 128 (SHIFTJIS_CHARSET) qualified variants because
-  # Win32 GDI looks up fonts keyed on "FaceName,CharsetID" — the plain name
-  # entry alone does not match Japanese-charset font requests from dialog
-  # controls (buttons, checkboxes).
+  # Maps common Windows UI fonts to Noto Sans CJK JP (symlinked by install_japanese_fonts_from_system).
+  # Charset-128 variants cover Japanese-charset GDI requests from dialog controls.
   local subkey="HKEY_LOCAL_MACHINE\\Software\\Microsoft\\Windows NT\\CurrentVersion\\FontSubstitutes"
   local jp_font="Noto Sans CJK JP"
   local key
@@ -623,9 +601,7 @@ install_japanese_fonts_from_system() {
   local installed=0
   local found_font
 
-  # noto-fonts-cjk on Arch Linux installs TTC/OTF files under /usr/share/fonts/.
-  # Symlinking them into drive_c/windows/Fonts/ guarantees Wine can find
-  # 'Noto Sans CJK JP' by family name even without fontconfig integration.
+  # Symlink Noto CJK JP fonts into the prefix so Wine finds them by family name.
   while IFS= read -r -d '' found_font; do
     local base
     base="$(basename "$found_font")"
@@ -812,11 +788,7 @@ run_miku_v4_en_installer() {
 }
 
 # ---------------------------------------------------------------------------
-# Voicebank licence activation
-# ---------------------------------------------------------------------------
-# After installing the Crypton voicebanks the licences default to trial mode.
-# Activation is done by running the Crypton/Vocaloid license manager that was
-# placed inside the prefix by the voicebank installer.
+# VOCALOID6 / Hatsune Miku V6 (currently broken on Linux under Wine)
 # ---------------------------------------------------------------------------
 run_vocaloid6_editor_installer() {
   step "Installing VOCALOID6 Editor"
@@ -840,7 +812,7 @@ run_vocaloid6_editor_installer() {
   log "Running VOCALOID6 Editor installer..."
   log "Path: $installer"
   log "This is a large installer (~678 MB) — it will take several minutes."
-  WINEPREFIX="$FL_MIKU_PREFIX" WINEDEBUG=-all wine "$installer" || \
+  run_wine_jp wine "$installer" || \
     log "WARNING: VOCALOID6 Editor installer exited non-zero — check for errors above."
   wait_for_wine_exit "VOCALOID6 Editor installer" 120
 
@@ -877,13 +849,13 @@ run_miku_v6_installer() {
   if ! vocaloid6_editor_installed && ! step_done vocaloid6_editor_installer; then
     log "WARNING: VOCALOID6 Editor does not appear to be installed."
     log "The Miku V6 voicebank requires the VOCALOID6 Editor."
-    log "Install the VOCALOID6 Editor first (option 9), then run this step again."
+    log "Install the VOCALOID6 Editor first (option 8), then run this step again."
     return 1
   fi
 
   log "Running Hatsune Miku V6 voicebank installer..."
   log "Path: $installer"
-  WINEPREFIX="$FL_MIKU_PREFIX" WINEDEBUG=-all wine "$installer" || \
+  run_wine_jp wine "$installer" || \
     log "WARNING: Miku V6 installer exited non-zero — check for errors above."
   wait_for_wine_exit "Miku V6 voicebank installer" 60
 
@@ -1178,8 +1150,9 @@ main() {
   if should_install "piapro";         then run_piapro_installer;           fi
   if should_install "miku_v4x";       then run_miku_v4x_installer;         fi
   if should_install "miku_v4_en";     then run_miku_v4_en_installer;       fi
-  if should_install "miku_v6";   then run_miku_v6_installer;    fi  # currently broken on Linux
-  if should_install "vocaloid6_editor"; then run_vocaloid6_editor_installer; fi
+  # V6 is excluded from full setup — only run when explicitly selected.
+  if [[ " ${INSTALL_COMPONENTS[*]} " =~ " vocaloid6_editor " ]]; then run_vocaloid6_editor_installer; fi
+  if [[ " ${INSTALL_COMPONENTS[*]} " =~ " miku_v6 " ]];          then run_miku_v6_installer;          fi
 
   # ── Launchers always recreated / updated at the end ───────────────────────
   create_launcher_scripts
