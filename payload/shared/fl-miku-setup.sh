@@ -16,6 +16,8 @@
 #        Crypton Software Installer (64bit) — Piapro Studio VST
 #        MIKU V4X Installer                — V4X voicebank
 #        MIKU V4 English Installer         — English voicebank (optional)
+#      NOTE: Hatsune Miku V6 / Vocaloid 6 is NOT included in the full setup —
+#            it is currently broken on Linux under Wine.
 #   9. Writes wrapper launcher scripts to ~/.local/bin
 #  10. Writes .desktop entries so FL Studio / winecfg / kill appear in KRunner
 #
@@ -116,13 +118,15 @@ select_install_mode() {
   log "What would you like to install?"
   echo
   echo "  1) Full setup — all components not yet installed  [default]"
+  echo "     (excludes Miku V6 / Vocaloid 6 — currently broken on Linux)"
   echo "  2) FL Studio only"
   echo "  3) Piapro Studio  (Mutant VSTi + Piapro Studio VST)"
   echo "  4) Hatsune Miku V4X voicebank"
   echo "  5) Hatsune Miku V4 English voicebank"
-  echo "  6) All Miku components  (Piapro + V4X + V4 English)"
+  echo "  6) All Miku components  (Piapro + V4X + V4 English; excludes V6)"
   echo "  7) Recreate launcher scripts and desktop entries only"
   echo "  8) Activate voicebank licences  (find and run Crypton/Vocaloid license tools)"
+  echo "  9) Hatsune Miku V6 / Vocaloid 6  (currently broken on Linux — not recommended)"
   echo
   local choice
   while true; do
@@ -169,8 +173,13 @@ select_install_mode() {
         INSTALL_COMPONENTS=(activate)
         return 0
         ;;
+      9)
+        log "Will attempt: Hatsune Miku V6 / Vocaloid 6 (currently broken on Linux)"
+        INSTALL_COMPONENTS=(miku_v6)
+        return 0
+        ;;
     esac
-    echo "Please enter a number from 1 to 8."
+    echo "Please enter a number from 1 to 9."
   done
 }
 
@@ -760,6 +769,21 @@ run_miku_v4_en_installer() {
 }
 
 # ---------------------------------------------------------------------------
+# Hatsune Miku V6 / Vocaloid 6 — currently broken on Linux under Wine
+# ---------------------------------------------------------------------------
+# Vocaloid 6 relies on a hardware-accelerated audio engine and DRM that does
+# not function correctly under Wine at this time.  This stub exists so the
+# menu option can warn the user rather than silently doing nothing.
+# ---------------------------------------------------------------------------
+run_miku_v6_installer() {
+  step "Hatsune Miku V6 / Vocaloid 6  (currently broken on Linux)"
+  log "WARNING: Hatsune Miku V6 / Vocaloid 6 is currently broken on Linux under Wine."
+  log "Installation is not supported at this time."
+  log "Use Hatsune Miku V4X or V4 English instead."
+  log "Check back later for Wine compatibility updates."
+}
+
+# ---------------------------------------------------------------------------
 # Voicebank licence activation
 # ---------------------------------------------------------------------------
 # After installing the Crypton voicebanks the licences default to trial mode.
@@ -1109,6 +1133,7 @@ main() {
   if should_install "piapro";    then run_piapro_installer;     fi
   if should_install "miku_v4x";  then run_miku_v4x_installer;   fi
   if should_install "miku_v4_en"; then run_miku_v4_en_installer; fi
+  if should_install "miku_v6";   then run_miku_v6_installer;    fi  # currently broken on Linux
   if should_install "activate";  then run_voicebank_activation;  fi
 
   # ── Launchers always recreated / updated at the end ───────────────────────
