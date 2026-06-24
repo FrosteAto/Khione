@@ -147,6 +147,47 @@ FrosteArch is now installed and ready to use, tweak, and build on.
 
 ---
 
+<h2 align="center">Music Production Support</h2>
+
+Linux and music production have historically not gotten along, especially in the PulseAudio days. DAW support isn't great and wine tends to fight back. FrosteArch includes a dedicated setup script that handles the fiddly bits for you.
+
+## FL Studio + Hatsune Miku
+
+`fl-miku-setup` creates a dedicated Wine prefix pre-configured for FL Studio and the Crypton Piapro Studio voicebank suite, including Japanese locale and font setup so the installers actually render correctly.
+
+**Supported:**
+- FL Studio 25
+- Piapro Studio VST
+- Hatsune Miku V4X voicebank
+- Hatsune Miku V4 English voicebank
+
+> **Note:** Hatsune Miku V6 / Vocaloid 6 is currently broken on Linux under Wine and, whilst optionally included, will not properly work.
+
+## Setup
+
+Download your installers and put them in the right place:
+
+- The script will download FL Studio automatically.
+- Place your SonicWire Miku V4X zip anywhere inside `~/Installers/Audio/MikuV4X/`.
+
+Then search for `FL Miku Setup` in KRunner, or run it from a terminal:
+
+```bash
+fl-miku-setup
+```
+
+It will walk you through everything interactively. You can re-run it at any time to install individual components, regenerate launchers, or activate voicebank licences.
+
+## After setup
+
+The following entries will appear in KRunner:
+
+- `FL Studio` — launch the DAW
+- `FL Miku Wine Config` — open winecfg for the fl-miku prefix
+- `Kill FL Miku Wine` — stop the Wine server
+
+---
+
 <h2 align="center">FAQ</h2>
 
 
@@ -203,3 +244,9 @@ My scripts and changes are stapled onto & around Archinstall. Without their incr
 
 - Ina: https://www.pixiv.net/en/artworks/103938068
 - Miku: https://www.pixiv.net/en/artworks/73597952
+
+---
+
+<h2 align="center">AI Usage Disclaimer</h2>
+
+Yeah I used AI to assist in writing the code. Look at this repo, it sucks. But I program from 9-5 without it, so let me enjoy things in my downtime. Also debugging wine prefixes is the most boring thing ever.
