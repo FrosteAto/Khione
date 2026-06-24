@@ -11,9 +11,14 @@ OFFICIAL_PACKAGES=(
   python python-markdown python-pip python-pipx
   avahi nss-mdns
   noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu ttf-jetbrains-mono
+  mdadm samba cockpit smartmontools
 )
 
-AUR_PACKAGES=( plex-media-server )
+AUR_PACKAGES=(
+  plex-media-server
+  wsdd                # makes the server visible in Windows Explorer's Network browser
+  cockpit-file-sharing  # Samba share management GUI inside Cockpit
+)
 
 SERVICES_ENABLE=(
   NetworkManager.service
@@ -21,11 +26,21 @@ SERVICES_ENABLE=(
   plexmediaserver.service
   avahi-daemon.service
   ufw.service
+  smb.service
+  nmb.service
+  cockpit.socket
+  smartd.service
+  wsdd.service
 )
 
 SERVICES_MASK=( sleep.target suspend.target hibernate.target hybrid-sleep.target )
 
-FIREWALL_RULES=( 22/tcp 32400/tcp 1900/udp 5353/udp )
+FIREWALL_RULES=(
+  22/tcp 32400/tcp 1900/udp 5353/udp
+  9090/tcp        # Cockpit web UI
+  137/udp 138/udp # Samba NetBIOS
+  139/tcp 445/tcp # Samba SMB
+)
 
 DOTFILES_SUBDIR="themes/server/dotfiles"
 
