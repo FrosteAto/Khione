@@ -18,6 +18,7 @@ AUR_PACKAGES=(
   plex-media-server
   wsdd                # makes the server visible in Windows Explorer's Network browser
   cockpit-file-sharing  # Samba share management GUI inside Cockpit
+  cockpit-storaged      # disk/partition/RAID management GUI inside Cockpit
 )
 
 SERVICES_ENABLE=(
@@ -33,7 +34,7 @@ SERVICES_ENABLE=(
   wsdd.service
 )
 
-SERVICES_MASK=( sleep.target suspend.target hibernate.target hybrid-sleep.target )
+SERVICES_MASK=( sleep.target suspend.target hibernate.target hybrid-sleep.target samba.service )
 
 FIREWALL_RULES=(
   22/tcp 32400/tcp 1900/udp 5353/udp
