@@ -175,6 +175,7 @@ section "Configuring services and firewall"
 enable_services SERVICES_ENABLE
 mask_services SERVICES_MASK
 configure_firewall FIREWALL_RULES
+configure_samba
 
 section "Configuring greetd and PAM"
 configure_greetd

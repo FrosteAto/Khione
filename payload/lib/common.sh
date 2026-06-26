@@ -176,6 +176,27 @@ configure_firewall() {
   fi
 }
 
+configure_samba() {
+  local conf="/etc/samba/smb.conf"
+  if [[ -f "$conf" ]]; then
+    echo "smb.conf already exists, skipping."
+    return 0
+  fi
+  echo "Writing minimal smb.conf..."
+  sudo mkdir -p /etc/samba
+  sudo tee "$conf" >/dev/null <<'EOF'
+[global]
+    workgroup = WORKGROUP
+    server string = Samba Server
+    server role = standalone server
+    security = user
+    passdb backend = tdbsam
+    log file = /var/log/samba/%m.log
+    max log size = 50
+    include = registry
+EOF
+}
+
 configure_greetd() {
   echo "Configuring greetd..."
   sudo tee /etc/greetd/config.toml >/dev/null <<EOF
@@ -272,7 +293,8 @@ install_kara_pager_from_source() {
 
   sudo pacman -S --needed --noconfirm \
     base-devel cmake extra-cmake-modules git \
-    qt6-base qt6-declarative kwin libplasma plasma-activities plasma-workspace
+    qt6-base qt6-declarative kwin libplasma plasma-activities plasma-workspace \
+    vulkan-headers vulkan-icd-loader
 
   sudo -u "$arch_user" mkdir -p "/home/$arch_user/.local/src"
   if [ -d "$source_dir/.git" ]; then
