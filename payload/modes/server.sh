@@ -11,7 +11,7 @@ OFFICIAL_PACKAGES=(
   python python-markdown python-pip python-pipx
   avahi nss-mdns
   noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu ttf-jetbrains-mono
-  mdadm samba cockpit smartmontools
+  samba cockpit smartmontools
 )
 
 AUR_PACKAGES=(
