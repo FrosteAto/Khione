@@ -1,4 +1,4 @@
-# Welcome to FrosteArch Desktop 2.2s
+# Welcome to FrosteArch Desktop 2.2
 
 Setup has finished successfully.
 
