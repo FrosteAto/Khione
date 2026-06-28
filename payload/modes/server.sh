@@ -9,6 +9,7 @@ OFFICIAL_PACKAGES=(
   kdialog
   ufw nano btop flatpak kitty dolphin ark fastfetch firefox sof-firmware git partitionmanager p7zip
   python python-markdown python-pip python-pipx
+  openssh
   avahi nss-mdns
   noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu ttf-jetbrains-mono
   samba cockpit smartmontools
@@ -32,6 +33,7 @@ SERVICES_ENABLE=(
   cockpit.socket
   smartd.service
   wsdd.service
+  sshd.service
 )
 
 SERVICES_MASK=( sleep.target suspend.target hibernate.target hybrid-sleep.target samba.service )
