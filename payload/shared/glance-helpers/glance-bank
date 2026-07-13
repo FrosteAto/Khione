@@ -103,6 +103,48 @@ def group_label(records):
     return Counter(r["name"] for r in records).most_common(1)[0][0]
 
 
+# Keyword -> category map for the Spending by Category widget. Matched as
+# substrings against the uppercased merchant name; first category with a
+# hit wins, so the specific must come before the generic (UBER EATS before
+# UBER, AMAZON PRIME before AMAZON). Unmatched spending lands in "Other" —
+# grow this list whenever something sits there that shouldn't.
+CATEGORY_KEYWORDS = [
+    ("Groceries", ["TESCO", "SAINSBURY", "ALDI", "LIDL", "ASDA", "MORRISON",
+                   "CO OP", "WAITROSE", "ICELAND", "FARMFOODS", "MARKS"]),
+    ("Eating Out", ["JUST EAT", "UBER EATS", "DELIVEROO", "MCDONALD", "KFC",
+                    "GREGGS", "SUBWAY", "NANDO", "DOMINO", "PIZZA", "BURGER",
+                    "KEBAB", "COFFEE", "CAFE", "COSTA", "STARBUCKS", "PRET",
+                    "WETHERSPOON", "RESTAURANT", "BAKERY"]),
+    ("Subscriptions", ["NETFLIX", "SPOTIFY", "DISNEY", "AMAZON PRIME",
+                       "PRIME VIDEO", "YOUTUBE", "APPLE COM", "GOOGLE",
+                       "PATREON", "TWITCH", "CRUNCHYROLL", "AUDIBLE",
+                       "PLAYSTATION", "NINTENDO", "XBOX"]),
+    ("Transport", ["TRAINLINE", "RAILWAY", "STAGECOACH", "ARRIVA",
+                   "NATIONAL EXPRESS", "UBER", "FUEL", "PETROL", "SHELL",
+                   "ESSO", "TEXACO", "PARKING", "RINGGO", "DVLA", "KWIK FIT"]),
+    ("Health & Fitness", ["PUREGYM", "GYM", "BOOTS", "SUPERDRUG", "PHARMACY",
+                          "DENTIST", "DENTAL", "SPECSAVERS", "OPTICIAN",
+                          "HOLLAND BARRETT", "MYPROTEIN", "BULK POWDERS"]),
+    ("Bills & Utilities", ["OCTOPUS", "BRITISH GAS", "EDF", "E ON", "OVO",
+                           "SEVERN TRENT", "COUNCIL", "TV LICENCE", "WATER",
+                           "VODAFONE", "GIFFGAFF", "PLUSNET", "VIRGIN MEDIA",
+                           "TALKTALK", "INSURANCE"]),
+    ("Rent & Housing", ["RENT", "LETTING", "MORTGAGE", "LANDLORD"]),
+    ("Shopping", ["AMAZON", "EBAY", "ARGOS", "CURRYS", "SCREWFIX", "WICKES",
+                  "TOOLSTATION", "PRIMARK", "TK MAXX", "SPORTS DIRECT",
+                  "JD SPORTS", "HOME BARGAINS", "JOHN LEWIS", "IKEA", "ETSY"]),
+    ("Cash", ["ATM", "CASH"]),
+]
+
+
+def category_for(name):
+    hay = name.upper() + " " + merchant_key(name)
+    for cat, keywords in CATEGORY_KEYWORDS:
+        if any(k in hay for k in keywords):
+            return cat
+    return "Other"
+
+
 secret_id = os.environ.get("GC_SECRET_ID")
 secret_key = os.environ.get("GC_SECRET_KEY")
 account_id = os.environ.get("GC_ACCOUNT_ID")
@@ -243,6 +285,21 @@ for m in merchants:
     m["percent"] = round(m["total"] / top_total * 100) if top_total else 0
     m["share"] = round(m["total"] / spent * 100) if spent else 0
 
+# This month's outgoings by category, bars scaled against the biggest.
+by_category = defaultdict(lambda: [0.0, 0])
+for r in month_records:
+    if r["amount"] < 0:
+        entry = by_category[category_for(r["name"])]
+        entry[0] += -r["amount"]
+        entry[1] += 1
+categories = [{"name": c, "total": round(t, 2), "count": n}
+              for c, (t, n) in by_category.items()]
+categories.sort(key=lambda x: -x["total"])
+cat_max = categories[0]["total"] if categories else 0
+for c in categories:
+    c["percent"] = round(c["total"] / cat_max * 100) if cat_max else 0
+    c["share"] = round(c["total"] / spent * 100) if spent else 0
+
 recent = [{
     "date": parse(r["date"]).strftime("%d %b"),
     "name": r["name"],
@@ -325,6 +382,7 @@ write(OUT_FINANCE, {
     "net": round(abs(net), 2),
     "net_positive": net >= 0,
     "kept_percent": max(0, round(net / income * 100)) if income else 0,
+    "categories": categories,
     "merchants": merchants,
     "recent": recent,
     "biggest": biggest,
