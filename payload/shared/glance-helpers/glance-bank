@@ -3,11 +3,18 @@
 the Glance dashboard: budget.json (Home page's Monthly Spending widget) and
 finance.json (the Finances page).
 
-One transactions call per run — GoCardless institutions typically allow ~4
-per day and the 6h timer is already at that cap, so everything on both pages
-must come from this single fetch. Booked transactions are merged into
-/var/lib/glance/bank-history.jsonl so month-vs-month comparisons and
-recurring-payment detection can outlive the ~90-day window the API returns.
+The timer runs this hourly, but the API is only hit when the last
+successful sync is ~6 hours old — GoCardless institutions typically allow
+~4 transaction calls per day. On any API failure the run still succeeds:
+both JSONs are regenerated from the local cache, flagged "stale" so the
+widgets can show a warning, and the next hourly tick retries.
+
+Booked transactions are merged into /var/lib/glance/bank-history.jsonl so
+month-vs-month comparisons and recurring-payment detection can outlive the
+~90-day window the API returns. Each line keeps the complete raw
+transaction from the API under "raw" — these calls are scarce, so nothing
+they return is thrown away; future features (categories etc.) can mine it
+without refetching.
 
 Credentials come from /etc/glance-bank.env (via the systemd unit); run
 glance-bank-setup to create them and link a bank account.
@@ -27,8 +34,11 @@ from datetime import date, datetime, timedelta, timezone
 OUT_BUDGET = "/var/lib/glance/assets/budget.json"
 OUT_FINANCE = "/var/lib/glance/assets/finance.json"
 HISTORY = "/var/lib/glance/bank-history.jsonl"
+STATE = "/var/lib/glance/bank-sync-state.json"
 API = "https://bankaccountdata.gocardless.com/api/v2"
 FETCH_DAYS = 90  # most banks' full access window; still a single API call
+SYNC_SECONDS = 6 * 3600 - 600  # ~6h between API hits (slack for timer jitter)
+STALE_SECONDS = 7 * 3600  # a missed sync plus slack -> widgets show a warning
 
 
 def write(path, data):
@@ -111,25 +121,10 @@ if not (secret_id and secret_key and account_id):
     write(OUT_FINANCE, {"configured": False})
     sys.exit(0)
 
-# On any API failure below the script exits non-zero and the previous JSON
-# files are left in place, so the widgets keep showing stale-but-real
-# numbers instead of an error.
-token = api("/token/new/", payload={"secret_id": secret_id, "secret_key": secret_key})["access"]
-
 today = date.today()
 month_start = today.replace(day=1)
-fetch_from = today - timedelta(days=FETCH_DAYS)
-try:
-    data = api(f"/accounts/{account_id}/transactions/?date_from={fetch_from.isoformat()}", token=token)
-except urllib.error.HTTPError as e:
-    # Some institutions reject 90-day requests (400); retry month-to-date.
-    # Anything else (429 rate limit, expired consent...) must NOT trigger a
-    # retry — that would burn another call from the daily quota.
-    if e.code != 400:
-        raise
-    data = api(f"/accounts/{account_id}/transactions/?date_from={month_start.isoformat()}", token=token)
+now_utc = datetime.now(timezone.utc)
 
-# ---- merge this fetch into the local history cache -------------------------
 history = {}
 try:
     with open(HISTORY) as f:
@@ -141,22 +136,55 @@ try:
 except FileNotFoundError:
     pass
 
-for t in data["transactions"]["booked"]:
-    amount = float(t["transactionAmount"]["amount"])
-    booked_on = t.get("bookingDate") or t.get("valueDate")
-    if not booked_on:
-        continue
-    name = display_name(t, amount)
-    key = (t.get("transactionId") or t.get("internalTransactionId")
-           or f"{booked_on}|{amount:.2f}|{name}")
-    history[key] = {"id": key, "date": booked_on, "amount": round(amount, 2), "name": name}
+last_success = None
+try:
+    with open(STATE) as f:
+        last_success = datetime.fromisoformat(json.load(f)["last_success"])
+except (FileNotFoundError, KeyError, ValueError):
+    pass
+
+# Only hit the API when the last successful sync is old enough; on failure
+# fall through and rebuild the outputs from the cache so the widgets stay
+# up (flagged stale below) and the next hourly timer tick retries.
+if last_success is None or (now_utc - last_success).total_seconds() >= SYNC_SECONDS:
+    try:
+        token = api("/token/new/", payload={"secret_id": secret_id, "secret_key": secret_key})["access"]
+        fetch_from = today - timedelta(days=FETCH_DAYS)
+        try:
+            data = api(f"/accounts/{account_id}/transactions/?date_from={fetch_from.isoformat()}", token=token)
+        except urllib.error.HTTPError as e:
+            # Some institutions reject 90-day requests (400); retry
+            # month-to-date. Anything else (429 rate limit, expired
+            # consent...) must NOT trigger a retry — that would burn
+            # another call from the daily quota.
+            if e.code != 400:
+                raise
+            data = api(f"/accounts/{account_id}/transactions/?date_from={month_start.isoformat()}", token=token)
+
+        for t in data["transactions"]["booked"]:
+            amount = float(t["transactionAmount"]["amount"])
+            booked_on = t.get("bookingDate") or t.get("valueDate")
+            if not booked_on:
+                continue
+            name = display_name(t, amount)
+            key = (t.get("transactionId") or t.get("internalTransactionId")
+                   or f"{booked_on}|{amount:.2f}|{name}")
+            history[key] = {"id": key, "date": booked_on, "amount": round(amount, 2),
+                            "name": name, "raw": t}
+
+        tmp = HISTORY + ".tmp"
+        with open(tmp, "w") as f:
+            for r in sorted(history.values(), key=lambda r: r["date"]):
+                f.write(json.dumps(r) + "\n")
+        os.replace(tmp, HISTORY)
+        last_success = now_utc
+        write(STATE, {"last_success": now_utc.isoformat()})
+    except Exception as e:
+        print(f"sync failed, serving cached data: {e}", file=sys.stderr)
 
 records = sorted(history.values(), key=lambda r: r["date"])
-tmp = HISTORY + ".tmp"
-with open(tmp, "w") as f:
-    for r in records:
-        f.write(json.dumps(r) + "\n")
-os.replace(tmp, HISTORY)
+stale = last_success is None or (now_utc - last_success).total_seconds() > STALE_SECONDS
+synced = last_success.strftime("%d %b %H:%M UTC") if last_success else "never"
 
 # ---- budget.json (Home page widget, fields unchanged) ----------------------
 month_records = [r for r in records if r["date"] >= month_start.isoformat()]
@@ -168,7 +196,6 @@ days_elapsed = today.day
 days_left = days_in_month - today.day + 1  # including today
 projected = spent / days_elapsed * days_in_month
 left = max(0.0, budget - spent)
-updated = datetime.now(timezone.utc).strftime("%d %b %H:%M UTC")
 
 write(OUT_BUDGET, {
     "configured": True,
@@ -188,7 +215,8 @@ write(OUT_BUDGET, {
     "food": round(food_allowance, 2),
     "wants": round(wants_max, 2),
     "savings": round(savings_max, 2),
-    "updated": updated,
+    "stale": stale,
+    "synced": synced,
 })
 
 # ---- finance.json (Finances page) -------------------------------------------
@@ -304,5 +332,6 @@ write(OUT_FINANCE, {
     "last_month": last_month,
     "recurring": recurring,
     "recurring_total": round(sum(x["amount"] for x in recurring), 2),
-    "updated": updated,
+    "stale": stale,
+    "synced": synced,
 })

@@ -104,6 +104,12 @@ env["GC_ACCOUNT_ID"] = account
 save_env(env)
 print(f"\nSaved {ENV_FILE} (monthly budget: £{env['BUDGET_MONTHLY']} — edit that file to change it).")
 
+# glance-bank only hits the API every ~6h; dropping its state file forces
+# a real sync now for the freshly linked account.
+try:
+    os.remove("/var/lib/glance/bank-sync-state.json")
+except FileNotFoundError:
+    pass
 subprocess.run(["systemctl", "start", "glance-bank.service"], check=False)
 subprocess.run(["systemctl", "restart", "glance.service"], check=False)
 print("First sync triggered — check the dashboard.")

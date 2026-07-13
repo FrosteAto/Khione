@@ -1,11 +1,13 @@
 [Unit]
-Description=Sync bank spending for Glance 4x a day (GoCardless free-tier rate limit)
+Description=Hourly glance-bank tick (real API sync ~every 6h, gated in the script)
 
 [Timer]
-# No OnBootSec: the service itself runs at boot (Before=glance.service),
-# and OnUnitActiveSec chains from that, avoiding a wasted double sync.
-OnUnitActiveSec=6h
-RandomizedDelaySec=15min
+# No OnBootSec: the service itself runs at boot (Before=glance.service).
+# Hourly ticks normally just rebuild the JSON from the cache; glance-bank
+# only hits the API when the last successful sync is ~6h old, so a failed
+# sync gets retried within the hour without blowing the daily quota.
+OnUnitActiveSec=1h
+RandomizedDelaySec=10min
 
 [Install]
 WantedBy=timers.target

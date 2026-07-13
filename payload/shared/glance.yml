@@ -105,7 +105,7 @@ pages:
                   </div>
                 </div>
 
-                <div class="size-h6" style="margin-top: 0.8rem;">UPDATED {{ .JSON.String "updated" }}</div>
+                <div class="size-h6" style="margin-top: 0.8rem;">SYNCED {{ .JSON.String "synced" }}{{ if .JSON.Bool "stale" }} · <span class="color-negative">SYNC FAILING — SHOWING CACHED DATA</span>{{ end }}</div>
               {{ else }}
                 <p class="color-negative">Bank not linked — run: sudo glance-bank-setup</p>
               {{ end }}
@@ -282,6 +282,9 @@ pages:
                   </div>
                 </div>
                 <div class="size-h6" style="margin-top: 0.8rem; text-align: center; text-transform: uppercase;">Kept {{ .JSON.Int "kept_percent" }}% of income in {{ .JSON.String "month" }}</div>
+                {{ if .JSON.Bool "stale" }}
+                <div class="size-h6 color-negative" style="margin-top: 0.8rem; text-align: center;">BANK SYNC FAILING — SHOWING CACHED DATA (LAST SYNC {{ .JSON.String "synced" }})</div>
+                {{ end }}
               {{ else }}
                 <p class="color-negative">Bank not linked — run: sudo glance-bank-setup</p>
               {{ end }}
@@ -372,7 +375,7 @@ pages:
                     {{ end }}
                   </tbody>
                 </table>
-                <div class="size-h6" style="margin-top: 0.8rem;">UPDATED {{ .JSON.String "updated" }}</div>
+                <div class="size-h6" style="margin-top: 0.8rem;">SYNCED {{ .JSON.String "synced" }}{{ if .JSON.Bool "stale" }} · <span class="color-negative">SYNC FAILING — SHOWING CACHED DATA</span>{{ end }}</div>
               {{ end }}
 
       - size: small
