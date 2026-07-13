@@ -3,5 +3,16 @@ set -euo pipefail
 
 out=/var/lib/glance/assets/speedtest.json
 mkdir -p "$(dirname "$out")"
-speedtest-cli --json > "$out.tmp"
+
+# librespeed-cli emits a JSON array of results (download/upload in Mbps,
+# ping in ms); reshape the first result for the dashboard widget.
+librespeed-cli --json | python3 -c '
+import json, sys
+result = json.load(sys.stdin)[0]
+json.dump({
+    "download_mbps": round(result["download"], 1),
+    "upload_mbps": round(result["upload"], 1),
+    "ping": round(result["ping"], 1),
+}, sys.stdout)
+' > "$out.tmp"
 mv "$out.tmp" "$out"

@@ -2,9 +2,11 @@
 Description=Run internet speed test every 3 hours
 
 [Timer]
-OnBootSec=5min
+# Too slow to run Before=glance.service like the other collectors, so it
+# runs shortly after boot instead; the widget shows a pending message
+# until the first result lands.
+OnBootSec=90s
 OnUnitActiveSec=3h
-RandomizedDelaySec=10min
 
 [Install]
 WantedBy=timers.target
