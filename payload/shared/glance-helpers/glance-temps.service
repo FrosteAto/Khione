@@ -1,0 +1,8 @@
+[Unit]
+Description=Collect hardware temperatures for Glance dashboard
+
+[Service]
+Type=oneshot
+User=glance
+Group=glance
+ExecStart=/usr/local/bin/glance-temps

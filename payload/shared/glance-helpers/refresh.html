@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body>
+<script>
+  // Reload the parent dashboard every 30 minutes so a 24/7 display stays
+  // fresh (Glance pages are server-rendered snapshots). This page sits in
+  // an iframe widget hidden via .hidden-widget in custom.css.
+  setTimeout(function () {
+    try { window.parent.location.reload(); } catch (e) { location.reload(); }
+  }, 30 * 60 * 1000);
+</script>
+</body>
+</html>

@@ -197,6 +197,59 @@ configure_samba() {
 EOF
 }
 
+configure_glance() {
+  local config_source="$1"
+  if [[ -z "$config_source" ]]; then
+    echo "No Glance config for this mode, skipping."
+    return 0
+  fi
+  if [[ ! -f "$config_source" ]]; then
+    echo "ERROR: Glance config not found: $config_source"
+    return 1
+  fi
+  # Overwrites the default config shipped by the glance-bin package.
+  echo "Installing Glance config..."
+  sudo install -Dm644 "$config_source" /etc/glance.yml
+}
+
+configure_glance_helpers() {
+  local src_dir="$1"
+  if [[ -z "$src_dir" ]]; then
+    echo "No Glance helpers for this mode, skipping."
+    return 0
+  fi
+  if [[ ! -d "$src_dir" ]]; then
+    echo "ERROR: Glance helpers dir not found: $src_dir"
+    return 1
+  fi
+  echo "Installing Glance helper scripts and systemd units..."
+  # SATA drive temperatures (glance-temps) come from the drivetemp module.
+  echo drivetemp | sudo tee /etc/modules-load.d/drivetemp.conf >/dev/null
+  local f name
+  for f in "$src_dir"/*; do
+    [[ -f "$f" ]] || continue
+    name="$(basename "$f")"
+    case "$name" in
+      *.service|*.timer)
+        sudo install -Dm644 "$f" "/etc/systemd/system/$name"
+        ;;
+      *.hook)
+        sudo install -Dm644 "$f" "/etc/pacman.d/hooks/$name"
+        ;;
+      *.html|*.css)
+        # Static assets served by Glance at /assets/ (dir must stay
+        # writable by the glance user for the helper scripts).
+        sudo install -d -o glance -g glance /var/lib/glance/assets
+        sudo install -m644 "$f" "/var/lib/glance/assets/$name"
+        ;;
+      *)
+        sudo install -Dm755 "$f" "/usr/local/bin/$name"
+        ;;
+    esac
+  done
+  sudo systemctl daemon-reload
+}
+
 configure_greetd() {
   echo "Configuring greetd..."
   sudo tee /etc/greetd/config.toml >/dev/null <<EOF
