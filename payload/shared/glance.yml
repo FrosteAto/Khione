@@ -197,13 +197,14 @@ pages:
             cache: 2m
             url: http://localhost:8080/assets/speedtest.json
             template: |
+              {{ if eq .Response.StatusCode 200 }}
               <div class="flex justify-between text-center">
                 <div>
-                  <div class="color-highlight size-h3">{{ printf "%.0f" (div (.JSON.Float "download") 1000000) }}</div>
+                  <div class="color-highlight size-h3">{{ printf "%.0f" (.JSON.Float "download_mbps") }}</div>
                   <div class="size-h6">DOWN MBPS</div>
                 </div>
                 <div>
-                  <div class="color-highlight size-h3">{{ printf "%.0f" (div (.JSON.Float "upload") 1000000) }}</div>
+                  <div class="color-highlight size-h3">{{ printf "%.0f" (.JSON.Float "upload_mbps") }}</div>
                   <div class="size-h6">UP MBPS</div>
                 </div>
                 <div>
@@ -211,6 +212,9 @@ pages:
                   <div class="size-h6">PING MS</div>
                 </div>
               </div>
+              {{ else }}
+              <p class="size-h5">Waiting for the first speed test — it runs a couple of minutes after boot.</p>
+              {{ end }}
 
           # CPU / NVMe / disk temperatures from /sys/class/hwmon, via the
           # glance-temps systemd timer.

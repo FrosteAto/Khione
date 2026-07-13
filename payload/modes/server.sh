@@ -13,7 +13,7 @@ OFFICIAL_PACKAGES=(
   avahi nss-mdns
   noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu ttf-jetbrains-mono
   samba cockpit smartmontools
-  speedtest-cli pacman-contrib
+  pacman-contrib
 )
 
 AUR_PACKAGES=(
@@ -22,6 +22,7 @@ AUR_PACKAGES=(
   cockpit-file-sharing  # Samba share management GUI inside Cockpit
   cockpit-storaged      # disk/partition/RAID management GUI inside Cockpit
   glance-bin            # self-hosted dashboard (feeds, weather, widgets)
+  librespeed-cli-bin    # dashboard speed test (open-source, unlike speedtest-cli)
 )
 
 SERVICES_ENABLE=(
