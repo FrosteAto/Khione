@@ -1,8 +1,13 @@
 [Unit]
 Description=Collect hardware temperatures for Glance dashboard
+# Runs once at boot before Glance so the widget JSON always exists.
+Before=glance.service
 
 [Service]
 Type=oneshot
 User=glance
 Group=glance
 ExecStart=/usr/local/bin/glance-temps
+
+[Install]
+WantedBy=multi-user.target

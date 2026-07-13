@@ -2,6 +2,9 @@
 Description=Fetch monthly bank spending for Glance dashboard
 Wants=network-online.target
 After=network-online.target
+# Runs once at boot before Glance so the widget JSON always exists
+# (writes an instant "not configured" marker until a bank is linked).
+Before=glance.service
 
 [Service]
 Type=oneshot
@@ -9,3 +12,6 @@ User=glance
 Group=glance
 EnvironmentFile=-/etc/glance-bank.env
 ExecStart=/usr/local/bin/glance-bank
+
+[Install]
+WantedBy=multi-user.target

@@ -38,12 +38,12 @@ SERVICES_ENABLE=(
   sshd.service
   glance.service
   glance-speedtest.timer
-  glance-disks.timer
-  glance-bank.timer
-  glance-system.timer
-  glance-meals.timer
+  glance-disks.timer glance-disks.service
+  glance-bank.timer glance-bank.service
+  glance-system.timer glance-system.service
+  glance-meals.timer glance-meals.service
   glance-weight.service
-  glance-temps.timer
+  glance-temps.timer glance-temps.service
 )
 
 SERVICES_MASK=( sleep.target suspend.target hibernate.target hybrid-sleep.target samba.service )
