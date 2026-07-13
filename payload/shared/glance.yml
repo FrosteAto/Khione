@@ -194,7 +194,7 @@ pages:
           # Data comes from the glance-speedtest systemd timer (every 3h).
           - type: custom-api
             title: Internet Speed
-            cache: 15m
+            cache: 2m
             url: http://localhost:8080/assets/speedtest.json
             template: |
               <div class="flex justify-between text-center">
