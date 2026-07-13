@@ -35,6 +35,18 @@ pages:
             units: metric
             hour-format: 24h
 
+          - type: markets
+            title: Investments
+            markets:
+              - symbol: 0P0000UGLG.L
+                name: ESG Dev World
+              - symbol: 0P0000TKZO.L
+                name: LifeStrategy 100
+              - symbol: 0P0000KM1Y.L
+                name: Japan Index
+              - symbol: VUAG.L
+                name: S&P 500 (VUAG)
+
       - size: full
         widgets:
           # Month-to-date outgoings vs the budget plan (50/25/25 from the
@@ -319,17 +331,31 @@ pages:
                 <p class="size-h5">Not enough history yet — this fills in once a full previous month is in the cache.</p>
               {{ end }}
 
-          - type: markets
-            title: Investments
-            markets:
-              - symbol: 0P0000UGLG.L
-                name: ESG Dev World
-              - symbol: 0P0000TKZO.L
-                name: LifeStrategy 100
-              - symbol: 0P0000KM1Y.L
-                name: Japan Index
-              - symbol: VUAG.L
-                name: S&P 500 (VUAG)
+          # This month's outgoings bucketed by the keyword->category map in
+          # /usr/local/bin/glance-bank (CATEGORY_KEYWORDS) — anything the
+          # map doesn't know lands in "Other", so grow it from there.
+          - type: custom-api
+            title: Spending by Category
+            cache: 1h
+            url: http://localhost:8080/assets/finance.json
+            template: |
+              {{ if .JSON.Bool "configured" }}
+                <ul class="list list-gap-10">
+                {{ range .JSON.Array "categories" }}
+                  <li title="{{ .Int "count" }} transactions">
+                    <div class="flex justify-between items-end">
+                      <div class="size-h5 color-highlight text-truncate">{{ .String "name" }}</div>
+                      <div class="size-h6" style="white-space: nowrap; margin-left: 0.6rem;">£{{ .Float "total" | printf "%.0f" }} · {{ .Int "share" }}%</div>
+                    </div>
+                    <div class="progress-bar">
+                      <div class="progress-value" style="--percent: {{ .Int "percent" }}"></div>
+                    </div>
+                  </li>
+                {{ end }}
+                </ul>
+              {{ else }}
+                <p class="color-negative">Bank not linked — run: sudo glance-bank-setup</p>
+              {{ end }}
 
       - size: full
         widgets:
