@@ -1,0 +1,14 @@
+[Unit]
+Description=Weigh-in logging endpoint for Glance dashboard
+After=network.target
+
+[Service]
+Type=simple
+User=glance
+Group=glance
+Restart=always
+RestartSec=2
+ExecStart=/usr/local/bin/glance-weight-server
+
+[Install]
+WantedBy=multi-user.target

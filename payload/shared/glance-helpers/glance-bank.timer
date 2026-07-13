@@ -1,0 +1,10 @@
+[Unit]
+Description=Sync bank spending for Glance 4x a day (GoCardless free-tier rate limit)
+
+[Timer]
+OnBootSec=10min
+OnUnitActiveSec=6h
+RandomizedDelaySec=15min
+
+[Install]
+WantedBy=timers.target

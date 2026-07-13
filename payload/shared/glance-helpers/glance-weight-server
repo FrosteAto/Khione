@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+"""Tiny HTTP endpoint that logs weigh-ins from the Glance Weight widget.
+
+GET /log?kg=89.4 appends today's weight to the history log, regenerates
+the widget JSON, and redirects back to the dashboard. Full history lives
+in /var/lib/glance/weight-log.json; the widget only sees the last four
+entries plus progress stats.
+"""
+import json
+import os
+from datetime import date, datetime
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import parse_qs, urlparse
+
+LOG = "/var/lib/glance/weight-log.json"
+OUT = "/var/lib/glance/assets/weight.json"
+PORT = 8081
+START_KG = 90.0
+GOAL_KG = 75.0
+
+
+def pretty(iso):
+    return datetime.strptime(iso, "%Y-%m-%d").strftime("%-d %b %Y")
+
+
+def load_log():
+    if os.path.exists(LOG):
+        with open(LOG) as f:
+            return json.load(f)
+    return []
+
+
+def write_json(path, data):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(data, f)
+    os.replace(tmp, path)
+
+
+def regenerate(entries):
+    entries.sort(key=lambda e: e["date"])
+    if entries:
+        current = entries[-1]
+        data = {
+            "configured": True,
+            "current": current["kg"],
+            "current_date": pretty(current["date"]),
+            "previous": [{"kg": e["kg"], "date": pretty(e["date"])}
+                         for e in entries[-4:-1]],
+            "lost": round(START_KG - current["kg"], 1),
+            "to_go": round(current["kg"] - GOAL_KG, 1),
+            "percent": max(0, min(100, round(
+                (START_KG - current["kg"]) / (START_KG - GOAL_KG) * 100))),
+        }
+    else:
+        data = {"configured": False}
+    write_json(OUT, data)
+
+
+class Handler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        url = urlparse(self.path)
+        if url.path != "/log":
+            self.send_error(404)
+            return
+        try:
+            kg = round(float(parse_qs(url.query)["kg"][0]), 1)
+            if not 30 <= kg <= 300:
+                raise ValueError
+        except (KeyError, ValueError, IndexError):
+            self.send_error(400, "kg must be a number between 30 and 300")
+            return
+        today = date.today().isoformat()
+        entries = [e for e in load_log() if e["date"] != today]
+        entries.append({"date": today, "kg": kg})
+        write_json(LOG, sorted(entries, key=lambda e: e["date"]))
+        regenerate(entries)
+        self.send_response(303)
+        self.send_header("Location", self.headers.get("Referer") or "/")
+        self.end_headers()
+
+    def log_message(self, *args):
+        pass
+
+
+if __name__ == "__main__":
+    regenerate(load_log())  # ensure weight.json exists before first log
+    HTTPServer(("", PORT), Handler).serve_forever()

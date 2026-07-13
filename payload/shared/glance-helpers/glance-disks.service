@@ -1,0 +1,8 @@
+[Unit]
+Description=Collect disk usage for Glance dashboard
+
+[Service]
+Type=oneshot
+User=glance
+Group=glance
+ExecStart=/usr/local/bin/glance-disks

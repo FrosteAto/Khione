@@ -1,0 +1,7 @@
+#!/bin/bash
+set -euo pipefail
+
+out=/var/lib/glance/assets/speedtest.json
+mkdir -p "$(dirname "$out")"
+speedtest-cli --json > "$out.tmp"
+mv "$out.tmp" "$out"

@@ -1,0 +1,4 @@
+/* Hides the auto-refresh iframe widget (and anything else given this class). */
+.hidden-widget {
+  display: none !important;
+}

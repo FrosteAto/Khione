@@ -1,0 +1,108 @@
+#!/usr/bin/env python3
+"""Interactive setup for the Glance Monthly Spending widget.
+
+Links a bank account via GoCardless Bank Account Data (free tier) and
+writes credentials to /etc/glance-bank.env. Re-run whenever the bank
+consent expires (typically every 90-180 days).
+
+Prerequisite: a free account at https://bankaccountdata.gocardless.com
+with a "user secret" created (Developers -> User secrets).
+"""
+import json
+import os
+import subprocess
+import sys
+import time
+import urllib.request
+
+ENV_FILE = "/etc/glance-bank.env"
+API = "https://bankaccountdata.gocardless.com/api/v2"
+
+
+def api(path, token=None, payload=None):
+    req = urllib.request.Request(API + path)
+    req.add_header("Accept", "application/json")
+    if token:
+        req.add_header("Authorization", "Bearer " + token)
+    if payload is not None:
+        req.add_header("Content-Type", "application/json")
+        req.data = json.dumps(payload).encode()
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        return json.load(resp)
+
+
+def load_env():
+    env = {}
+    if os.path.exists(ENV_FILE):
+        with open(ENV_FILE) as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, value = line.split("=", 1)
+                    env[key] = value
+    return env
+
+
+def save_env(env):
+    with open(ENV_FILE, "w") as f:
+        f.write("# GoCardless Bank Account Data credentials for glance-bank.\n")
+        f.write("# BUDGET_MONTHLY is the spending limit shown on the dashboard (GBP).\n")
+        f.write("# INCOME_MONTHLY / BILLS_MONTHLY drive the 50/25/25 budget plan display.\n")
+        for key in ("GC_SECRET_ID", "GC_SECRET_KEY", "GC_ACCOUNT_ID", "BUDGET_MONTHLY",
+                    "INCOME_MONTHLY", "BILLS_MONTHLY"):
+            f.write(f"{key}={env.get(key, '')}\n")
+    os.chmod(ENV_FILE, 0o600)
+
+
+if os.geteuid() != 0:
+    sys.exit("This needs to write /etc/glance-bank.env — run with sudo.")
+
+env = load_env()
+for key, prompt in (("GC_SECRET_ID", "GoCardless secret ID"),
+                    ("GC_SECRET_KEY", "GoCardless secret key")):
+    if not env.get(key):
+        env[key] = input(f"{prompt}: ").strip()
+env.setdefault("BUDGET_MONTHLY", "1790")
+env.setdefault("INCOME_MONTHLY", "2387.42")
+env.setdefault("BILLS_MONTHLY", "1015.48")
+
+token = api("/token/new/", payload={"secret_id": env["GC_SECRET_ID"],
+                                    "secret_key": env["GC_SECRET_KEY"]})["access"]
+
+query = input("Search for your bank (e.g. 'monzo'): ").strip().lower()
+institutions = api("/institutions/?country=gb", token=token)
+matches = [i for i in institutions if query in i["name"].lower()]
+if not matches:
+    sys.exit("No banks matched that search.")
+for n, inst in enumerate(matches):
+    print(f"  [{n}] {inst['name']}")
+inst = matches[int(input("Pick a number: "))]
+
+requisition = api("/requisitions/", token=token, payload={
+    "redirect": "http://192.168.1.185:8080",
+    "institution_id": inst["id"],
+    "reference": str(int(time.time())),
+})
+print("\nOpen this link on any device, log into your bank and approve access:")
+print(f"\n  {requisition['link']}\n")
+input("Press Enter here once you've finished the bank approval... ")
+
+requisition = api(f"/requisitions/{requisition['id']}/", token=token)
+accounts = requisition.get("accounts") or []
+if not accounts:
+    sys.exit(f"No linked accounts yet (requisition status: {requisition.get('status')}). "
+             "Finish the approval and re-run glance-bank-setup.")
+if len(accounts) == 1:
+    account = accounts[0]
+else:
+    for n, acc in enumerate(accounts):
+        print(f"  [{n}] {acc}")
+    account = accounts[int(input("Pick an account number: "))]
+
+env["GC_ACCOUNT_ID"] = account
+save_env(env)
+print(f"\nSaved {ENV_FILE} (monthly budget: £{env['BUDGET_MONTHLY']} — edit that file to change it).")
+
+subprocess.run(["systemctl", "start", "glance-bank.service"], check=False)
+subprocess.run(["systemctl", "restart", "glance.service"], check=False)
+print("First sync triggered — check the dashboard.")

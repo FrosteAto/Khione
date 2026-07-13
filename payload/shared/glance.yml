@@ -1,0 +1,628 @@
+server:
+  port: 8080
+  assets-path: /var/lib/glance/assets
+
+# Earthy naturey theme. Colors are HSL: "hue saturation lightness".
+theme:
+  light: true
+  custom-css-file: /assets/custom.css
+  background-color: 67 19 72 # off-white sage (from #C2C5AA)
+  primary-color: 74 19 32 # olive (from #656D4A)
+  positive-color: 90 26 34 # leafy green
+  negative-color: 27 55 40 # warm brown (from #582F0E)
+  contrast-multiplier: 1.1
+  presets:
+    forest-dark:
+      background-color: 90 20 16 # deep forest green (from #333D29)
+      primary-color: 73 19 60 # sage (from #A4AC86)
+      positive-color: 74 19 45 # olive
+      negative-color: 27 55 45 # warm brown
+      contrast-multiplier: 1.1
+
+pages:
+  - name: Home
+    columns:
+      - size: small
+        widgets:
+          - type: clock
+            hour-format: 24h
+
+          - type: calendar
+            first-day-of-week: monday
+
+          - type: weather
+            location: Derby, United Kingdom
+            units: metric
+            hour-format: 24h
+
+          - type: markets
+            title: Investments
+            markets:
+              - symbol: 0P0000UGLG.L
+                name: ESG Dev World
+              - symbol: 0P0000TKZO.L
+                name: LifeStrategy 100
+              - symbol: 0P0000KM1Y.L
+                name: Japan Index
+              - symbol: VUAG.L
+                name: S&P 500 (VUAG)
+
+      - size: full
+        widgets:
+          # Month-to-date outgoings vs the budget plan (50/25/25 from the
+          # spreadsheet; tune INCOME_MONTHLY / BILLS_MONTHLY / BUDGET_MONTHLY
+          # in /etc/glance-bank.env). Data comes from the glance-bank
+          # systemd timer; link a bank with glance-bank-setup.
+          - type: custom-api
+            title: Monthly Spending
+            cache: 1h
+            url: http://localhost:8080/assets/budget.json
+            template: |
+              {{ if .JSON.Bool "configured" }}
+                <div class="flex justify-between items-end">
+                  <div>
+                    <div class="color-highlight" style="font-size: 2.6rem; line-height: 1;">£{{ .JSON.Float "spent" | printf "%.0f" }}</div>
+                    <div class="size-h5" style="margin-top: 0.3rem;">of £{{ .JSON.Float "budget" | printf "%.0f" }} out in {{ .JSON.String "month" }}</div>
+                  </div>
+                  <div style="text-align: right;">
+                    <div class="size-h3 {{ if gt (.JSON.Float "projected") (.JSON.Float "budget") }}color-negative{{ else }}color-positive{{ end }}">£{{ .JSON.Float "projected" | printf "%.0f" }}</div>
+                    <div class="size-h6">PROJECTED MONTH-END</div>
+                  </div>
+                </div>
+
+                <div class="progress-bar" style="margin-top: 0.8rem;">
+                  <div class="progress-value{{ if ge (.JSON.Int "percent") 85 }} progress-value-notice{{ end }}" style="--percent: {{ .JSON.Int "percent" }}"></div>
+                </div>
+
+                <div class="flex justify-between text-center" style="margin-top: 1rem;">
+                  <div>
+                    <div class="color-highlight size-h3">£{{ .JSON.Float "left" | printf "%.0f" }}</div>
+                    <div class="size-h6">LEFT TO SPEND</div>
+                  </div>
+                  <div>
+                    <div class="color-highlight size-h3">£{{ .JSON.Float "per_day_left" | printf "%.0f" }}/day</div>
+                    <div class="size-h6">FOR {{ .JSON.Int "days_left" }} MORE DAYS</div>
+                  </div>
+                  <div>
+                    <div class="color-highlight size-h3">£{{ .JSON.Float "per_day_spent" | printf "%.0f" }}/day</div>
+                    <div class="size-h6">ACTUAL DAILY AVERAGE</div>
+                  </div>
+                </div>
+
+                <div class="flex justify-between items-end" style="margin-top: 1.2rem;">
+                  <div class="size-h6">MONEY IN THIS MONTH</div>
+                  <div class="size-h5">£{{ .JSON.Float "income" | printf "%.0f" }} of £{{ .JSON.Float "income_expected" | printf "%.0f" }} expected</div>
+                </div>
+                <div class="progress-bar" style="margin-top: 0.4rem;">
+                  <div class="progress-value" style="--percent: {{ .JSON.Int "income_percent" }}"></div>
+                </div>
+
+                <div class="size-h6" style="margin-top: 1.2rem;">BUDGET PLAN (50 / 25 / 25)</div>
+                <div class="flex justify-between text-center" style="margin-top: 0.5rem;">
+                  <div>
+                    <div class="color-highlight size-h4">£{{ .JSON.Float "bills" | printf "%.0f" }}</div>
+                    <div class="size-h6">BILLS</div>
+                  </div>
+                  <div>
+                    <div class="color-highlight size-h4">£{{ .JSON.Float "food" | printf "%.0f" }}</div>
+                    <div class="size-h6">FOOD</div>
+                  </div>
+                  <div>
+                    <div class="color-highlight size-h4">£{{ .JSON.Float "wants" | printf "%.0f" }}</div>
+                    <div class="size-h6">WANTS</div>
+                  </div>
+                  <div>
+                    <div class="color-highlight size-h4">£{{ .JSON.Float "savings" | printf "%.0f" }}</div>
+                    <div class="size-h6">SAVINGS</div>
+                  </div>
+                </div>
+
+                <div class="size-h6" style="margin-top: 0.8rem;">UPDATED {{ .JSON.String "updated" }}</div>
+              {{ else }}
+                <p class="color-negative">Bank not linked — run: sudo glance-bank-setup</p>
+              {{ end }}
+
+          # One news widget, tab per feed.
+          - type: group
+            widgets:
+              - type: rss
+                title: BBC UK News
+                limit: 8
+                collapse-after: 4
+                cache: 1h
+                feeds:
+                  - url: https://feeds.bbci.co.uk/news/uk/rss.xml
+
+              - type: rss
+                title: Derbyshire Live
+                limit: 8
+                collapse-after: 4
+                cache: 1h
+                feeds:
+                  - url: https://www.derbytelegraph.co.uk/news/?service=rss
+
+          - type: rss
+            title: Arch Linux News
+            limit: 5
+            collapse-after: 3
+            cache: 3h
+            feeds:
+              - url: https://archlinux.org/feeds/news/
+
+      - size: small
+        widgets:
+          - type: monitor
+            title: Services
+            cache: 1m
+            sites:
+              - title: Plex
+                url: http://192.168.1.185:32400/web
+                check-url: http://localhost:32400/identity
+                icon: di:plex
+              - title: Cockpit
+                url: https://192.168.1.185:9090
+                check-url: https://localhost:9090
+                allow-insecure: true
+                icon: di:cockpit
+
+          - type: server-stats
+            servers:
+              - type: local
+                name: FrosteArch Server
+
+          # All disks, always visible (server-stats only shows disks on
+          # hover). Data comes from the glance-disks systemd timer.
+          - type: custom-api
+            title: Disks
+            cache: 5m
+            url: http://localhost:8080/assets/disks.json
+            template: |
+              <ul class="list list-gap-10">
+              {{ range .JSON.Array "disks" }}
+                <li>
+                  <div class="flex justify-between items-end">
+                    <div class="size-h4 color-highlight text-truncate">{{ .String "path" }}</div>
+                    <div class="size-h5">{{ .Float "used_gb" | printf "%.0f" }} / {{ .Float "total_gb" | printf "%.0f" }} GB</div>
+                  </div>
+                  <div class="progress-bar">
+                    <div class="progress-value{{ if ge (.Int "percent") 85 }} progress-value-notice{{ end }}" style="--percent: {{ .Int "percent" }}"></div>
+                  </div>
+                </li>
+              {{ end }}
+              </ul>
+
+          # Data comes from the glance-speedtest systemd timer (every 3h).
+          - type: custom-api
+            title: Internet Speed
+            cache: 15m
+            url: http://localhost:8080/assets/speedtest.json
+            template: |
+              <div class="flex justify-between text-center">
+                <div>
+                  <div class="color-highlight size-h3">{{ printf "%.0f" (div (.JSON.Float "download") 1000000) }}</div>
+                  <div class="size-h6">DOWN MBPS</div>
+                </div>
+                <div>
+                  <div class="color-highlight size-h3">{{ printf "%.0f" (div (.JSON.Float "upload") 1000000) }}</div>
+                  <div class="size-h6">UP MBPS</div>
+                </div>
+                <div>
+                  <div class="color-highlight size-h3">{{ printf "%.0f" (.JSON.Float "ping") }}</div>
+                  <div class="size-h6">PING MS</div>
+                </div>
+              </div>
+
+          # CPU / NVMe / disk temperatures from /sys/class/hwmon, via the
+          # glance-temps systemd timer.
+          - type: custom-api
+            title: Temperatures
+            cache: 1m
+            url: http://localhost:8080/assets/temps.json
+            template: |
+              {{ $temps := .JSON.Array "temps" }}
+              {{ if gt (len $temps) 0 }}
+              <div class="flex justify-between text-center">
+                {{ range $temps }}
+                <div>
+                  <div class="size-h3 {{ if .Bool "hot" }}color-negative{{ else }}color-highlight{{ end }}">{{ .Int "c" }}°C</div>
+                  <div class="size-h6">{{ .String "name" }}</div>
+                </div>
+                {{ end }}
+              </div>
+              {{ else }}
+              <p class="size-h5">No temperature sensors found.</p>
+              {{ end }}
+
+          # Pending pacman updates, uptime and kernel. Data comes from the
+          # glance-system systemd timer.
+          - type: custom-api
+            title: System
+            cache: 1m
+            url: http://localhost:8080/assets/system.json
+            template: |
+              <div class="flex justify-between text-center">
+                <div>
+                  <div class="size-h3 {{ if gt (.JSON.Int "updates") 0 }}color-highlight{{ else }}color-positive{{ end }}">{{ .JSON.Int "updates" }}</div>
+                  <div class="size-h6">UPDATES PENDING</div>
+                </div>
+                <div>
+                  <div class="color-highlight size-h3">{{ .JSON.String "uptime" }}</div>
+                  <div class="size-h6">UPTIME</div>
+                </div>
+              </div>
+              <div class="size-h6" style="margin-top: 0.8rem; text-align: center;">KERNEL {{ .JSON.String "kernel" }}</div>
+
+          # Invisible: reloads the page every 30 minutes so a 24/7 wall
+          # display stays fresh. Hidden by .hidden-widget in custom.css;
+          # the reload interval lives in /var/lib/glance/assets/refresh.html.
+          - type: iframe
+            source: /assets/refresh.html
+            height: 50
+            css-class: hidden-widget
+
+  # Meal-plan page. Day/week data comes from the glance-meals systemd
+  # timer (4-week rotation anchored in /usr/local/bin/glance-meals).
+  - name: Meals
+    columns:
+      - size: small
+        widgets:
+          - type: custom-api
+            title: Today
+            cache: 15m
+            url: http://localhost:8080/assets/meals.json
+            template: |
+              <div class="size-h3 color-highlight">{{ .JSON.String "day_name" }}</div>
+              <div class="size-h5">Week {{ .JSON.Int "week" }} of 4</div>
+              <ul class="list list-gap-10" style="margin-top: 0.8rem;">
+                <li>
+                  <div class="size-h6">BREAKFAST</div>
+                  <div class="size-h4 color-highlight">{{ .JSON.String "today.breakfast" }}</div>
+                </li>
+                <li>
+                  <div class="size-h6">LUNCH</div>
+                  <div class="size-h4 color-highlight">{{ .JSON.String "today.lunch" }}</div>
+                </li>
+                <li>
+                  <div class="size-h6">SNACKS</div>
+                  <div class="size-h4 color-highlight">{{ .JSON.String "today.snacks" }}</div>
+                </li>
+                <li>
+                  <div class="size-h6">DINNER</div>
+                  <div class="size-h4 color-highlight">{{ .JSON.String "today.dinner" }}</div>
+                </li>
+              </ul>
+
+          # Estimated from the midpoints of each recipe's kcal/protein range.
+          - type: custom-api
+            title: Today's Macros
+            cache: 15m
+            url: http://localhost:8080/assets/meals.json
+            template: |
+              <div class="flex justify-between items-end">
+                <div class="size-h3 color-highlight">~{{ .JSON.Int "kcal" }} kcal</div>
+                <div class="size-h6">TARGET 1,600–1,800</div>
+              </div>
+              <div class="progress-bar" style="margin-top: 0.4rem;">
+                <div class="progress-value" style="--percent: {{ .JSON.Int "kcal_percent" }}"></div>
+              </div>
+              <div class="flex justify-between items-end" style="margin-top: 1rem;">
+                <div class="size-h3 color-highlight">~{{ .JSON.Int "protein" }}g protein</div>
+                <div class="size-h6">TARGET 90–120g</div>
+              </div>
+              <div class="progress-bar" style="margin-top: 0.4rem;">
+                <div class="progress-value" style="--percent: {{ .JSON.Int "protein_percent" }}"></div>
+              </div>
+
+          - type: html
+            title: Targets
+            source: |
+              <div class="flex justify-between text-center">
+                <div>
+                  <div class="color-highlight size-h3">3× / week</div>
+                  <div class="size-h6">RUNNING</div>
+                </div>
+                <div>
+                  <div class="color-highlight size-h3">90 → 75 kg</div>
+                  <div class="size-h6">WEIGHT GOAL</div>
+                </div>
+              </div>
+
+          # Weigh-in tracker: the form posts to the glance-weight-server
+          # helper (port 8081), which logs it and redirects back here.
+          # Hover a number for the date it was logged.
+          - type: custom-api
+            title: Weight
+            cache: 5s
+            url: http://localhost:8080/assets/weight.json
+            template: |
+              {{ if .JSON.Bool "configured" }}
+                <div class="flex items-end justify-between">
+                  {{ range .JSON.Array "previous" }}
+                  <div class="size-h4 color-subdue" title="{{ .String "date" }}">{{ .Float "kg" | printf "%.1f" }}</div>
+                  {{ end }}
+                  <div class="color-highlight" style="font-size: 2.2rem; line-height: 1;" title="{{ .JSON.String "current_date" }}">{{ .JSON.Float "current" | printf "%.1f" }}<span class="size-h5"> kg</span></div>
+                </div>
+                <div class="progress-bar" style="margin-top: 0.6rem;">
+                  <div class="progress-value" style="--percent: {{ .JSON.Int "percent" }}"></div>
+                </div>
+                <div class="flex justify-between size-h6" style="margin-top: 0.3rem;">
+                  <div>LOST {{ .JSON.Float "lost" | printf "%.1f" }} KG</div>
+                  <div>{{ .JSON.Float "to_go" | printf "%.1f" }} KG TO 75</div>
+                </div>
+              {{ else }}
+                <p class="size-h5">No weigh-ins yet — log your first below.</p>
+              {{ end }}
+              <form action="http://192.168.1.185:8081/log" method="get" style="margin-top: 0.8rem; display: flex; gap: 0.5rem;">
+                <input type="number" name="kg" step="0.1" min="30" max="300" placeholder="today's kg" required
+                  style="flex: 1; min-width: 0; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                <button type="submit"
+                  style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.8rem; font: inherit; cursor: pointer;">Log</button>
+              </form>
+
+      - size: full
+        widgets:
+          # Tonight's dinner with batch-cooking status and the full recipe.
+          - type: custom-api
+            title: Tonight
+            cache: 15m
+            url: http://localhost:8080/assets/meals.json
+            template: |
+              <div class="flex justify-between items-end">
+                <div class="size-h2 color-highlight">{{ .JSON.String "tonight.name" }}</div>
+                <div class="size-h4 {{ if eq (.JSON.String "tonight.kind") "cook" }}color-positive{{ else }}color-subdue{{ end }}">{{ .JSON.String "tonight.status" }}</div>
+              </div>
+              <div class="size-h5 color-subdue" style="margin-top: 0.2rem;">{{ .JSON.String "tonight.detail" }}</div>
+              <div class="size-h6" style="margin-top: 0.8rem;">INGREDIENTS</div>
+              <p class="size-h5" style="margin-top: 0.2rem;">{{ .JSON.String "tonight.ingredients" }}</p>
+              <div class="size-h6" style="margin-top: 0.6rem;">METHOD</div>
+              <p class="size-h5" style="margin-top: 0.2rem;">{{ .JSON.String "tonight.instructions" }}</p>
+              <div class="size-h6" style="margin-top: 0.8rem;">TOMORROW · {{ .JSON.String "tonight.tomorrow" }}</div>
+
+          - type: custom-api
+            title: This Week
+            cache: 15m
+            url: http://localhost:8080/assets/meals.json
+            template: |
+              <div class="size-h5">Week {{ .JSON.Int "week" }} of 4 · Week {{ .JSON.Int "next_week" }} starts Monday</div>
+              <table style="width: 100%; border-collapse: collapse; text-align: left; margin-top: 0.6rem;">
+                <thead>
+                  <tr class="size-h6">
+                    <th style="padding: 0.3rem 0.4rem;"></th>
+                    <th style="padding: 0.3rem 0.4rem;">BREAKFAST</th>
+                    <th style="padding: 0.3rem 0.4rem;">LUNCH</th>
+                    <th style="padding: 0.3rem 0.4rem;">SNACKS</th>
+                    <th style="padding: 0.3rem 0.4rem;">DINNER</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {{ range .JSON.Array "days" }}
+                  <tr {{ if .Bool "is_today" }}class="color-highlight"{{ end }} style="border-top: 1px solid rgba(128, 128, 128, 0.25);">
+                    <td class="size-h5" style="padding: 0.5rem 0.4rem;">{{ .String "name" }}</td>
+                    <td style="padding: 0.5rem 0.4rem;">{{ .String "breakfast" }}</td>
+                    <td style="padding: 0.5rem 0.4rem;">{{ .String "lunch" }}</td>
+                    <td style="padding: 0.5rem 0.4rem;">{{ .String "snacks" }}</td>
+                    <td style="padding: 0.5rem 0.4rem;">{{ .String "dinner" }}</td>
+                  </tr>
+                  {{ end }}
+                </tbody>
+              </table>
+
+          - type: custom-api
+            title: Shopping List
+            cache: 15m
+            url: http://localhost:8080/assets/meals.json
+            template: |
+              <div class="size-h5">For week {{ .JSON.Int "week" }} of 4</div>
+              <div class="flex" style="gap: 1.5rem; flex-wrap: wrap; margin-top: 0.6rem;">
+                <div style="flex: 1; min-width: 11rem;">
+                  <div class="size-h6">BREAKFAST</div>
+                  <ul class="list list-gap-2" style="margin-top: 0.3rem;">
+                    {{ range .JSON.Array "shopping_breakfast" }}<li class="size-h5">{{ .String "t" }}</li>{{ end }}
+                  </ul>
+                  <div class="size-h6" style="margin-top: 0.8rem;">LUNCH</div>
+                  <ul class="list list-gap-2" style="margin-top: 0.3rem;">
+                    {{ range .JSON.Array "shopping_lunch" }}<li class="size-h5">{{ .String "t" }}</li>{{ end }}
+                  </ul>
+                  <div class="size-h6" style="margin-top: 0.8rem;">SNACKS</div>
+                  <ul class="list list-gap-2" style="margin-top: 0.3rem;">
+                    {{ range .JSON.Array "shopping_snacks" }}<li class="size-h5">{{ .String "t" }}</li>{{ end }}
+                  </ul>
+                </div>
+                <div style="flex: 1; min-width: 11rem;">
+                  <div class="size-h6">DINNER</div>
+                  <ul class="list list-gap-2" style="margin-top: 0.3rem;">
+                    {{ range .JSON.Array "shopping_dinner" }}<li class="size-h5">{{ .String "t" }}</li>{{ end }}
+                  </ul>
+                </div>
+              </div>
+
+      - size: small
+        widgets:
+          - type: group
+            widgets:
+              - type: html
+                title: Breakfast
+                source: |
+                  <details style="margin-bottom: 0.6rem;">
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Protein porridge + fruit</summary>
+                    <div class="size-h5" style="margin-top: 0.3rem;">
+                      <p class="color-subdue">~345 kcal · ~19g protein</p>
+                      <p style="margin-top: 0.2rem;">½ cup oats, 200ml semi-skimmed milk, 2 heaped tbsp 0% Greek yoghurt, ½ banana or ½ cup berries.</p>
+                      <p style="margin-top: 0.2rem;">Cook oats with milk. Stir in yoghurt after cooking and top with fruit.</p>
+                    </div>
+                  </details>
+                  <details style="margin-bottom: 0.6rem;">
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Yoghurt + oats + fruit</summary>
+                    <div class="size-h5" style="margin-top: 0.3rem;">
+                      <p class="color-subdue">~315 kcal · ~27g protein</p>
+                      <p style="margin-top: 0.2rem;">1 cup 0% Greek yoghurt, ⅓ cup oats, ½ banana or ½ cup berries.</p>
+                      <p style="margin-top: 0.2rem;">Mix yoghurt, oats, and fruit in a bowl.</p>
+                    </div>
+                  </details>
+                  <details style="margin-bottom: 0.6rem;">
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Marmite on toast + protein side</summary>
+                    <div class="size-h5" style="margin-top: 0.3rem;">
+                      <p class="color-subdue">~305–365 kcal · ~15–25g protein</p>
+                      <p style="margin-top: 0.2rem;">2 slices wholemeal bread, thin spreading of Marmite, 200ml semi-skimmed milk or 1 protein drink.</p>
+                      <p style="margin-top: 0.2rem;">Toast bread, spread Marmite thinly, and have milk or a protein drink alongside.</p>
+                    </div>
+                  </details>
+
+              - type: html
+                title: Lunch
+                source: |
+                  <details style="margin-bottom: 0.6rem;">
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Tuna mayo sandwich</summary>
+                    <div class="size-h5" style="margin-top: 0.3rem;">
+                      <p class="color-subdue">~335 kcal · ~35–40g protein</p>
+                      <p style="margin-top: 0.2rem;">2 slices wholemeal bread, 1 tin tuna in spring water, 1 tbsp light mayo, black pepper.</p>
+                      <p style="margin-top: 0.2rem;">Drain tuna, mix with mayo and pepper, and make the sandwich.</p>
+                    </div>
+                  </details>
+                  <details style="margin-bottom: 0.6rem;">
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Chicken + pickle sandwich</summary>
+                    <div class="size-h5" style="margin-top: 0.3rem;">
+                      <p class="color-subdue">~330–380 kcal · ~30–35g protein</p>
+                      <p style="margin-top: 0.2rem;">2 slices wholemeal bread, 100g cooked chicken slices, 1 tbsp pickle, optional cucumber or salad.</p>
+                      <p style="margin-top: 0.2rem;">Layer chicken and pickle in the sandwich; add cucumber or salad if desired.</p>
+                    </div>
+                  </details>
+                  <details style="margin-bottom: 0.6rem;">
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Hummus + chicken salad sandwich</summary>
+                    <div class="size-h5" style="margin-top: 0.3rem;">
+                      <p class="color-subdue">~350–400 kcal · ~28–32g protein</p>
+                      <p style="margin-top: 0.2rem;">2 slices wholemeal bread, 1 heaped tbsp hummus, 75g cooked chicken, 1 handful salad.</p>
+                      <p style="margin-top: 0.2rem;">Use hummus as the spread and add chicken plus salad.</p>
+                    </div>
+                  </details>
+                  <details style="margin-bottom: 0.6rem;">
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Cheese + tomato/pickle sandwich</summary>
+                    <div class="size-h5" style="margin-top: 0.3rem;">
+                      <p class="color-subdue">~315 kcal · ~17g protein</p>
+                      <p style="margin-top: 0.2rem;">2 slices wholemeal bread, 30g reduced-fat cheddar, ½ tomato, 1 tbsp pickle, optional 200ml milk.</p>
+                      <p style="margin-top: 0.2rem;">Slice tomato, add cheese and pickle, and serve with milk if extra protein is needed.</p>
+                    </div>
+                  </details>
+                  <details style="margin-bottom: 0.6rem;">
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Marmite + cucumber sandwich + protein drink</summary>
+                    <div class="size-h5" style="margin-top: 0.3rem;">
+                      <p class="color-subdue">~310–370 kcal · ~15–25g protein</p>
+                      <p style="margin-top: 0.2rem;">2 slices wholemeal bread, thin spreading of Marmite, ¼ cucumber, 1 protein drink.</p>
+                      <p style="margin-top: 0.2rem;">Spread Marmite, add cucumber slices, and have a protein drink alongside.</p>
+                    </div>
+                  </details>
+
+              - type: html
+                title: Snacks
+                source: |
+                  <details style="margin-bottom: 0.6rem;">
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Protein bar</summary>
+                    <div class="size-h5" style="margin-top: 0.3rem;">
+                      <p class="color-subdue">~180–230 kcal · ~15–22g protein</p>
+                      <p style="margin-top: 0.2rem;">Best post-run or as a high-protein treat snack.</p>
+                    </div>
+                  </details>
+                  <details style="margin-bottom: 0.6rem;">
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Protein savoury pack</summary>
+                    <div class="size-h5" style="margin-top: 0.3rem;">
+                      <p class="color-subdue">~80–180 kcal · ~10–25g protein</p>
+                      <p style="margin-top: 0.2rem;">Jerky or chicken bite-style pack; convenient savoury protein.</p>
+                    </div>
+                  </details>
+                  <details style="margin-bottom: 0.6rem;">
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Cereal/oat bar</summary>
+                    <div class="size-h5" style="margin-top: 0.3rem;">
+                      <p class="color-subdue">~90–180 kcal · ~2–6g protein</p>
+                      <p style="margin-top: 0.2rem;">Useful pre-run carbohydrate snack.</p>
+                    </div>
+                  </details>
+                  <details style="margin-bottom: 0.6rem;">
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Small chocolate bar / biscuit pack</summary>
+                    <div class="size-h5" style="margin-top: 0.3rem;">
+                      <p class="color-subdue">~100–250 kcal · ~1–5g protein</p>
+                      <p style="margin-top: 0.2rem;">Treat option; keep portion-controlled.</p>
+                    </div>
+                  </details>
+                  <details style="margin-bottom: 0.6rem;">
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Mini Cheddars / baked crisps</summary>
+                    <div class="size-h5" style="margin-top: 0.3rem;">
+                      <p class="color-subdue">~120–180 kcal · ~3–6g protein</p>
+                      <p style="margin-top: 0.2rem;">Savoury treat option for variety.</p>
+                    </div>
+                  </details>
+
+              - type: html
+                title: Dinner
+                source: |
+                  <details style="margin-bottom: 0.6rem;">
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">High-protein chilli</summary>
+                    <div class="size-h5" style="margin-top: 0.3rem;">
+                      <p class="color-subdue">~520–560 kcal · ~35–40g protein · batch of 4</p>
+                      <p style="margin-top: 0.2rem;">500g 5% beef mince, 1 tin chopped tomatoes, 1 tin kidney beans, 1 onion, 1 pepper, spinach, spices, rice.</p>
+                      <p style="margin-top: 0.2rem;">Cook mince, onion, and pepper. Add tomatoes, beans, spices, and spinach. Serve with ½ cup cooked rice.</p>
+                    </div>
+                  </details>
+                  <details style="margin-bottom: 0.6rem;">
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">High-protein bolognese</summary>
+                    <div class="size-h5" style="margin-top: 0.3rem;">
+                      <p class="color-subdue">~500–540 kcal · ~35–40g protein · batch of 4</p>
+                      <p style="margin-top: 0.2rem;">500g 5% beef mince, 1 tin chopped tomatoes, 1 onion, spinach, herbs, 300g dry pasta total.</p>
+                      <p style="margin-top: 0.2rem;">Cook mince and onion, add tomatoes, herbs, and spinach. Serve with 75g dry pasta per portion.</p>
+                    </div>
+                  </details>
+                  <details style="margin-bottom: 0.6rem;">
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Chicken curry</summary>
+                    <div class="size-h5" style="margin-top: 0.3rem;">
+                      <p class="color-subdue">~520–580 kcal · ~45–50g protein · batch of 4</p>
+                      <p style="margin-top: 0.2rem;">700g chicken breast, 1 onion, 1 tin chopped tomatoes, spinach, curry paste/sauce, low-fat yoghurt, rice.</p>
+                      <p style="margin-top: 0.2rem;">Cook chicken and onion, add tomatoes and curry paste. Stir in yoghurt at the end and serve with ½ cup cooked rice.</p>
+                    </div>
+                  </details>
+                  <details style="margin-bottom: 0.6rem;">
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Salmon + potatoes + veg</summary>
+                    <div class="size-h5" style="margin-top: 0.3rem;">
+                      <p class="color-subdue">~500–620 kcal · ~28–45g protein · 3 portions / fresh</p>
+                      <p style="margin-top: 0.2rem;">1 salmon fillet, 250g potatoes, 1½ cups vegetables, 1 tsp olive oil.</p>
+                      <p style="margin-top: 0.2rem;">Cook salmon, boil or bake potatoes, and serve with a large portion of vegetables.</p>
+                    </div>
+                  </details>
+                  <details style="margin-bottom: 0.6rem;">
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Japanese chicken curry</summary>
+                    <div class="size-h5" style="margin-top: 0.3rem;">
+                      <p class="color-subdue">~620–700 kcal · ~45–50g protein · batch of 4</p>
+                      <p style="margin-top: 0.2rem;">700g chicken breast, ½ block Japanese curry mix, onion, carrots, potatoes, spinach, rice.</p>
+                      <p style="margin-top: 0.2rem;">Simmer chicken, onion, carrots, and potatoes. Add curry block and spinach, then serve with ½ cup cooked rice.</p>
+                    </div>
+                  </details>
+                  <details style="margin-bottom: 0.6rem;">
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Tuna pesto pasta</summary>
+                    <div class="size-h5" style="margin-top: 0.3rem;">
+                      <p class="color-subdue">~520–580 kcal · ~38–45g protein · batch of 3</p>
+                      <p style="margin-top: 0.2rem;">75g dry pasta, 2 tbsp reduced-fat pesto, spinach, tomato, 1 tin tuna.</p>
+                      <p style="margin-top: 0.2rem;">Cook pasta, stir through pesto, spinach, and tomato, then add drained tuna.</p>
+                    </div>
+                  </details>
+                  <details style="margin-bottom: 0.6rem;">
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Baked potato with tuna</summary>
+                    <div class="size-h5" style="margin-top: 0.3rem;">
+                      <p class="color-subdue">~400–500 kcal · ~35–45g protein · 3 portions / fresh</p>
+                      <p style="margin-top: 0.2rem;">1 large potato, 1 tin tuna, 1 tbsp light mayo, ¼ small red onion, salad/veg.</p>
+                      <p style="margin-top: 0.2rem;">Bake or microwave the potato, mix tuna with mayo and onion, and serve with salad or vegetables.</p>
+                    </div>
+                  </details>
+                  <details style="margin-bottom: 0.6rem;">
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Sausage tray bake + beans</summary>
+                    <div class="size-h5" style="margin-top: 0.3rem;">
+                      <p class="color-subdue">~540–680 kcal · ~20–32g protein · batch of 3</p>
+                      <p style="margin-top: 0.2rem;">2 reduced-fat sausages, 250g potatoes, carrot, ½ onion, ½ pepper, 1 tsp olive oil, ½ tin beans.</p>
+                      <p style="margin-top: 0.2rem;">Roast sausages and vegetables with oil, then serve with ½ tin beans.</p>
+                    </div>
+                  </details>
+                  <details style="margin-bottom: 0.6rem;">
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Tortelloni with tomato + lentils/beans</summary>
+                    <div class="size-h5" style="margin-top: 0.3rem;">
+                      <p class="color-subdue">~560–650 kcal · ~25–35g protein · 3 portions / fresh</p>
+                      <p style="margin-top: 0.2rem;">½ pack tortelloni, tomato sauce/chopped tomatoes, spinach, ½ tin drained lentils or beans.</p>
+                      <p style="margin-top: 0.2rem;">Boil tortelloni, heat sauce with spinach and lentils/beans, then combine.</p>
+                    </div>
+                  </details>

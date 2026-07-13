@@ -1,0 +1,10 @@
+[Unit]
+Description=Measure internet speed for Glance dashboard
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=glance
+Group=glance
+ExecStart=/usr/local/bin/glance-speedtest

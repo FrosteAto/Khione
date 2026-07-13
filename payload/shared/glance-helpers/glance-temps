@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+"""Write hardware temperature JSON for the Glance Temperatures widget.
+
+Reads /sys/class/hwmon directly (no root or lm_sensors needed). SATA
+drive temps require the drivetemp kernel module, loaded via
+/etc/modules-load.d/drivetemp.conf by the installer.
+"""
+import glob
+import json
+import os
+
+OUT = "/var/lib/glance/assets/temps.json"
+
+# hwmon name -> (tile label, "hot" threshold in celsius)
+SOURCES = {
+    "coretemp": ("CPU", 80),
+    "k10temp": ("CPU", 80),
+    "zenpower": ("CPU", 80),
+    "nvme": ("NVME", 70),
+    "drivetemp": ("DISKS", 50),
+    "acpitz": ("BOARD", 70),
+}
+
+readings = {}  # label -> (max celsius, threshold)
+for hwmon in glob.glob("/sys/class/hwmon/hwmon*"):
+    try:
+        with open(os.path.join(hwmon, "name")) as f:
+            name = f.read().strip()
+    except OSError:
+        continue
+    if name not in SOURCES:
+        continue
+    label, limit = SOURCES[name]
+    for sensor in glob.glob(os.path.join(hwmon, "temp*_input")):
+        try:
+            with open(sensor) as f:
+                celsius = int(f.read()) / 1000
+        except (OSError, ValueError):
+            continue
+        if label not in readings or celsius > readings[label][0]:
+            readings[label] = (celsius, limit)
+
+ORDER = ["CPU", "NVME", "DISKS", "BOARD"]
+temps = [{"name": label,
+          "c": round(readings[label][0]),
+          "hot": readings[label][0] >= readings[label][1]}
+         for label in ORDER if label in readings]
+
+os.makedirs(os.path.dirname(OUT), exist_ok=True)
+tmp = OUT + ".tmp"
+with open(tmp, "w") as f:
+    json.dump({"temps": temps}, f)
+os.replace(tmp, OUT)

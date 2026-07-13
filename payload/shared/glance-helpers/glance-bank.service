@@ -1,0 +1,11 @@
+[Unit]
+Description=Fetch monthly bank spending for Glance dashboard
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=glance
+Group=glance
+EnvironmentFile=-/etc/glance-bank.env
+ExecStart=/usr/local/bin/glance-bank

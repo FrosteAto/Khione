@@ -146,6 +146,8 @@ THEME_SWITCHER_FILE="${THEME_SWITCHER_FILE:-$REPO_ROOT/shared/frostearch-theme-s
 THEME_METADATA_HELPER_FILE="${THEME_METADATA_HELPER_FILE:-$REPO_ROOT/shared/theme-metadata-tool.py}"
 THEME_WALLPAPERS_DIR="${THEME_WALLPAPERS_DIR:-$REPO_ROOT/themes}"
 THEME_DEFAULT_ID="${THEME_DEFAULT_ID:-$MODE_NAME}"
+GLANCE_CONFIG_REL="${GLANCE_CONFIG_REL:-}"
+GLANCE_HELPERS_REL="${GLANCE_HELPERS_REL:-}"
 KARA_GIT_URL="${KARA_GIT_URL:-https://github.com/dhruv8sh/kara.git}"
 KARA_GIT_REF="${KARA_GIT_REF:-v1.0.0}"
 SETUP_AUDIO_PRODUCTION="${SETUP_AUDIO_PRODUCTION:-false}"
@@ -172,6 +174,8 @@ section "Installing Flatpak packages"
 install_flatpak_packages FLATPAK_PACKAGES
 
 section "Configuring services and firewall"
+configure_glance "${GLANCE_CONFIG_REL:+$REPO_ROOT/$GLANCE_CONFIG_REL}"
+configure_glance_helpers "${GLANCE_HELPERS_REL:+$REPO_ROOT/$GLANCE_HELPERS_REL}"
 enable_services SERVICES_ENABLE
 mask_services SERVICES_MASK
 configure_firewall FIREWALL_RULES

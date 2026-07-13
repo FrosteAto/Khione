@@ -1,0 +1,11 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Operation = Remove
+Type = Package
+Target = *
+
+[Action]
+Description = Refreshing Glance pending-updates count...
+When = PostTransaction
+Exec = /usr/bin/systemctl start --no-block glance-system.service

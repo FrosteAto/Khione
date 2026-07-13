@@ -1,0 +1,22 @@
+#!/bin/bash
+set -euo pipefail
+
+out=/var/lib/glance/assets/system.json
+mkdir -p "$(dirname "$out")"
+
+# checkupdates (pacman-contrib) exits 2 when there are no updates.
+updates_list="$(checkupdates 2>/dev/null || true)"
+if [[ -n "$updates_list" ]]; then
+  updates=$(wc -l <<<"$updates_list")
+else
+  updates=0
+fi
+
+uptime_s=$(cut -d. -f1 /proc/uptime)
+days=$((uptime_s / 86400))
+hours=$(((uptime_s % 86400) / 3600))
+mins=$(((uptime_s % 3600) / 60))
+
+printf '{"updates": %d, "uptime": "%dd %dh %dm", "kernel": "%s"}\n' \
+  "$updates" "$days" "$hours" "$mins" "$(uname -r)" > "$out.tmp"
+mv "$out.tmp" "$out"

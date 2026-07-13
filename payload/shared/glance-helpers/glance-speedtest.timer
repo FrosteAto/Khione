@@ -1,0 +1,10 @@
+[Unit]
+Description=Run internet speed test every 3 hours
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=3h
+RandomizedDelaySec=10min
+
+[Install]
+WantedBy=timers.target
