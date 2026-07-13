@@ -2,7 +2,8 @@
 Description=Sync bank spending for Glance 4x a day (GoCardless free-tier rate limit)
 
 [Timer]
-OnBootSec=10min
+# No OnBootSec: the service itself runs at boot (Before=glance.service),
+# and OnUnitActiveSec chains from that, avoiding a wasted double sync.
 OnUnitActiveSec=6h
 RandomizedDelaySec=15min
 
