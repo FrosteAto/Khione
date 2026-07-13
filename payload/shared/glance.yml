@@ -156,11 +156,11 @@ pages:
             cache: 1m
             sites:
               - title: Plex
-                url: http://192.168.1.185:32400/web
+                url: http://@@GLANCE_HOST@@:32400/web
                 check-url: http://localhost:32400/identity
                 icon: di:plex
               - title: Cockpit
-                url: https://192.168.1.185:9090
+                url: https://@@GLANCE_HOST@@:9090
                 check-url: https://localhost:9090
                 allow-insecure: true
                 icon: di:cockpit
@@ -352,7 +352,7 @@ pages:
               {{ else }}
                 <p class="size-h5">No weigh-ins yet — log your first below.</p>
               {{ end }}
-              <form action="http://192.168.1.185:8081/log" method="get" style="margin-top: 0.8rem; display: flex; gap: 0.5rem;">
+              <form action="http://@@GLANCE_HOST@@:8081/log" method="get" style="margin-top: 0.8rem; display: flex; gap: 0.5rem;">
                 <input type="number" name="kg" step="0.1" min="30" max="300" placeholder="today's kg" required
                   style="flex: 1; min-width: 0; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
                 <button type="submit"

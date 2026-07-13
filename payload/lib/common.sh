@@ -210,6 +210,13 @@ configure_glance() {
   # Overwrites the default config shipped by the glance-bin package.
   echo "Installing Glance config..."
   sudo install -Dm644 "$config_source" /etc/glance.yml
+
+  # LAN-facing links in the config use @@GLANCE_HOST@@ so each install
+  # references its own mDNS name instead of a hardcoded IP.
+  local host
+  host="$(cat /etc/hostname 2>/dev/null || true)"
+  host="${host:-$(hostname)}"
+  sudo sed -i "s/@@GLANCE_HOST@@/${host}.local/g" /etc/glance.yml
 }
 
 configure_glance_helpers() {

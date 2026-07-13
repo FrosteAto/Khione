@@ -10,6 +10,7 @@ with a "user secret" created (Developers -> User secrets).
 """
 import json
 import os
+import socket
 import subprocess
 import sys
 import time
@@ -79,7 +80,7 @@ for n, inst in enumerate(matches):
 inst = matches[int(input("Pick a number: "))]
 
 requisition = api("/requisitions/", token=token, payload={
-    "redirect": "http://192.168.1.185:8080",
+    "redirect": f"http://{socket.gethostname()}.local:8080",
     "institution_id": inst["id"],
     "reference": str(int(time.time())),
 })
