@@ -121,8 +121,12 @@ month_start = today.replace(day=1)
 fetch_from = today - timedelta(days=FETCH_DAYS)
 try:
     data = api(f"/accounts/{account_id}/transactions/?date_from={fetch_from.isoformat()}", token=token)
-except urllib.error.HTTPError:
-    # Some institutions cap how far back a single request may reach.
+except urllib.error.HTTPError as e:
+    # Some institutions reject 90-day requests (400); retry month-to-date.
+    # Anything else (429 rate limit, expired consent...) must NOT trigger a
+    # retry — that would burn another call from the daily quota.
+    if e.code != 400:
+        raise
     data = api(f"/accounts/{account_id}/transactions/?date_from={month_start.isoformat()}", token=token)
 
 # ---- merge this fetch into the local history cache -------------------------
