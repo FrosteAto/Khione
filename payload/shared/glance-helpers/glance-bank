@@ -1,0 +1,96 @@
+#!/usr/bin/env python3
+"""Fetch month-to-date bank activity from GoCardless Bank Account Data and
+write budget JSON for the Glance dashboard's Monthly Spending widget.
+
+Credentials come from /etc/glance-bank.env (via the systemd unit); run
+glance-bank-setup to create them and link a bank account.
+"""
+import calendar
+import json
+import os
+import sys
+import urllib.request
+from datetime import date, datetime, timezone
+
+OUT = "/var/lib/glance/assets/budget.json"
+API = "https://bankaccountdata.gocardless.com/api/v2"
+
+
+def write(data):
+    os.makedirs(os.path.dirname(OUT), exist_ok=True)
+    tmp = OUT + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(data, f)
+    os.replace(tmp, OUT)
+
+
+def api(path, token=None, payload=None):
+    req = urllib.request.Request(API + path)
+    req.add_header("Accept", "application/json")
+    if token:
+        req.add_header("Authorization", "Bearer " + token)
+    if payload is not None:
+        req.add_header("Content-Type", "application/json")
+        req.data = json.dumps(payload).encode()
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        return json.load(resp)
+
+
+secret_id = os.environ.get("GC_SECRET_ID")
+secret_key = os.environ.get("GC_SECRET_KEY")
+account_id = os.environ.get("GC_ACCOUNT_ID")
+budget = float(os.environ.get("BUDGET_MONTHLY", "1790"))
+
+# Budget plan (50/25/25 needs/wants/savings) derived from expected income.
+income_expected = float(os.environ.get("INCOME_MONTHLY", "2387.42"))
+bills_planned = float(os.environ.get("BILLS_MONTHLY", "1015.48"))
+needs_max = income_expected * 0.50
+wants_max = income_expected * 0.25
+savings_max = income_expected * 0.25
+food_allowance = max(0.0, needs_max - bills_planned)
+
+if not (secret_id and secret_key and account_id):
+    write({"configured": False})
+    sys.exit(0)
+
+# On any API failure below the script exits non-zero and the previous
+# budget.json is left in place, so the widget keeps showing stale-but-real
+# numbers instead of an error.
+token = api("/token/new/", payload={"secret_id": secret_id, "secret_key": secret_key})["access"]
+
+today = date.today()
+month_start = today.replace(day=1)
+data = api(f"/accounts/{account_id}/transactions/?date_from={month_start.isoformat()}", token=token)
+
+booked = data["transactions"]["booked"]
+outgoing = [t for t in booked if float(t["transactionAmount"]["amount"]) < 0]
+spent = sum(-float(t["transactionAmount"]["amount"]) for t in outgoing)
+income = sum(float(t["transactionAmount"]["amount"]) for t in booked
+             if float(t["transactionAmount"]["amount"]) > 0)
+
+days_in_month = calendar.monthrange(today.year, today.month)[1]
+days_elapsed = today.day
+days_left = days_in_month - today.day + 1  # including today
+projected = spent / days_elapsed * days_in_month
+left = max(0.0, budget - spent)
+
+write({
+    "configured": True,
+    "month": month_start.strftime("%B"),
+    "spent": round(spent, 2),
+    "budget": budget,
+    "percent": min(100, round(spent / budget * 100)) if budget else 0,
+    "income": round(income, 2),
+    "income_expected": round(income_expected, 2),
+    "income_percent": min(100, round(income / income_expected * 100)) if income_expected else 0,
+    "projected": round(projected, 2),
+    "left": round(left, 2),
+    "per_day_left": round(left / days_left, 2),
+    "per_day_spent": round(spent / days_elapsed, 2),
+    "days_left": days_left,
+    "bills": round(bills_planned, 2),
+    "food": round(food_allowance, 2),
+    "wants": round(wants_max, 2),
+    "savings": round(savings_max, 2),
+    "updated": datetime.now(timezone.utc).strftime("%d %b %H:%M UTC"),
+})

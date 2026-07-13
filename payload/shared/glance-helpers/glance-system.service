@@ -1,0 +1,10 @@
+[Unit]
+Description=Collect system info (pending updates, uptime) for Glance dashboard
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=glance
+Group=glance
+ExecStart=/usr/local/bin/glance-system
