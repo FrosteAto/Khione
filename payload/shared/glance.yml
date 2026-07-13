@@ -35,18 +35,6 @@ pages:
             units: metric
             hour-format: 24h
 
-          - type: markets
-            title: Investments
-            markets:
-              - symbol: 0P0000UGLG.L
-                name: ESG Dev World
-              - symbol: 0P0000TKZO.L
-                name: LifeStrategy 100
-              - symbol: 0P0000KM1Y.L
-                name: Japan Index
-              - symbol: VUAG.L
-                name: S&P 500 (VUAG)
-
       - size: full
         widgets:
           # Month-to-date outgoings vs the budget plan (50/25/25 from the
@@ -263,6 +251,202 @@ pages:
             source: /assets/refresh.html
             height: 50
             css-class: hidden-widget
+
+  # Finance page. Everything comes from finance.json, written by the same
+  # glance-bank systemd timer that feeds the Home page's budget widget
+  # (one GoCardless fetch per run — the free tier only allows ~4/day).
+  # Month-vs-month and recurring data build up in the local history cache
+  # (/var/lib/glance/bank-history.jsonl), so they fill in over time.
+  - name: Finances
+    columns:
+      - size: small
+        widgets:
+          - type: custom-api
+            title: Cash Flow
+            cache: 1h
+            url: http://localhost:8080/assets/finance.json
+            template: |
+              {{ if .JSON.Bool "configured" }}
+                <div class="flex justify-between text-center">
+                  <div>
+                    <div class="size-h3 color-positive">£{{ .JSON.Float "in" | printf "%.0f" }}</div>
+                    <div class="size-h6">MONEY IN</div>
+                  </div>
+                  <div>
+                    <div class="size-h3 color-highlight">£{{ .JSON.Float "out" | printf "%.0f" }}</div>
+                    <div class="size-h6">MONEY OUT</div>
+                  </div>
+                  <div>
+                    <div class="size-h3 {{ if .JSON.Bool "net_positive" }}color-positive{{ else }}color-negative{{ end }}">£{{ .JSON.Float "net" | printf "%.0f" }}</div>
+                    <div class="size-h6">{{ if .JSON.Bool "net_positive" }}KEPT{{ else }}OVERSPENT{{ end }}</div>
+                  </div>
+                </div>
+                <div class="size-h6" style="margin-top: 0.8rem; text-align: center; text-transform: uppercase;">Kept {{ .JSON.Int "kept_percent" }}% of income in {{ .JSON.String "month" }}</div>
+              {{ else }}
+                <p class="color-negative">Bank not linked — run: sudo glance-bank-setup</p>
+              {{ end }}
+
+          # Spend so far vs the same point last month; needs a month of
+          # history in the cache before it has anything to compare.
+          - type: custom-api
+            title: vs Last Month
+            cache: 1h
+            url: http://localhost:8080/assets/finance.json
+            template: |
+              {{ if and (.JSON.Bool "configured") (.JSON.Bool "last_month.available") }}
+                <div class="flex justify-between items-end">
+                  <div class="size-h3 {{ if .JSON.Bool "last_month.up" }}color-negative{{ else }}color-positive{{ end }}">{{ if .JSON.Bool "last_month.up" }}▲{{ else }}▼{{ end }} {{ .JSON.Int "last_month.delta_percent" }}%</div>
+                  <div class="size-h6" style="text-transform: uppercase;">vs {{ .JSON.String "last_month.name" }}</div>
+                </div>
+                <div class="flex justify-between text-center" style="margin-top: 0.8rem;">
+                  <div>
+                    <div class="color-highlight size-h4">£{{ .JSON.Float "out" | printf "%.0f" }}</div>
+                    <div class="size-h6">SO FAR</div>
+                  </div>
+                  <div>
+                    <div class="color-highlight size-h4">£{{ .JSON.Float "last_month.out_to_date" | printf "%.0f" }}</div>
+                    <div class="size-h6">SAME POINT</div>
+                  </div>
+                  <div>
+                    <div class="color-highlight size-h4">£{{ .JSON.Float "last_month.out_total" | printf "%.0f" }}</div>
+                    <div class="size-h6">FULL MONTH</div>
+                  </div>
+                </div>
+              {{ else }}
+                <p class="size-h5">Not enough history yet — this fills in once a full previous month is in the cache.</p>
+              {{ end }}
+
+          - type: markets
+            title: Investments
+            markets:
+              - symbol: 0P0000UGLG.L
+                name: ESG Dev World
+              - symbol: 0P0000TKZO.L
+                name: LifeStrategy 100
+              - symbol: 0P0000KM1Y.L
+                name: Japan Index
+              - symbol: VUAG.L
+                name: S&P 500 (VUAG)
+
+      - size: full
+        widgets:
+          # Outgoings this month grouped by merchant, bars scaled against
+          # the biggest one. Hover a name for its share of total spending.
+          - type: custom-api
+            title: Where The Money Goes
+            cache: 1h
+            url: http://localhost:8080/assets/finance.json
+            template: |
+              {{ if .JSON.Bool "configured" }}
+                <ul class="list list-gap-14">
+                {{ range .JSON.Array "merchants" }}
+                  <li title="{{ .Int "share" }}% of this month's spending">
+                    <div class="flex justify-between items-end">
+                      <div class="size-h4 color-highlight text-truncate">{{ .String "name" }}</div>
+                      <div class="size-h5" style="white-space: nowrap; margin-left: 0.6rem;">£{{ .Float "total" | printf "%.2f" }} · {{ .Int "count" }}×</div>
+                    </div>
+                    <div class="progress-bar">
+                      <div class="progress-value" style="--percent: {{ .Int "percent" }}"></div>
+                    </div>
+                  </li>
+                {{ end }}
+                </ul>
+              {{ else }}
+                <p class="color-negative">Bank not linked — run: sudo glance-bank-setup</p>
+              {{ end }}
+
+          - type: custom-api
+            title: Recent Transactions
+            cache: 1h
+            url: http://localhost:8080/assets/finance.json
+            template: |
+              {{ if .JSON.Bool "configured" }}
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                  <tbody>
+                    {{ range .JSON.Array "recent" }}
+                    <tr style="border-top: 1px solid rgba(128, 128, 128, 0.25);">
+                      <td class="size-h5" style="padding: 0.45rem 0.4rem; white-space: nowrap;">{{ .String "date" }}</td>
+                      <td class="size-h5 color-highlight" style="padding: 0.45rem 0.4rem;">{{ .String "name" }}</td>
+                      <td class="size-h5 {{ if .Bool "in" }}color-positive{{ end }}" style="padding: 0.45rem 0.4rem; text-align: right; white-space: nowrap;">{{ if .Bool "in" }}+{{ else }}−{{ end }}£{{ .String "amount" }}</td>
+                    </tr>
+                    {{ end }}
+                  </tbody>
+                </table>
+                <div class="size-h6" style="margin-top: 0.8rem;">UPDATED {{ .JSON.String "updated" }}</div>
+              {{ end }}
+
+      - size: small
+        widgets:
+          # Spend per day over the last 30 days; hover a bar for the date
+          # and amount.
+          - type: custom-api
+            title: Daily Spending
+            cache: 1h
+            url: http://localhost:8080/assets/finance.json
+            template: |
+              {{ if .JSON.Bool "configured" }}
+                <div class="flex items-end" style="gap: 2px; height: 4.5rem;">
+                  {{ range .JSON.Array "daily" }}
+                  <div title="{{ .String "date" }} · £{{ .Float "amount" | printf "%.2f" }}" style="flex: 1 1 0; min-width: 0; height: {{ .Int "percent" }}%; min-height: 3px; border-radius: 2px 2px 0 0; background: var(--color-primary); opacity: {{ if gt (.Float "amount") 0.0 }}0.85{{ else }}0.25{{ end }};"></div>
+                  {{ end }}
+                </div>
+                <div class="flex justify-between size-h6" style="margin-top: 0.4rem;">
+                  <div>30 DAYS AGO</div>
+                  <div>TODAY</div>
+                </div>
+              {{ end }}
+
+          - type: custom-api
+            title: Biggest Purchases
+            cache: 1h
+            url: http://localhost:8080/assets/finance.json
+            template: |
+              {{ if .JSON.Bool "configured" }}
+                {{ $big := .JSON.Array "biggest" }}
+                {{ if gt (len $big) 0 }}
+                  <ul class="list list-gap-10">
+                  {{ range $big }}
+                    <li class="flex justify-between items-end">
+                      <div style="min-width: 0;">
+                        <div class="size-h5 color-highlight text-truncate">{{ .String "name" }}</div>
+                        <div class="size-h6">{{ .String "date" }}</div>
+                      </div>
+                      <div class="size-h4" style="white-space: nowrap; margin-left: 0.6rem;">£{{ .Float "amount" | printf "%.2f" }}</div>
+                    </li>
+                  {{ end }}
+                  </ul>
+                {{ else }}
+                  <p class="size-h5">Nothing spent this month yet.</p>
+                {{ end }}
+              {{ end }}
+
+          # Same merchant + steady amount + roughly monthly cadence,
+          # detected from the history cache. Hover for the last payment
+          # date.
+          - type: custom-api
+            title: Recurring Payments
+            cache: 1h
+            url: http://localhost:8080/assets/finance.json
+            template: |
+              {{ if .JSON.Bool "configured" }}
+                {{ $rec := .JSON.Array "recurring" }}
+                {{ if gt (len $rec) 0 }}
+                  <div class="flex justify-between items-end">
+                    <div class="size-h3 color-highlight">£{{ .JSON.Float "recurring_total" | printf "%.0f" }}</div>
+                    <div class="size-h6">PER MONTH</div>
+                  </div>
+                  <ul class="list list-gap-10" style="margin-top: 0.8rem;">
+                  {{ range $rec }}
+                    <li class="flex justify-between items-end">
+                      <div class="size-h5 color-highlight text-truncate" title="last paid {{ .String "last" }}">{{ .String "name" }}</div>
+                      <div class="size-h5" style="white-space: nowrap; margin-left: 0.6rem;">£{{ .Float "amount" | printf "%.2f" }}</div>
+                    </li>
+                  {{ end }}
+                  </ul>
+                {{ else }}
+                  <p class="size-h5">No recurring payments spotted yet — detection needs two months of history.</p>
+                {{ end }}
+              {{ end }}
 
   # Meal-plan page. Day/week data comes from the glance-meals systemd
   # timer (4-week rotation anchored in /usr/local/bin/glance-meals).
