@@ -211,12 +211,19 @@ configure_glance() {
   echo "Installing Glance config..."
   sudo install -Dm644 "$config_source" /etc/glance.yml
 
-  # LAN-facing links in the config use @@GLANCE_HOST@@ so each install
-  # references its own mDNS name instead of a hardcoded IP.
+  # LAN-facing links in the config use @@GLANCE_HOST@@. Substitute the
+  # machine's LAN IP: .local mDNS names don't resolve on all clients
+  # (notably Android browsers). Falls back to <hostname>.local if the
+  # IP can't be detected. Give the server a DHCP reservation so the
+  # baked-in IP stays valid.
   local host
-  host="$(cat /etc/hostname 2>/dev/null || true)"
-  host="${host:-$(hostname)}"
-  sudo sed -i "s/@@GLANCE_HOST@@/${host}.local/g" /etc/glance.yml
+  host="$(ip -4 route get 1.1.1.1 2>/dev/null | grep -oP 'src \K\S+' || true)"
+  if [[ -z "$host" ]]; then
+    host="$(cat /etc/hostname 2>/dev/null || true)"
+    host="${host:+${host}.local}"
+    host="${host:-localhost}"
+  fi
+  sudo sed -i "s/@@GLANCE_HOST@@/${host}/g" /etc/glance.yml
 }
 
 configure_glance_helpers() {
