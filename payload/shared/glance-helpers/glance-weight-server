@@ -10,12 +10,13 @@ GET /profile?age=30&height_cm=183&sex=male&activity=1.375 saves the
 maintenance-calorie profile (persisted in weight-profile.json) and
 regenerates the widget JSON with the new numbers.
 
-GET /finance?budget=...&income=...&bills=...&needs_pct=50&wants_pct=25
+GET /finance?salary=35000&bills=...&needs_pct=50&wants_pct=25
 &savings_pct=25 saves the budget-plan constants for the Finances page's
-Budget Settings widget to finance-constants.json. glance-bank reads that
-file (overriding the /etc/glance-bank.env defaults) and a glance-bank.path
-unit re-runs it whenever the file changes, so the dashboard numbers
-rebuild straight away.
+Budget Settings widget to finance-constants.json. Monthly take-home is
+estimated from the annual salary (UK PAYE tax + NI) and written as the
+"income" and "budget" fields glance-bank already reads (overriding the
+/etc/glance-bank.env defaults); a glance-bank.path unit re-runs it
+whenever the file changes, so the dashboard numbers rebuild straight away.
 """
 import json
 import os
@@ -37,8 +38,60 @@ ACTIVITY_FACTORS = ("1.2", "1.375", "1.55", "1.725")  # sedentary..very active
 # Budget-plan constants for the Finances page. Lives under assets/ so the
 # Budget Settings widget can read it back for display and form prefill.
 FINANCE = "/var/lib/glance/assets/finance-constants.json"
-DEFAULT_FINANCE = {"budget": 1790.0, "income": 2387.42, "bills": 1015.48,
+DEFAULT_FINANCE = {"salary": 35000.0, "bills": 1015.48,
                    "needs_pct": 50, "wants_pct": 25, "savings_pct": 25}
+
+# UK PAYE income tax + employee Class 1 NI for the salary -> take-home
+# estimate (2026/27 rates; thresholds frozen for years yet). Assumes no
+# pension contributions, student loan or other payslip deductions. Tax
+# bands apply to taxable income, i.e. after the personal allowance —
+# which tapers away £1 per £2 earned above £100k.
+PERSONAL_ALLOWANCE = 12570.0
+BASIC_BAND = 37700.0     # 20% on taxable income up to this
+HIGHER_LIMIT = 125140.0  # 40% up to this, 45% above
+NI_LOWER, NI_UPPER = 12570.0, 50270.0
+NI_MAIN_RATE, NI_UPPER_RATE = 0.08, 0.02
+
+
+def uk_take_home(salary):
+    allowance = PERSONAL_ALLOWANCE
+    if salary > 100_000:
+        allowance = max(0.0, allowance - (salary - 100_000) / 2)
+    taxable = max(0.0, salary - allowance)
+    tax = 0.20 * min(taxable, BASIC_BAND)
+    tax += 0.40 * max(0.0, min(taxable, HIGHER_LIMIT) - BASIC_BAND)
+    tax += 0.45 * max(0.0, taxable - HIGHER_LIMIT)
+    ni = (NI_MAIN_RATE * max(0.0, min(salary, NI_UPPER) - NI_LOWER)
+          + NI_UPPER_RATE * max(0.0, salary - NI_UPPER))
+    return salary - tax - ni
+
+
+def build_finance(fin):
+    """Derive the monthly figures from salary + bills + split. Take-home
+    is written as both "income" and "budget" — the fields glance-bank and
+    the Home page widget already read — so spending is measured against
+    what actually lands in the bank each month."""
+    take_home = round(uk_take_home(fin["salary"]) / 12, 2)
+    return {**fin, "income": take_home, "budget": take_home,
+            "tax_monthly": round(fin["salary"] / 12 - take_home, 2),
+            "configured": True}
+
+
+def ensure_finance():
+    """Create finance-constants.json, or migrate a pre-salary version:
+    bills and the split survive, the money figures re-derive from the
+    default salary until the form is next saved."""
+    cur = {}
+    if os.path.exists(FINANCE):
+        with open(FINANCE) as f:
+            cur = json.load(f)
+        if "salary" in cur:
+            return
+    fin = dict(DEFAULT_FINANCE)
+    for k in ("bills", "needs_pct", "wants_pct", "savings_pct"):
+        if k in cur:
+            fin[k] = cur[k]
+    write_json(FINANCE, build_finance(fin))
 
 
 def maintenance_kcal(kg, prof):
@@ -124,8 +177,7 @@ class Handler(BaseHTTPRequestHandler):
         elif url.path == "/finance":
             try:
                 fin = {
-                    "budget": round(float(query["budget"][0]), 2),
-                    "income": round(float(query["income"][0]), 2),
+                    "salary": round(float(query["salary"][0]), 2),
                     "bills": round(float(query["bills"][0]), 2),
                     "needs_pct": int(query["needs_pct"][0]),
                     "wants_pct": int(query["wants_pct"][0]),
@@ -133,8 +185,8 @@ class Handler(BaseHTTPRequestHandler):
                 }
                 pcts = (fin["needs_pct"], fin["wants_pct"],
                         fin["savings_pct"])
-                if not (all(0 <= fin[k] <= 1_000_000
-                            for k in ("budget", "income", "bills"))
+                if not (0 <= fin["salary"] <= 10_000_000
+                        and 0 <= fin["bills"] <= 1_000_000
                         and all(0 <= p <= 100 for p in pcts)
                         and sum(pcts) == 100):
                     raise ValueError
@@ -142,8 +194,7 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_error(
                     400, "bad finance values (split must sum to 100)")
                 return
-            fin["configured"] = True
-            write_json(FINANCE, fin)
+            write_json(FINANCE, build_finance(fin))
         elif url.path == "/profile":
             try:
                 prof = {
@@ -180,6 +231,5 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     regenerate(load_log())  # ensure weight.json exists before first log
-    if not os.path.exists(FINANCE):
-        write_json(FINANCE, {**DEFAULT_FINANCE, "configured": True})
+    ensure_finance()
     HTTPServer(("", PORT), Handler).serve_forever()
