@@ -15,7 +15,7 @@ Setup has finished and services are configured.
 
 ## Dashboard setup
 
-The Glance dashboard is already running — open `http://<this-server>.local:8080` from any device on the network.
+The Glance dashboard is already running — open `http://<server-ip>:8080` from any device on the network (`ip -4 addr` shows the IP; give it a DHCP reservation in the router so it doesn't change).
 
 To link your **bank account** (Monthly Spending widget and the Finances page), open a terminal and run:
 
@@ -27,7 +27,7 @@ It walks you through it and can be re-run any time (bank consent needs renewing 
 
 ## Home Assistant
 
-Home Assistant runs as a container. The very first start downloads its image, so give it a few minutes after boot, then open `http://<this-server>.local:8123` and create your account (one time — it survives reinstalls if you keep `/var/lib/hass`).
+Home Assistant runs as a container. The very first start downloads its image, so give it a few minutes after boot, then open `http://<server-ip>:8123` and create your account (one time — it survives reinstalls if you keep `/var/lib/hass`).
 
 - Zigbee: plug in the coordinator dongle, add its `--device` line to `/etc/systemd/system/home-assistant.service` (instructions inside), then enable the ZHA integration.
 - To update HA: `sudo docker pull ghcr.io/home-assistant/home-assistant:stable && sudo systemctl restart home-assistant`
