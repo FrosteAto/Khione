@@ -383,29 +383,42 @@ pages:
                     <div class="size-h6">BILLS /MO</div>
                   </div>
                 </div>
-                <div class="size-h6 color-subdue" style="margin-top: 0.5rem; text-align: center;">PLAN {{ .JSON.Int "needs_pct" }}/{{ .JSON.Int "wants_pct" }}/{{ .JSON.Int "savings_pct" }} NEEDS/WANTS/SAVINGS</div>
+                <div class="flex justify-between text-center" style="margin-top: 0.8rem;">
+                  <div title="bills come out of this, leaving £{{ .JSON.Float "food_amt" | printf "%.0f" }} for food & essentials">
+                    <div class="size-h4 color-highlight">£{{ .JSON.Float "needs_amt" | printf "%.0f" }}</div>
+                    <div class="size-h6">NEEDS {{ .JSON.Int "needs_pct" }}%</div>
+                  </div>
+                  <div>
+                    <div class="size-h4 color-highlight">£{{ .JSON.Float "wants_amt" | printf "%.0f" }}</div>
+                    <div class="size-h6">WANTS {{ .JSON.Int "wants_pct" }}%</div>
+                  </div>
+                  <div>
+                    <div class="size-h4 color-highlight">£{{ .JSON.Float "savings_amt" | printf "%.0f" }}</div>
+                    <div class="size-h6">SAVE {{ .JSON.Int "savings_pct" }}%</div>
+                  </div>
+                </div>
                 <details style="margin-top: 0.6rem;">
                   <summary class="size-h6 color-subdue" style="cursor: pointer;">EDIT</summary>
                   <form action="http://@@GLANCE_HOST@@:8081/finance" method="get"
-                    style="margin-top: 0.5rem; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
+                    style="margin-top: 0.5rem; display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.5rem;">
                     <input type="hidden" name="back" value="http://@@GLANCE_HOST@@:8080/finances">
-                    <label class="size-h6">SALARY £/YR
+                    <label class="size-h6" style="grid-column: span 3;">SALARY £/YR
                       <input type="number" name="salary" step="0.01" min="0" max="10000000" value="{{ .JSON.Float "salary" | printf "%.2f" }}" required
                         style="width: 100%; margin-top: 0.2rem; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
                     </label>
-                    <label class="size-h6">BILLS £/MO
+                    <label class="size-h6" style="grid-column: span 3;">BILLS £/MO
                       <input type="number" name="bills" step="0.01" min="0" max="1000000" value="{{ .JSON.Float "bills" | printf "%.2f" }}" required
                         style="width: 100%; margin-top: 0.2rem; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
                     </label>
-                    <label class="size-h6">NEEDS %
+                    <label class="size-h6" style="grid-column: span 2;">NEEDS %
                       <input type="number" name="needs_pct" min="0" max="100" value="{{ .JSON.Int "needs_pct" }}" required
                         style="width: 100%; margin-top: 0.2rem; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
                     </label>
-                    <label class="size-h6">WANTS %
+                    <label class="size-h6" style="grid-column: span 2;">WANTS %
                       <input type="number" name="wants_pct" min="0" max="100" value="{{ .JSON.Int "wants_pct" }}" required
                         style="width: 100%; margin-top: 0.2rem; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
                     </label>
-                    <label class="size-h6">SAVE %
+                    <label class="size-h6" style="grid-column: span 2;">SAVE %
                       <input type="number" name="savings_pct" min="0" max="100" value="{{ .JSON.Int "savings_pct" }}" required
                         style="width: 100%; margin-top: 0.2rem; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
                     </label>
