@@ -74,21 +74,26 @@ def build_finance(fin):
     take_home = round(uk_take_home(fin["salary"]) / 12, 2)
     return {**fin, "income": take_home, "budget": take_home,
             "tax_monthly": round(fin["salary"] / 12 - take_home, 2),
+            "needs_amt": round(take_home * fin["needs_pct"] / 100, 2),
+            "food_amt": round(max(
+                0.0, take_home * fin["needs_pct"] / 100 - fin["bills"]), 2),
+            "wants_amt": round(take_home * fin["wants_pct"] / 100, 2),
+            "savings_amt": round(take_home * fin["savings_pct"] / 100, 2),
             "configured": True}
 
 
 def ensure_finance():
-    """Create finance-constants.json, or migrate a pre-salary version:
-    bills and the split survive, the money figures re-derive from the
-    default salary until the form is next saved."""
+    """Create finance-constants.json, or migrate an older version: any
+    saved inputs survive and the derived fields are (re)built, so new
+    derived fields appear without waiting for the next form save."""
     cur = {}
     if os.path.exists(FINANCE):
         with open(FINANCE) as f:
             cur = json.load(f)
-        if "salary" in cur:
+        if "salary" in cur and "food_amt" in cur:
             return
     fin = dict(DEFAULT_FINANCE)
-    for k in ("bills", "needs_pct", "wants_pct", "savings_pct"):
+    for k in DEFAULT_FINANCE:
         if k in cur:
             fin[k] = cur[k]
     write_json(FINANCE, build_finance(fin))
