@@ -14,6 +14,7 @@ OFFICIAL_PACKAGES=(
   noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu ttf-jetbrains-mono
   samba cockpit smartmontools
   pacman-contrib
+  docker              # runs the Home Assistant container
 )
 
 AUR_PACKAGES=(
@@ -45,6 +46,8 @@ SERVICES_ENABLE=(
   glance-meals.timer glance-meals.service
   glance-weight.service
   glance-temps.timer glance-temps.service
+  docker.service
+  home-assistant.service
 )
 
 SERVICES_MASK=( sleep.target suspend.target hibernate.target hybrid-sleep.target samba.service )
@@ -56,11 +59,13 @@ FIREWALL_RULES=(
   137/udp 138/udp # Samba NetBIOS
   139/tcp 445/tcp # Samba SMB
   8080/tcp        # Glance dashboard
+  8123/tcp        # Home Assistant web UI
 )
 
 DOTFILES_SUBDIR="themes/server/dotfiles"
 GLANCE_CONFIG_REL="shared/glance.yml"
 GLANCE_HELPERS_REL="shared/glance-helpers"
+HOME_ASSISTANT_UNIT_REL="shared/home-assistant.service"
 
 FIRST_BOOT_DIALOG_TITLE="Welcome to FrosteArch Server"
 FIRST_BOOT_DIALOG_MARKDOWN_REL="shared/first-boot-server.md"

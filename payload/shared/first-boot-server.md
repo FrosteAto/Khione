@@ -11,6 +11,7 @@ Setup has finished and services are configured.
 - Added tools for NAS management: mdadm, samba, wsdd, cockpit, cockpit-file-sharing,smartmontools
 - Added Glance dashboard on port 8080 (news, weather, budget, meal plan, server stats)
 - Added Finances dashboard page (cash flow, top merchants, recent transactions, recurring payments)
+- Added Home Assistant (containerised, port 8123) for smart-home control
 
 ## Dashboard setup
 
@@ -23,6 +24,13 @@ sudo glance-bank-setup
 ```
 
 It walks you through it and can be re-run any time (bank consent needs renewing every ~90-180 days). The Finances page's month-vs-month and recurring-payment widgets build from transaction history, so they fill in over the first month or two.
+
+## Home Assistant
+
+Home Assistant runs as a container. The very first start downloads its image, so give it a few minutes after boot, then open `http://<this-server>.local:8123` and create your account (one time — it survives reinstalls if you keep `/var/lib/hass`).
+
+- Zigbee: plug in the coordinator dongle, add its `--device` line to `/etc/systemd/system/home-assistant.service` (instructions inside), then enable the ZHA integration.
+- To update HA: `sudo docker pull ghcr.io/home-assistant/home-assistant:stable && sudo systemctl restart home-assistant`
 
 ## Recommended checks
 
