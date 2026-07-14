@@ -357,11 +357,12 @@ pages:
                 <p class="color-negative">Bank not linked — run: sudo glance-bank-setup</p>
               {{ end }}
 
-          # Budget-plan constants (expected income, spending budget, planned
-          # bills, needs/wants/savings split). Saving posts to the
-          # glance-weight-server helper (:8081), which writes
-          # finance-constants.json; glance-bank.path then re-runs glance-bank
-          # so every finance widget rebuilds with the new numbers.
+          # Budget-plan constants: annual salary (take-home estimated via UK
+          # PAYE tax + NI in glance-weight-server, used as expected income
+          # AND the monthly spending budget), planned bills, and the
+          # needs/wants/savings split. Saving posts to the helper (:8081),
+          # which writes finance-constants.json; glance-bank.path then
+          # re-runs glance-bank so every finance widget rebuilds.
           - type: custom-api
             title: Budget Settings
             cache: 5s
@@ -370,16 +371,16 @@ pages:
               {{ if .JSON.Bool "configured" }}
                 <div class="flex justify-between text-center">
                   <div>
-                    <div class="size-h4 color-highlight">£{{ .JSON.Float "income" | printf "%.0f" }}</div>
-                    <div class="size-h6">INCOME</div>
+                    <div class="size-h4 color-highlight">£{{ .JSON.Float "salary" | printf "%.0f" }}</div>
+                    <div class="size-h6">SALARY /YR</div>
                   </div>
-                  <div>
-                    <div class="size-h4 color-highlight">£{{ .JSON.Float "budget" | printf "%.0f" }}</div>
-                    <div class="size-h6">BUDGET</div>
+                  <div title="after an estimated £{{ .JSON.Float "tax_monthly" | printf "%.0f" }}/month PAYE tax + NI (no pension or student loan)">
+                    <div class="size-h4 color-highlight">£{{ .JSON.Float "income" | printf "%.0f" }}</div>
+                    <div class="size-h6">TAKE-HOME /MO</div>
                   </div>
                   <div>
                     <div class="size-h4 color-highlight">£{{ .JSON.Float "bills" | printf "%.0f" }}</div>
-                    <div class="size-h6">BILLS</div>
+                    <div class="size-h6">BILLS /MO</div>
                   </div>
                 </div>
                 <div class="size-h6 color-subdue" style="margin-top: 0.5rem; text-align: center;">PLAN {{ .JSON.Int "needs_pct" }}/{{ .JSON.Int "wants_pct" }}/{{ .JSON.Int "savings_pct" }} NEEDS/WANTS/SAVINGS</div>
@@ -388,15 +389,11 @@ pages:
                   <form action="http://@@GLANCE_HOST@@:8081/finance" method="get"
                     style="margin-top: 0.5rem; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
                     <input type="hidden" name="back" value="http://@@GLANCE_HOST@@:8080/finances">
-                    <label class="size-h6">INCOME £
-                      <input type="number" name="income" step="0.01" min="0" max="1000000" value="{{ .JSON.Float "income" | printf "%.2f" }}" required
+                    <label class="size-h6">SALARY £/YR
+                      <input type="number" name="salary" step="0.01" min="0" max="10000000" value="{{ .JSON.Float "salary" | printf "%.2f" }}" required
                         style="width: 100%; margin-top: 0.2rem; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
                     </label>
-                    <label class="size-h6">BUDGET £
-                      <input type="number" name="budget" step="0.01" min="0" max="1000000" value="{{ .JSON.Float "budget" | printf "%.2f" }}" required
-                        style="width: 100%; margin-top: 0.2rem; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
-                    </label>
-                    <label class="size-h6">BILLS £
+                    <label class="size-h6">BILLS £/MO
                       <input type="number" name="bills" step="0.01" min="0" max="1000000" value="{{ .JSON.Float "bills" | printf "%.2f" }}" required
                         style="width: 100%; margin-top: 0.2rem; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
                     </label>
