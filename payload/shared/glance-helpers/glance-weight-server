@@ -9,6 +9,13 @@ entries plus progress stats.
 GET /profile?age=30&height_cm=183&sex=male&activity=1.375 saves the
 maintenance-calorie profile (persisted in weight-profile.json) and
 regenerates the widget JSON with the new numbers.
+
+GET /finance?budget=...&income=...&bills=...&needs_pct=50&wants_pct=25
+&savings_pct=25 saves the budget-plan constants for the Finances page's
+Budget Settings widget to finance-constants.json. glance-bank reads that
+file (overriding the /etc/glance-bank.env defaults) and a glance-bank.path
+unit re-runs it whenever the file changes, so the dashboard numbers
+rebuild straight away.
 """
 import json
 import os
@@ -26,6 +33,12 @@ GOAL_KG = 75.0
 DEFAULT_PROFILE = {"age": 30, "height_cm": 183, "sex": "male",
                    "activity": 1.375}
 ACTIVITY_FACTORS = ("1.2", "1.375", "1.55", "1.725")  # sedentary..very active
+
+# Budget-plan constants for the Finances page. Lives under assets/ so the
+# Budget Settings widget can read it back for display and form prefill.
+FINANCE = "/var/lib/glance/assets/finance-constants.json"
+DEFAULT_FINANCE = {"budget": 1790.0, "income": 2387.42, "bills": 1015.48,
+                   "needs_pct": 50, "wants_pct": 25, "savings_pct": 25}
 
 
 def maintenance_kcal(kg, prof):
@@ -108,6 +121,29 @@ class Handler(BaseHTTPRequestHandler):
             entries.append({"date": today, "kg": kg})
             write_json(LOG, sorted(entries, key=lambda e: e["date"]))
             regenerate(entries)
+        elif url.path == "/finance":
+            try:
+                fin = {
+                    "budget": round(float(query["budget"][0]), 2),
+                    "income": round(float(query["income"][0]), 2),
+                    "bills": round(float(query["bills"][0]), 2),
+                    "needs_pct": int(query["needs_pct"][0]),
+                    "wants_pct": int(query["wants_pct"][0]),
+                    "savings_pct": int(query["savings_pct"][0]),
+                }
+                pcts = (fin["needs_pct"], fin["wants_pct"],
+                        fin["savings_pct"])
+                if not (all(0 <= fin[k] <= 1_000_000
+                            for k in ("budget", "income", "bills"))
+                        and all(0 <= p <= 100 for p in pcts)
+                        and sum(pcts) == 100):
+                    raise ValueError
+            except (KeyError, ValueError, IndexError):
+                self.send_error(
+                    400, "bad finance values (split must sum to 100)")
+                return
+            fin["configured"] = True
+            write_json(FINANCE, fin)
         elif url.path == "/profile":
             try:
                 prof = {
@@ -144,4 +180,6 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     regenerate(load_log())  # ensure weight.json exists before first log
+    if not os.path.exists(FINANCE):
+        write_json(FINANCE, {**DEFAULT_FINANCE, "configured": True})
     HTTPServer(("", PORT), Handler).serve_forever()

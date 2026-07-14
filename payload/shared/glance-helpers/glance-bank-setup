@@ -47,8 +47,9 @@ def load_env():
 def save_env(env):
     with open(ENV_FILE, "w") as f:
         f.write("# GoCardless Bank Account Data credentials for glance-bank.\n")
-        f.write("# BUDGET_MONTHLY is the spending limit shown on the dashboard (GBP).\n")
-        f.write("# INCOME_MONTHLY / BILLS_MONTHLY drive the 50/25/25 budget plan display.\n")
+        f.write("# BUDGET_MONTHLY / INCOME_MONTHLY / BILLS_MONTHLY are only the\n")
+        f.write("# initial defaults — the dashboard's Budget Settings widget\n")
+        f.write("# (Finances page) overrides them via finance-constants.json.\n")
         for key in ("GC_SECRET_ID", "GC_SECRET_KEY", "GC_ACCOUNT_ID", "BUDGET_MONTHLY",
                     "INCOME_MONTHLY", "BILLS_MONTHLY"):
             f.write(f"{key}={env.get(key, '')}\n")
@@ -102,7 +103,8 @@ else:
 
 env["GC_ACCOUNT_ID"] = account
 save_env(env)
-print(f"\nSaved {ENV_FILE} (monthly budget: £{env['BUDGET_MONTHLY']} — edit that file to change it).")
+print(f"\nSaved {ENV_FILE} (monthly budget: £{env['BUDGET_MONTHLY']} — change it "
+      "from the dashboard's Budget Settings widget on the Finances page).")
 
 # glance-bank only hits the API every ~6h; dropping its state file forces
 # a real sync now for the freshly linked account.

@@ -1,0 +1,11 @@
+[Unit]
+Description=Rebuild Glance finance JSON when budget constants change
+
+# Fires glance-bank.service (same-name default) whenever the dashboard's
+# Budget Settings widget saves finance-constants.json. Rebuilds happen
+# from the local cache — the bank API is only hit on its normal schedule.
+[Path]
+PathChanged=/var/lib/glance/assets/finance-constants.json
+
+[Install]
+WantedBy=multi-user.target
