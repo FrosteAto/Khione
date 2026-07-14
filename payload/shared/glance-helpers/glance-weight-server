@@ -5,6 +5,10 @@ GET /log?kg=89.4 appends today's weight to the history log, regenerates
 the widget JSON, and redirects back to the dashboard. Full history lives
 in /var/lib/glance/weight-log.json; the widget only sees the last four
 entries plus progress stats.
+
+GET /profile?age=30&height_cm=183&sex=male&activity=1.375 saves the
+maintenance-calorie profile (persisted in weight-profile.json) and
+regenerates the widget JSON with the new numbers.
 """
 import json
 import os
@@ -13,10 +17,30 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
 
 LOG = "/var/lib/glance/weight-log.json"
+PROFILE = "/var/lib/glance/weight-profile.json"
 OUT = "/var/lib/glance/assets/weight.json"
 PORT = 8081
 START_KG = 90.0
 GOAL_KG = 75.0
+# Defaults until the widget's profile form is saved for the first time.
+DEFAULT_PROFILE = {"age": 30, "height_cm": 183, "sex": "male",
+                   "activity": 1.375}
+ACTIVITY_FACTORS = ("1.2", "1.375", "1.55", "1.725")  # sedentary..very active
+
+
+def maintenance_kcal(kg, prof):
+    # Mifflin-St Jeor BMR scaled by the activity factor.
+    bmr = (10 * kg + 6.25 * prof["height_cm"] - 5 * prof["age"]
+           + (5 if prof["sex"] == "male" else -161))
+    return int(round(bmr * float(prof["activity"]) / 10) * 10)
+
+
+def load_profile():
+    prof = dict(DEFAULT_PROFILE)
+    if os.path.exists(PROFILE):
+        with open(PROFILE) as f:
+            prof.update(json.load(f))
+    return prof
 
 
 def pretty(iso):
@@ -39,6 +63,7 @@ def write_json(path, data):
 
 
 def regenerate(entries):
+    prof = load_profile()
     entries.sort(key=lambda e: e["date"])
     if entries:
         current = entries[-1]
@@ -52,30 +77,58 @@ def regenerate(entries):
             "to_go": round(current["kg"] - GOAL_KG, 1),
             "percent": max(0, min(100, round(
                 (START_KG - current["kg"]) / (START_KG - GOAL_KG) * 100))),
+            "maint": maintenance_kcal(current["kg"], prof),
         }
     else:
         data = {"configured": False}
+    # Echoed back so the widget's profile form shows the saved values.
+    data.update({
+        "profile_age": prof["age"],
+        "profile_height": prof["height_cm"],
+        "profile_sex": prof["sex"],
+        "profile_activity": str(prof["activity"]),
+    })
     write_json(OUT, data)
 
 
 class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         url = urlparse(self.path)
-        if url.path != "/log":
+        query = parse_qs(url.query)
+        if url.path == "/log":
+            try:
+                kg = round(float(query["kg"][0]), 1)
+                if not 30 <= kg <= 300:
+                    raise ValueError
+            except (KeyError, ValueError, IndexError):
+                self.send_error(400, "kg must be a number between 30 and 300")
+                return
+            today = date.today().isoformat()
+            entries = [e for e in load_log() if e["date"] != today]
+            entries.append({"date": today, "kg": kg})
+            write_json(LOG, sorted(entries, key=lambda e: e["date"]))
+            regenerate(entries)
+        elif url.path == "/profile":
+            try:
+                prof = {
+                    "age": int(query["age"][0]),
+                    "height_cm": int(query["height_cm"][0]),
+                    "sex": query["sex"][0],
+                    "activity": float(query["activity"][0]),
+                }
+                if not (10 <= prof["age"] <= 120
+                        and 100 <= prof["height_cm"] <= 250
+                        and prof["sex"] in ("male", "female")
+                        and query["activity"][0] in ACTIVITY_FACTORS):
+                    raise ValueError
+            except (KeyError, ValueError, IndexError):
+                self.send_error(400, "bad profile values")
+                return
+            write_json(PROFILE, prof)
+            regenerate(load_log())
+        else:
             self.send_error(404)
             return
-        try:
-            kg = round(float(parse_qs(url.query)["kg"][0]), 1)
-            if not 30 <= kg <= 300:
-                raise ValueError
-        except (KeyError, ValueError, IndexError):
-            self.send_error(400, "kg must be a number between 30 and 300")
-            return
-        today = date.today().isoformat()
-        entries = [e for e in load_log() if e["date"] != today]
-        entries.append({"date": today, "kg": kg})
-        write_json(LOG, sorted(entries, key=lambda e: e["date"]))
-        regenerate(entries)
         self.send_response(303)
         self.send_header("Location", self.headers.get("Referer") or "/")
         self.end_headers()

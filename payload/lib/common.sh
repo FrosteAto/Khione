@@ -257,6 +257,24 @@ configure_glance_helpers() {
   sudo systemctl daemon-reload
 }
 
+configure_home_assistant() {
+  local unit_source="$1"
+  if [[ -z "$unit_source" ]]; then
+    echo "No Home Assistant unit for this mode, skipping."
+    return 0
+  fi
+  if [[ ! -f "$unit_source" ]]; then
+    echo "ERROR: Home Assistant unit not found: $unit_source"
+    return 1
+  fi
+  echo "Installing Home Assistant container unit..."
+  # All HA state (account, devices, automations, history DB) lives here;
+  # the container itself is disposable.
+  sudo install -d -m755 /var/lib/hass
+  sudo install -Dm644 "$unit_source" /etc/systemd/system/home-assistant.service
+  sudo systemctl daemon-reload
+}
+
 configure_greetd() {
   echo "Configuring greetd..."
   sudo tee /etc/greetd/config.toml >/dev/null <<EOF

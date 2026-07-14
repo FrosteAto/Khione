@@ -566,6 +566,11 @@ pages:
                   <div>LOST {{ .JSON.Float "lost" | printf "%.1f" }} KG</div>
                   <div>{{ .JSON.Float "to_go" | printf "%.1f" }} KG TO 75</div>
                 </div>
+                <div class="flex justify-between size-h6 color-subdue" style="margin-top: 0.3rem;"
+                  title="Mifflin-St Jeor maintenance calories at this weight for the profile saved below">
+                  <div>MAINTENANCE</div>
+                  <div>{{ .JSON.Int "maint" }} KCAL</div>
+                </div>
               {{ else }}
                 <p class="size-h5">No weigh-ins yet — log your first below.</p>
               {{ end }}
@@ -575,6 +580,38 @@ pages:
                 <button type="submit"
                   style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.8rem; font: inherit; cursor: pointer;">Log</button>
               </form>
+              <details style="margin-top: 0.6rem;">
+                <summary class="size-h6 color-subdue" style="cursor: pointer;">MAINTENANCE PROFILE</summary>
+                <form action="http://@@GLANCE_HOST@@:8081/profile" method="get"
+                  style="margin-top: 0.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                  <label class="size-h6">AGE
+                    <input type="number" name="age" min="10" max="120" value="{{ .JSON.Int "profile_age" }}" required
+                      style="width: 100%; margin-top: 0.2rem; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                  </label>
+                  <label class="size-h6">HEIGHT (CM)
+                    <input type="number" name="height_cm" min="100" max="250" value="{{ .JSON.Int "profile_height" }}" required
+                      style="width: 100%; margin-top: 0.2rem; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                  </label>
+                  <label class="size-h6">SEX
+                    <select name="sex"
+                      style="width: 100%; margin-top: 0.2rem; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <option value="male" {{ if eq (.JSON.String "profile_sex") "male" }}selected{{ end }}>Male</option>
+                      <option value="female" {{ if eq (.JSON.String "profile_sex") "female" }}selected{{ end }}>Female</option>
+                    </select>
+                  </label>
+                  <label class="size-h6">ACTIVITY
+                    <select name="activity"
+                      style="width: 100%; margin-top: 0.2rem; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <option value="1.2" {{ if eq (.JSON.String "profile_activity") "1.2" }}selected{{ end }}>Sedentary</option>
+                      <option value="1.375" {{ if eq (.JSON.String "profile_activity") "1.375" }}selected{{ end }}>Light</option>
+                      <option value="1.55" {{ if eq (.JSON.String "profile_activity") "1.55" }}selected{{ end }}>Moderate</option>
+                      <option value="1.725" {{ if eq (.JSON.String "profile_activity") "1.725" }}selected{{ end }}>Very active</option>
+                    </select>
+                  </label>
+                  <button type="submit"
+                    style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.8rem; font: inherit; cursor: pointer;">Save</button>
+                </form>
+              </details>
 
       - size: full
         widgets:
