@@ -160,11 +160,11 @@ try:
         consts = json.load(f)
 except (FileNotFoundError, ValueError):
     pass
-budget = float(consts.get("budget", os.environ.get("BUDGET_MONTHLY", "1790")))
+budget = float(consts.get("budget", os.environ.get("BUDGET_MONTHLY", "1500")))
 income_expected = float(consts.get("income",
-                                   os.environ.get("INCOME_MONTHLY", "2387.42")))
+                                   os.environ.get("INCOME_MONTHLY", "2000")))
 bills_planned = float(consts.get("bills",
-                                 os.environ.get("BILLS_MONTHLY", "1015.48")))
+                                 os.environ.get("BILLS_MONTHLY", "1000")))
 needs_max = income_expected * float(consts.get("needs_pct", 50)) / 100
 wants_max = income_expected * float(consts.get("wants_pct", 25)) / 100
 savings_max = income_expected * float(consts.get("savings_pct", 25)) / 100

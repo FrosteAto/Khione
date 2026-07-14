@@ -27,3 +27,5 @@ Thumbs.db
 **/dev/**
 **/run/**
 iso/airootfs/root/installer/
+# OBS websocket config holds the remote-control password — never track it
+payload/themes/desktop/dotfiles/config/obs-studio/plugin_config/obs-websocket/
