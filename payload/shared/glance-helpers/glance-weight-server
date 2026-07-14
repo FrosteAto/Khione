@@ -129,8 +129,13 @@ class Handler(BaseHTTPRequestHandler):
         else:
             self.send_error(404)
             return
+        # Cross-origin form posts (dashboard :8080 -> here :8081) get a
+        # path-stripped Referer, so forms pass the return URL explicitly.
+        back = query.get("back", [""])[0]
+        if not back.startswith(("http://", "https://")):
+            back = self.headers.get("Referer") or "/"
         self.send_response(303)
-        self.send_header("Location", self.headers.get("Referer") or "/")
+        self.send_header("Location", back)
         self.end_headers()
 
     def log_message(self, *args):

@@ -575,6 +575,7 @@ pages:
                 <p class="size-h5">No weigh-ins yet — log your first below.</p>
               {{ end }}
               <form action="http://@@GLANCE_HOST@@:8081/log" method="get" style="margin-top: 0.8rem; display: flex; gap: 0.5rem;">
+                <input type="hidden" name="back" value="http://@@GLANCE_HOST@@:8080/meals">
                 <input type="number" name="kg" step="0.1" min="30" max="300" placeholder="today's kg" required
                   style="flex: 1; min-width: 0; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
                 <button type="submit"
@@ -584,6 +585,7 @@ pages:
                 <summary class="size-h6 color-subdue" style="cursor: pointer;">MAINTENANCE PROFILE</summary>
                 <form action="http://@@GLANCE_HOST@@:8081/profile" method="get"
                   style="margin-top: 0.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                  <input type="hidden" name="back" value="http://@@GLANCE_HOST@@:8080/meals">
                   <label class="size-h6">AGE
                     <input type="number" name="age" min="10" max="120" value="{{ .JSON.Int "profile_age" }}" required
                       style="width: 100%; margin-top: 0.2rem; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
