@@ -164,6 +164,10 @@ pages:
                 check-url: https://localhost:9090
                 allow-insecure: true
                 icon: di:cockpit
+              - title: Home Assistant
+                url: http://@@GLANCE_HOST@@:8123
+                check-url: http://localhost:8123
+                icon: di:home-assistant
 
           - type: server-stats
             servers:
