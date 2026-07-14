@@ -244,7 +244,7 @@ configure_glance_helpers() {
     [[ -f "$f" ]] || continue
     name="$(basename "$f")"
     case "$name" in
-      *.service|*.timer)
+      *.service|*.timer|*.path)
         sudo install -Dm644 "$f" "/etc/systemd/system/$name"
         ;;
       *.hook)
