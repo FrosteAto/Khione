@@ -64,9 +64,9 @@ for key, prompt in (("GC_SECRET_ID", "GoCardless secret ID"),
                     ("GC_SECRET_KEY", "GoCardless secret key")):
     if not env.get(key):
         env[key] = input(f"{prompt}: ").strip()
-env.setdefault("BUDGET_MONTHLY", "1790")
-env.setdefault("INCOME_MONTHLY", "2387.42")
-env.setdefault("BILLS_MONTHLY", "1015.48")
+env.setdefault("BUDGET_MONTHLY", "1500")
+env.setdefault("INCOME_MONTHLY", "2000")
+env.setdefault("BILLS_MONTHLY", "1000")
 
 token = api("/token/new/", payload={"secret_id": env["GC_SECRET_ID"],
                                     "secret_key": env["GC_SECRET_KEY"]})["access"]

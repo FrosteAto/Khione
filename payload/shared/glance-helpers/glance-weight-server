@@ -10,7 +10,7 @@ GET /profile?age=30&height_cm=183&sex=male&activity=1.375 saves the
 maintenance-calorie profile (persisted in weight-profile.json) and
 regenerates the widget JSON with the new numbers.
 
-GET /finance?salary=35000&bills=...&needs_pct=50&wants_pct=25
+GET /finance?salary=30000&bills=...&needs_pct=50&wants_pct=25
 &savings_pct=25 saves the budget-plan constants for the Finances page's
 Budget Settings widget to finance-constants.json. Monthly take-home is
 estimated from the annual salary (UK PAYE tax + NI) and written as the
@@ -38,7 +38,7 @@ ACTIVITY_FACTORS = ("1.2", "1.375", "1.55", "1.725")  # sedentary..very active
 # Budget-plan constants for the Finances page. Lives under assets/ so the
 # Budget Settings widget can read it back for display and form prefill.
 FINANCE = "/var/lib/glance/assets/finance-constants.json"
-DEFAULT_FINANCE = {"salary": 35000.0, "bills": 1015.48,
+DEFAULT_FINANCE = {"salary": 30000.0, "bills": 1000.0,
                    "needs_pct": 50, "wants_pct": 25, "savings_pct": 25}
 
 # UK PAYE income tax + employee Class 1 NI for the salary -> take-home
