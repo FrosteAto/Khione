@@ -55,7 +55,7 @@ pages:
           # systemd timer; link a bank with glance-bank-setup.
           - type: custom-api
             title: Monthly Spending
-            cache: 1h
+            cache: 1m
             url: http://localhost:8080/assets/budget.json
             template: |
               {{ if .JSON.Bool "configured" }}
@@ -275,7 +275,7 @@ pages:
         widgets:
           - type: custom-api
             title: Cash Flow
-            cache: 1h
+            cache: 1m
             url: http://localhost:8080/assets/finance.json
             template: |
               {{ if .JSON.Bool "configured" }}
@@ -305,7 +305,7 @@ pages:
           # history in the cache before it has anything to compare.
           - type: custom-api
             title: vs Last Month
-            cache: 1h
+            cache: 1m
             url: http://localhost:8080/assets/finance.json
             template: |
               {{ if and (.JSON.Bool "configured") (.JSON.Bool "last_month.available") }}
@@ -336,7 +336,7 @@ pages:
           # map doesn't know lands in "Other", so grow it from there.
           - type: custom-api
             title: Spending by Category
-            cache: 1h
+            cache: 1m
             url: http://localhost:8080/assets/finance.json
             template: |
               {{ if .JSON.Bool "configured" }}
@@ -357,13 +357,76 @@ pages:
                 <p class="color-negative">Bank not linked — run: sudo glance-bank-setup</p>
               {{ end }}
 
+          # Budget-plan constants (expected income, spending budget, planned
+          # bills, needs/wants/savings split). Saving posts to the
+          # glance-weight-server helper (:8081), which writes
+          # finance-constants.json; glance-bank.path then re-runs glance-bank
+          # so every finance widget rebuilds with the new numbers.
+          - type: custom-api
+            title: Budget Settings
+            cache: 5s
+            url: http://localhost:8080/assets/finance-constants.json
+            template: |
+              {{ if .JSON.Bool "configured" }}
+                <div class="flex justify-between text-center">
+                  <div>
+                    <div class="size-h4 color-highlight">£{{ .JSON.Float "income" | printf "%.0f" }}</div>
+                    <div class="size-h6">INCOME</div>
+                  </div>
+                  <div>
+                    <div class="size-h4 color-highlight">£{{ .JSON.Float "budget" | printf "%.0f" }}</div>
+                    <div class="size-h6">BUDGET</div>
+                  </div>
+                  <div>
+                    <div class="size-h4 color-highlight">£{{ .JSON.Float "bills" | printf "%.0f" }}</div>
+                    <div class="size-h6">BILLS</div>
+                  </div>
+                </div>
+                <div class="size-h6 color-subdue" style="margin-top: 0.5rem; text-align: center;">PLAN {{ .JSON.Int "needs_pct" }}/{{ .JSON.Int "wants_pct" }}/{{ .JSON.Int "savings_pct" }} NEEDS/WANTS/SAVINGS</div>
+                <details style="margin-top: 0.6rem;">
+                  <summary class="size-h6 color-subdue" style="cursor: pointer;">EDIT</summary>
+                  <form action="http://@@GLANCE_HOST@@:8081/finance" method="get"
+                    style="margin-top: 0.5rem; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
+                    <input type="hidden" name="back" value="http://@@GLANCE_HOST@@:8080/finances">
+                    <label class="size-h6">INCOME £
+                      <input type="number" name="income" step="0.01" min="0" max="1000000" value="{{ .JSON.Float "income" | printf "%.2f" }}" required
+                        style="width: 100%; margin-top: 0.2rem; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                    </label>
+                    <label class="size-h6">BUDGET £
+                      <input type="number" name="budget" step="0.01" min="0" max="1000000" value="{{ .JSON.Float "budget" | printf "%.2f" }}" required
+                        style="width: 100%; margin-top: 0.2rem; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                    </label>
+                    <label class="size-h6">BILLS £
+                      <input type="number" name="bills" step="0.01" min="0" max="1000000" value="{{ .JSON.Float "bills" | printf "%.2f" }}" required
+                        style="width: 100%; margin-top: 0.2rem; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                    </label>
+                    <label class="size-h6">NEEDS %
+                      <input type="number" name="needs_pct" min="0" max="100" value="{{ .JSON.Int "needs_pct" }}" required
+                        style="width: 100%; margin-top: 0.2rem; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                    </label>
+                    <label class="size-h6">WANTS %
+                      <input type="number" name="wants_pct" min="0" max="100" value="{{ .JSON.Int "wants_pct" }}" required
+                        style="width: 100%; margin-top: 0.2rem; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                    </label>
+                    <label class="size-h6">SAVE %
+                      <input type="number" name="savings_pct" min="0" max="100" value="{{ .JSON.Int "savings_pct" }}" required
+                        style="width: 100%; margin-top: 0.2rem; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                    </label>
+                    <button type="submit" title="The three percentages must add up to 100"
+                      style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.8rem; font: inherit; cursor: pointer;">Save</button>
+                  </form>
+                </details>
+              {{ else }}
+                <p class="size-h5">Waiting for first values — is the glance-weight service running?</p>
+              {{ end }}
+
       - size: full
         widgets:
           # Outgoings this month grouped by merchant, bars scaled against
           # the biggest one. Hover a name for its share of total spending.
           - type: custom-api
             title: Where The Money Goes
-            cache: 1h
+            cache: 1m
             url: http://localhost:8080/assets/finance.json
             template: |
               {{ if .JSON.Bool "configured" }}
@@ -386,7 +449,7 @@ pages:
 
           - type: custom-api
             title: Recent Transactions
-            cache: 1h
+            cache: 1m
             url: http://localhost:8080/assets/finance.json
             template: |
               {{ if .JSON.Bool "configured" }}
@@ -410,7 +473,7 @@ pages:
           # and amount.
           - type: custom-api
             title: Daily Spending
-            cache: 1h
+            cache: 1m
             url: http://localhost:8080/assets/finance.json
             template: |
               {{ if .JSON.Bool "configured" }}
@@ -427,7 +490,7 @@ pages:
 
           - type: custom-api
             title: Biggest Purchases
-            cache: 1h
+            cache: 1m
             url: http://localhost:8080/assets/finance.json
             template: |
               {{ if .JSON.Bool "configured" }}
@@ -454,7 +517,7 @@ pages:
           # date.
           - type: custom-api
             title: Recurring Payments
-            cache: 1h
+            cache: 1m
             url: http://localhost:8080/assets/finance.json
             template: |
               {{ if .JSON.Bool "configured" }}
