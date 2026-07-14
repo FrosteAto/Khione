@@ -1,0 +1,32 @@
+[Unit]
+Description=Home Assistant (containerised)
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Restart=always
+RestartSec=10
+# First-ever start downloads the image (~600MB); later boots skip the pull
+# entirely so the service still comes up with no internet.
+TimeoutStartSec=900
+ExecStartPre=/bin/sh -c 'docker image inspect ghcr.io/home-assistant/home-assistant:stable >/dev/null 2>&1 || docker pull ghcr.io/home-assistant/home-assistant:stable'
+ExecStartPre=-/usr/bin/docker rm -f home-assistant
+# --network=host: HA must hear mDNS/SSDP broadcasts for device discovery,
+# and serves its UI on port 8123 (opened in ufw by the installer).
+# All state lives in /var/lib/hass on the host; the container is disposable.
+# To update HA: docker pull ghcr.io/home-assistant/home-assistant:stable
+# then systemctl restart home-assistant.
+#
+# When the Zigbee dongle arrives, add its stable path as an extra line
+# before the image name (ls /dev/serial/by-id/ to find it):
+#   --device /dev/serial/by-id/usb-ITEAD_SONOFF_Zigbee_3.0_..._-if00 \
+ExecStart=/usr/bin/docker run --rm --name home-assistant \
+  --network=host \
+  -e TZ=Europe/London \
+  -v /var/lib/hass:/config \
+  ghcr.io/home-assistant/home-assistant:stable
+ExecStop=/usr/bin/docker stop home-assistant
+
+[Install]
+WantedBy=multi-user.target
