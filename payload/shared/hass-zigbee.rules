@@ -1,6 +1,13 @@
 # Stable /dev/zigbee symlink for the Zigbee coordinator, so the Home
 # Assistant container unit can pass it through under a fixed name no
 # matter which ttyACM/ttyUSB number the kernel hands out.
+#
+# Only the two dongles below are recognised. To support another one,
+# add a line with its USB vendor/product ID — plug it in and run
+# `lsusb` to find the "xxxx:yyyy" pair (vendor:product), then copy a
+# line below with those IDs. Re-apply with:
+#   sudo udevadm control --reload-rules && sudo udevadm trigger
+#
 # SONOFF ZBDongle-E (Silicon Labs EFR32MG21, CH9102F serial bridge):
 SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="55d4", SYMLINK+="zigbee"
 # SONOFF ZBDongle-P (TI CC2652P, CP2102N serial bridge). NB this ID is
