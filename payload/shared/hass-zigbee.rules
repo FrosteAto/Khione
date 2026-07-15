@@ -1,0 +1,8 @@
+# Stable /dev/zigbee symlink for the Zigbee coordinator, so the Home
+# Assistant container unit can pass it through under a fixed name no
+# matter which ttyACM/ttyUSB number the kernel hands out.
+# SONOFF ZBDongle-E (Silicon Labs EFR32MG21, CH9102F serial bridge):
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="55d4", SYMLINK+="zigbee"
+# SONOFF ZBDongle-P (TI CC2652P, CP2102N serial bridge). NB this ID is
+# shared by many CP2102 gadgets — fine while the dongle is the only one.
+SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", SYMLINK+="zigbee"
