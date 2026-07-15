@@ -160,14 +160,31 @@ try:
         consts = json.load(f)
 except (FileNotFoundError, ValueError):
     pass
-budget = float(consts.get("budget", os.environ.get("BUDGET_MONTHLY", "1500")))
-income_expected = float(consts.get("income",
-                                   os.environ.get("INCOME_MONTHLY", "2000")))
-bills_planned = float(consts.get("bills",
-                                 os.environ.get("BILLS_MONTHLY", "1000")))
-needs_max = income_expected * float(consts.get("needs_pct", 50)) / 100
-wants_max = income_expected * float(consts.get("wants_pct", 25)) / 100
-savings_max = income_expected * float(consts.get("savings_pct", 25)) / 100
+if not isinstance(consts, dict):
+    consts = {}
+
+
+def num(*candidates, default):
+    """First candidate that parses as a number. A bad saved/env value must
+    fall back, not crash the run: an uncaught crash leaves the widget JSONs
+    frozen at their last write, with stale:false baked in — no warning."""
+    for c in candidates:
+        try:
+            return float(c)
+        except (TypeError, ValueError):
+            continue
+    return default
+
+
+budget = num(consts.get("budget"), os.environ.get("BUDGET_MONTHLY"),
+             default=1500.0)
+income_expected = num(consts.get("income"), os.environ.get("INCOME_MONTHLY"),
+                      default=2000.0)
+bills_planned = num(consts.get("bills"), os.environ.get("BILLS_MONTHLY"),
+                    default=1000.0)
+needs_max = income_expected * num(consts.get("needs_pct"), default=50.0) / 100
+wants_max = income_expected * num(consts.get("wants_pct"), default=25.0) / 100
+savings_max = income_expected * num(consts.get("savings_pct"), default=25.0) / 100
 food_allowance = max(0.0, needs_max - bills_planned)
 
 if not (secret_id and secret_key and account_id):
@@ -184,9 +201,16 @@ try:
     with open(HISTORY) as f:
         for line in f:
             line = line.strip()
-            if line:
+            if not line:
+                continue
+            # A single corrupt line must not kill the run: an uncaught crash
+            # here would leave the widget JSONs frozen at their last write —
+            # with stale:false baked in, so the dashboard never even warns.
+            try:
                 r = json.loads(line)
                 history[r["id"]] = r
+            except (ValueError, KeyError, TypeError):
+                continue
 except FileNotFoundError:
     pass
 

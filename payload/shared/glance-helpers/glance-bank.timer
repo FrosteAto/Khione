@@ -2,10 +2,13 @@
 Description=Hourly glance-bank tick (real API sync ~every 6h, gated in the script)
 
 [Timer]
-# No OnBootSec: the service itself runs at boot (Before=glance.service).
 # Hourly ticks normally just rebuild the JSON from the cache; glance-bank
 # only hits the API when the last successful sync is ~6h old, so a failed
 # sync gets retried within the hour without blowing the daily quota.
+# OnBootSec is belt-and-braces: OnUnitActiveSec alone schedules nothing
+# until the service has run once this boot, so if the boot-time run ever
+# goes away (unit disabled, ordering change) the timer would never fire.
+OnBootSec=15min
 OnUnitActiveSec=1h
 RandomizedDelaySec=10min
 
