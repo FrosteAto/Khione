@@ -279,6 +279,12 @@ configure_home_assistant() {
   # the container itself is disposable.
   sudo install -d -m755 /var/lib/hass
   sudo install -Dm644 "$unit_source" /etc/systemd/system/home-assistant.service
+  # Stable /dev/zigbee symlink for the ZHA dongle passthrough (see the
+  # unit's ExecStart); trigger so an already-plugged dongle gets the link.
+  sudo install -Dm644 "$(dirname "$unit_source")/hass-zigbee.rules" \
+    /etc/udev/rules.d/99-hass-zigbee.rules
+  sudo udevadm control --reload-rules
+  sudo udevadm trigger --subsystem-match=tty
   sudo systemctl daemon-reload
 }
 

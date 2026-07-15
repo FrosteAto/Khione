@@ -18,14 +18,16 @@ ExecStartPre=-/usr/bin/docker rm -f home-assistant
 # To update HA: docker pull ghcr.io/home-assistant/home-assistant:stable
 # then systemctl restart home-assistant.
 #
-# When the Zigbee dongle arrives, add its stable path as an extra line
-# before the image name (ls /dev/serial/by-id/ to find it):
-#   --device /dev/serial/by-id/usb-ITEAD_SONOFF_Zigbee_3.0_..._-if00 \
-ExecStart=/usr/bin/docker run --rm --name home-assistant \
+# The Zigbee dongle gets a stable /dev/zigbee name from hass-zigbee.rules
+# (udev); it is passed through only when present so HA still starts with
+# the dongle unplugged. Point ZHA at /dev/zigbee. Re-plugging the dongle
+# needs a `systemctl restart home-assistant` to re-map the device.
+ExecStart=/bin/sh -c 'exec /usr/bin/docker run --rm --name home-assistant \
   --network=host \
   -e TZ=Europe/London \
   -v /var/lib/hass:/config \
-  ghcr.io/home-assistant/home-assistant:stable
+  $([ -e /dev/zigbee ] && echo "--device /dev/zigbee") \
+  ghcr.io/home-assistant/home-assistant:stable'
 ExecStop=/usr/bin/docker stop home-assistant
 
 [Install]
