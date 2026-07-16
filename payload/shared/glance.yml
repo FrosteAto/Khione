@@ -554,6 +554,82 @@ pages:
                 {{ end }}
               {{ end }}
 
+  # Smart Home page. hass.json comes from the glance-hass poller (1-min
+  # timer, plus an instant rebuild after each toggle). Buttons hit the
+  # :8081 helper's /hass endpoint, which toggles the HA group and
+  # redirects back here. Needs HASS_TOKEN in /etc/glance-hass.env.
+  - name: Smart Home
+    columns:
+      - size: full
+        widgets:
+          - type: custom-api
+            title: Groups
+            cache: 5s
+            url: http://localhost:8080/assets/hass.json
+            template: |
+              {{ if .JSON.Bool "configured" }}
+                {{ $groups := .JSON.Array "groups" }}
+                {{ if gt (len $groups) 0 }}
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 0.8rem;">
+                  {{ range $groups }}
+                  <div style="border: 1px solid rgba(128, 128, 128, 0.3); border-radius: 6px; padding: 0.8rem;">
+                    <div class="flex justify-between items-center" style="gap: 0.6rem;">
+                      <div style="min-width: 0;">
+                        <div class="size-h4 text-truncate {{ if .Bool "on" }}color-highlight{{ else }}color-subdue{{ end }}">{{ .String "name" }}</div>
+                        <div class="size-h6 color-subdue">
+                          {{ if .Bool "unavailable" }}UNAVAILABLE{{ else if .Bool "on" }}ON{{ else }}OFF{{ end }}
+                          · {{ .Int "members" }} DEVICE{{ if ne (.Int "members") 1 }}S{{ end }}
+                          {{ if .Bool "has_power" }} · {{ .Float "watts" | printf "%.0f" }} W{{ end }}
+                        </div>
+                      </div>
+                      <form action="http://@@GLANCE_HOST@@:8081/hass" method="get">
+                        <input type="hidden" name="back" value="http://@@GLANCE_HOST@@:8080/smart-home">
+                        <input type="hidden" name="entity" value="{{ .String "entity" }}">
+                        <button type="submit"
+                          style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.8rem; font: inherit; cursor: pointer; white-space: nowrap;">
+                          {{ if .Bool "on" }}Turn off{{ else }}Turn on{{ end }}</button>
+                      </form>
+                    </div>
+                  </div>
+                  {{ end }}
+                </div>
+                {{ else }}
+                <p class="size-h5">No groups found — create light or switch groups in Home Assistant under Settings → Devices & Services → Helpers.</p>
+                {{ end }}
+              {{ else }}
+                <p class="size-h5">{{ .JSON.String "reason" }}</p>
+              {{ end }}
+
+      - size: small
+        widgets:
+          - type: custom-api
+            title: Power Draw
+            cache: 5s
+            url: http://localhost:8080/assets/hass.json
+            template: |
+              {{ if .JSON.Bool "configured" }}
+                {{ $devices := .JSON.Array "devices" }}
+                {{ if gt (len $devices) 0 }}
+                <div class="flex justify-between items-end">
+                  <div class="color-highlight" style="font-size: 2.2rem; line-height: 1;">{{ .JSON.Float "total_watts" | printf "%.0f" }}<span class="size-h5"> W</span></div>
+                  <div class="size-h6">TOTAL MEASURED</div>
+                </div>
+                <ul class="list list-gap-10" style="margin-top: 0.8rem;">
+                  {{ range $devices }}
+                  <li class="flex justify-between items-end">
+                    <div class="size-h5 text-truncate">{{ .String "name" }}</div>
+                    <div class="size-h5 color-highlight" style="white-space: nowrap; margin-left: 0.6rem;">{{ .Float "watts" | printf "%.1f" }} W</div>
+                  </li>
+                  {{ end }}
+                </ul>
+                <div class="size-h6 color-subdue" style="margin-top: 0.6rem;">UPDATED {{ .JSON.String "synced" }}</div>
+                {{ else }}
+                <p class="size-h5">No power sensors found — plugs with power monitoring will show up here automatically.</p>
+                {{ end }}
+              {{ else }}
+                <p class="size-h5">Waiting for Home Assistant…</p>
+              {{ end }}
+
   # Meal-plan page. Day/week data comes from the glance-meals systemd
   # timer (4-week rotation anchored in /usr/local/bin/glance-meals).
   - name: Meals
