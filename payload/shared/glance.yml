@@ -554,82 +554,6 @@ pages:
                 {{ end }}
               {{ end }}
 
-  # Smart Home page. hass.json comes from the glance-hass poller (1-min
-  # timer, plus an instant rebuild after each toggle). Buttons hit the
-  # :8081 helper's /hass endpoint, which toggles the HA group and
-  # redirects back here. Needs HASS_TOKEN in /etc/glance-hass.env.
-  - name: Smart Home
-    columns:
-      - size: full
-        widgets:
-          - type: custom-api
-            title: Groups
-            cache: 5s
-            url: http://localhost:8080/assets/hass.json
-            template: |
-              {{ if .JSON.Bool "configured" }}
-                {{ $groups := .JSON.Array "groups" }}
-                {{ if gt (len $groups) 0 }}
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 0.8rem;">
-                  {{ range $groups }}
-                  <div style="border: 1px solid rgba(128, 128, 128, 0.3); border-radius: 6px; padding: 0.8rem;">
-                    <div class="flex justify-between items-center" style="gap: 0.6rem;">
-                      <div style="min-width: 0;">
-                        <div class="size-h4 text-truncate {{ if .Bool "on" }}color-highlight{{ else }}color-subdue{{ end }}">{{ .String "name" }}</div>
-                        <div class="size-h6 color-subdue">
-                          {{ if .Bool "unavailable" }}UNAVAILABLE{{ else if .Bool "on" }}ON{{ else }}OFF{{ end }}
-                          · {{ .Int "members" }} DEVICE{{ if ne (.Int "members") 1 }}S{{ end }}
-                          {{ if .Bool "has_power" }} · {{ .Float "watts" | printf "%.0f" }} W{{ end }}
-                        </div>
-                      </div>
-                      <form action="http://@@GLANCE_HOST@@:8081/hass" method="get">
-                        <input type="hidden" name="back" value="http://@@GLANCE_HOST@@:8080/smart-home">
-                        <input type="hidden" name="entity" value="{{ .String "entity" }}">
-                        <button type="submit"
-                          style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.8rem; font: inherit; cursor: pointer; white-space: nowrap;">
-                          {{ if .Bool "on" }}Turn off{{ else }}Turn on{{ end }}</button>
-                      </form>
-                    </div>
-                  </div>
-                  {{ end }}
-                </div>
-                {{ else }}
-                <p class="size-h5">No groups found — create light or switch groups in Home Assistant under Settings → Devices & Services → Helpers.</p>
-                {{ end }}
-              {{ else }}
-                <p class="size-h5">{{ .JSON.String "reason" }}</p>
-              {{ end }}
-
-      - size: small
-        widgets:
-          - type: custom-api
-            title: Power Draw
-            cache: 5s
-            url: http://localhost:8080/assets/hass.json
-            template: |
-              {{ if .JSON.Bool "configured" }}
-                {{ $devices := .JSON.Array "devices" }}
-                {{ if gt (len $devices) 0 }}
-                <div class="flex justify-between items-end">
-                  <div class="color-highlight" style="font-size: 2.2rem; line-height: 1;">{{ .JSON.Float "total_watts" | printf "%.0f" }}<span class="size-h5"> W</span></div>
-                  <div class="size-h6">TOTAL MEASURED</div>
-                </div>
-                <ul class="list list-gap-10" style="margin-top: 0.8rem;">
-                  {{ range $devices }}
-                  <li class="flex justify-between items-end">
-                    <div class="size-h5 text-truncate">{{ .String "name" }}</div>
-                    <div class="size-h5 color-highlight" style="white-space: nowrap; margin-left: 0.6rem;">{{ .Float "watts" | printf "%.1f" }} W</div>
-                  </li>
-                  {{ end }}
-                </ul>
-                <div class="size-h6 color-subdue" style="margin-top: 0.6rem;">UPDATED {{ .JSON.String "synced" }}</div>
-                {{ else }}
-                <p class="size-h5">No power sensors found — plugs with power monitoring will show up here automatically.</p>
-                {{ end }}
-              {{ else }}
-                <p class="size-h5">Waiting for Home Assistant…</p>
-              {{ end }}
-
   # Meal-plan page. Day/week data comes from the glance-meals systemd
   # timer (4-week rotation anchored in /usr/local/bin/glance-meals).
   - name: Meals
@@ -1035,3 +959,212 @@ pages:
                       <p style="margin-top: 0.2rem;">Boil tortelloni, heat sauce with spinach and lentils/beans, then combine.</p>
                     </div>
                   </details>
+
+  # Smart Home page (touch-first: big cards and full-width buttons for a
+  # 14" touchscreen). hass.json comes from the glance-hass poller (1-min
+  # timer, plus an instant rebuild after each toggle). Buttons hit the
+  # :8081 helper's /hass endpoint, which toggles the HA group and
+  # redirects back here. Token comes from the Admin page (or
+  # /etc/glance-hass.env directly).
+  - name: Smart Home
+    columns:
+      - size: full
+        widgets:
+          - type: custom-api
+            title: Groups
+            cache: 5s
+            url: http://localhost:8080/assets/hass.json
+            template: |
+              {{ if .JSON.Bool "configured" }}
+                {{ $groups := .JSON.Array "groups" }}
+                {{ if gt (len $groups) 0 }}
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;">
+                  {{ range $groups }}
+                  <div style="border: 1px solid rgba(128, 128, 128, 0.3); border-radius: 10px; padding: 1.2rem;">
+                    <div class="size-h3 text-truncate {{ if .Bool "on" }}color-highlight{{ else }}color-subdue{{ end }}">{{ .String "name" }}</div>
+                    <div class="size-h5 color-subdue" style="margin-top: 0.3rem;">
+                      {{ if .Bool "unavailable" }}UNAVAILABLE{{ else if .Bool "on" }}ON{{ else }}OFF{{ end }}
+                      · {{ .Int "members" }} DEVICE{{ if ne (.Int "members") 1 }}S{{ end }}
+                      {{ if .Bool "has_power" }} · {{ .Float "watts" | printf "%.0f" }} W{{ end }}
+                    </div>
+                    <form action="http://@@GLANCE_HOST@@:8081/hass" method="get" style="margin-top: 1rem;">
+                      <input type="hidden" name="back" value="http://@@GLANCE_HOST@@:8080/smart-home">
+                      <input type="hidden" name="entity" value="{{ .String "entity" }}">
+                      <button type="submit"
+                        style="width: 100%; min-height: 3.2rem; background: {{ if .Bool "on" }}rgba(128, 128, 128, 0.18){{ else }}transparent{{ end }}; color: inherit; border: 1px solid rgba(128, 128, 128, 0.45); border-radius: 8px; padding: 0.8rem 1.2rem; font: inherit; font-size: 1.15rem; cursor: pointer;">
+                        {{ if .Bool "on" }}Turn off{{ else }}Turn on{{ end }}</button>
+                    </form>
+                  </div>
+                  {{ end }}
+                </div>
+                {{ else }}
+                <p class="size-h5">No groups found — create light or switch groups in Home Assistant under Settings → Devices & Services → Helpers.</p>
+                {{ end }}
+              {{ else }}
+                <p class="size-h5">{{ .JSON.String "reason" }}</p>
+              {{ end }}
+
+      - size: small
+        widgets:
+          - type: custom-api
+            title: At a Glance
+            cache: 5s
+            url: http://localhost:8080/assets/hass.json
+            template: |
+              {{ if .JSON.Bool "configured" }}
+                <div class="flex justify-between text-center">
+                  <div>
+                    <div class="size-h3 color-highlight">{{ .JSON.Int "groups_on" }}</div>
+                    <div class="size-h6">GROUPS ON</div>
+                  </div>
+                  <div>
+                    <div class="size-h3 color-highlight">{{ .JSON.Float "total_watts" | printf "%.0f" }} W</div>
+                    <div class="size-h6">MEASURED</div>
+                  </div>
+                  <div>
+                    <div class="size-h3 color-highlight">{{ .JSON.Int "entities" }}</div>
+                    <div class="size-h6">ENTITIES</div>
+                  </div>
+                </div>
+                {{ $lows := .JSON.Array "low_batteries" }}
+                {{ if gt (len $lows) 0 }}
+                <ul class="list list-gap-10" style="margin-top: 0.8rem;">
+                  {{ range $lows }}
+                  <li class="flex justify-between items-end">
+                    <div class="size-h5 color-negative text-truncate">{{ .String "name" }}</div>
+                    <div class="size-h5 color-negative" style="white-space: nowrap; margin-left: 0.6rem;">{{ .Float "percent" | printf "%.0f" }}% battery</div>
+                  </li>
+                  {{ end }}
+                </ul>
+                {{ end }}
+                <div class="size-h6 color-subdue" style="margin-top: 0.6rem;">HA {{ .JSON.String "version" }} · UPDATED {{ .JSON.String "synced" }}</div>
+              {{ else }}
+                <p class="size-h5">Waiting for Home Assistant…</p>
+              {{ end }}
+
+          - type: custom-api
+            title: Power Draw
+            cache: 5s
+            url: http://localhost:8080/assets/hass.json
+            template: |
+              {{ if .JSON.Bool "configured" }}
+                {{ $devices := .JSON.Array "devices" }}
+                {{ if gt (len $devices) 0 }}
+                <ul class="list list-gap-10">
+                  {{ range $devices }}
+                  <li class="flex justify-between items-end">
+                    <div class="size-h5 text-truncate">{{ .String "name" }}</div>
+                    <div class="size-h5 color-highlight" style="white-space: nowrap; margin-left: 0.6rem;">{{ .Float "watts" | printf "%.1f" }} W</div>
+                  </li>
+                  {{ end }}
+                </ul>
+                {{ else }}
+                <p class="size-h5">No power sensors found — plugs with power monitoring will show up here automatically.</p>
+                {{ end }}
+              {{ else }}
+                <p class="size-h5">Waiting for Home Assistant…</p>
+              {{ end }}
+
+          - type: custom-api
+            title: Climate
+            cache: 1m
+            url: http://localhost:8080/assets/hass.json
+            template: |
+              {{ if .JSON.Bool "configured" }}
+                {{ $climate := .JSON.Array "climate" }}
+                {{ if gt (len $climate) 0 }}
+                <ul class="list list-gap-10">
+                  {{ range $climate }}
+                  <li class="flex justify-between items-end">
+                    <div class="size-h5 text-truncate">{{ .String "name" }}</div>
+                    <div class="size-h5 color-highlight" style="white-space: nowrap; margin-left: 0.6rem;">{{ .Float "value" | printf "%.1f" }}{{ .String "unit" }}</div>
+                  </li>
+                  {{ end }}
+                </ul>
+                {{ else }}
+                <p class="size-h5">No temperature or humidity sensors yet — pair one and it shows up here.</p>
+                {{ end }}
+              {{ else }}
+                <p class="size-h5">Waiting for Home Assistant…</p>
+              {{ end }}
+
+  # Admin page: save the integration API keys from the dashboard instead
+  # of digging for terminal commands. Forms post to the :8081 helper,
+  # which rewrites the env files (they belong to the glance user) and
+  # refreshes everything. NB submissions travel as plain-HTTP GETs on the
+  # LAN — fine for this trust model, same as every other form here.
+  - name: Admin
+    columns:
+      - size: full
+        widgets:
+          - type: custom-api
+            title: Home Assistant Token
+            cache: 5s
+            url: http://localhost:8080/assets/admin.json
+            template: |
+              {{ if .JSON.Bool "hass_set" }}
+                <p class="size-h5">Token saved <span class="color-subdue">(…{{ .JSON.String "hass_tail" }})</span> — Smart Home page is live.</p>
+              {{ else }}
+                <p class="size-h5 color-negative">No token saved — the Smart Home page is dark until one is added.</p>
+              {{ end }}
+              {{ if not (.JSON.Bool "hass_writable") }}
+                <p class="size-h6 color-negative" style="margin-top: 0.3rem;">/etc/glance-hass.env is not writable by the dashboard — on the server run: sudo chown glance:glance /etc/glance-hass.env</p>
+              {{ end }}
+              <form action="http://@@GLANCE_HOST@@:8081/admin/hass" method="get" style="margin-top: 0.8rem; display: flex; gap: 0.5rem;">
+                <input type="hidden" name="back" value="http://@@GLANCE_HOST@@:8080/admin">
+                <input type="password" name="token" placeholder="paste long-lived access token" required
+                  style="flex: 1; min-width: 0; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.5rem 0.6rem; font: inherit;">
+                <button type="submit"
+                  style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.5rem 1rem; font: inherit; cursor: pointer;">Save</button>
+              </form>
+              <p class="size-h6 color-subdue" style="margin-top: 0.5rem;">Create one in Home Assistant: click your user (bottom left) → Security → Long-lived access tokens. Saving refreshes the Smart Home page immediately.</p>
+
+          - type: custom-api
+            title: GoCardless (Banking)
+            cache: 5s
+            url: http://localhost:8080/assets/admin.json
+            template: |
+              {{ if .JSON.Bool "gc_set" }}
+                <p class="size-h5">Secrets saved <span class="color-subdue">(ID …{{ .JSON.String "gc_tail" }})</span>{{ if .JSON.Bool "gc_linked" }} · bank account linked.{{ else }} · <span class="color-negative">no bank linked yet — run: sudo glance-bank-setup</span>{{ end }}</p>
+              {{ else }}
+                <p class="size-h5 color-negative">No GoCardless secrets saved — budget and finance widgets stay empty.</p>
+              {{ end }}
+              {{ if not (.JSON.Bool "bank_writable") }}
+                <p class="size-h6 color-negative" style="margin-top: 0.3rem;">/etc/glance-bank.env is not writable by the dashboard — on the server run: sudo chown glance:glance /etc/glance-bank.env</p>
+              {{ end }}
+              <form action="http://@@GLANCE_HOST@@:8081/admin/bank" method="get" style="margin-top: 0.8rem; display: grid; grid-template-columns: 1fr 1fr auto; gap: 0.5rem;">
+                <input type="hidden" name="back" value="http://@@GLANCE_HOST@@:8080/admin">
+                <input type="password" name="gc_id" placeholder="secret ID" required
+                  style="min-width: 0; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.5rem 0.6rem; font: inherit;">
+                <input type="password" name="gc_key" placeholder="secret key" required
+                  style="min-width: 0; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.5rem 0.6rem; font: inherit;">
+                <button type="submit"
+                  style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.5rem 1rem; font: inherit; cursor: pointer;">Save</button>
+              </form>
+              <p class="size-h6 color-subdue" style="margin-top: 0.5rem;">From bankaccountdata.gocardless.com → Developers → User secrets. Linking (or re-linking after the ~90-day consent expiry) still needs a terminal: sudo glance-bank-setup — it skips the secrets prompt once these are saved.</p>
+
+      - size: small
+        widgets:
+          - type: custom-api
+            title: Banking Sync
+            cache: 1m
+            url: http://localhost:8080/assets/budget.json
+            template: |
+              {{ if .JSON.Bool "configured" }}
+                <div class="size-h4 {{ if .JSON.Bool "stale" }}color-negative{{ else }}color-positive{{ end }}">{{ if .JSON.Bool "stale" }}STALE{{ else }}OK{{ end }}</div>
+                <div class="size-h6 color-subdue" style="margin-top: 0.3rem;">LAST SYNC {{ .JSON.String "synced" }}</div>
+              {{ else }}
+                <p class="size-h5">Not configured.</p>
+              {{ end }}
+
+          - type: custom-api
+            title: Home Assistant Sync
+            cache: 1m
+            url: http://localhost:8080/assets/hass.json
+            template: |
+              {{ if .JSON.Bool "configured" }}
+                <div class="size-h4 color-positive">OK</div>
+                <div class="size-h6 color-subdue" style="margin-top: 0.3rem;">HA {{ .JSON.String "version" }} · {{ .JSON.Int "entities" }} ENTITIES · {{ .JSON.String "synced" }}</div>
+              {{ else }}
+                <p class="size-h5">{{ .JSON.String "reason" }}</p>
+              {{ end }}

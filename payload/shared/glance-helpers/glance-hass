@@ -9,9 +9,10 @@ matched heuristically: a member like switch.desk_plug picks up power
 sensors whose ids start with desk_plug (e.g. sensor.desk_plug_power) —
 the standard ZHA/Z2M smart-plug naming.
 
-Credentials come from /etc/glance-hass.env (via the systemd unit):
 HASS_TOKEN is a long-lived access token from the HA profile's Security
-tab; optional HASS_URL defaults to http://localhost:8123.
+tab, saved via the dashboard's Admin page (or by hand). The env file is
+read directly on every run — not just via the systemd unit — so a token
+saved seconds ago works without any service restarts.
 """
 import json
 import os
@@ -20,9 +21,28 @@ import urllib.request
 from datetime import datetime
 
 OUT = "/var/lib/glance/assets/hass.json"
-HASS_URL = os.environ.get("HASS_URL", "http://localhost:8123").rstrip("/")
-TOKEN = os.environ.get("HASS_TOKEN", "").strip()
+ENV_FILE = "/etc/glance-hass.env"
 GROUP_DOMAINS = ("light", "switch", "group")
+
+
+def read_env(path):
+    vals = {}
+    try:
+        with open(path) as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, _, value = line.partition("=")
+                    vals[key] = value
+    except OSError:
+        pass
+    return vals
+
+
+_env = read_env(ENV_FILE)
+HASS_URL = (_env.get("HASS_URL") or os.environ.get("HASS_URL")
+            or "http://localhost:8123").rstrip("/")
+TOKEN = (_env.get("HASS_TOKEN") or os.environ.get("HASS_TOKEN", "")).strip()
 
 
 def write(data):
@@ -37,35 +57,56 @@ if not TOKEN:
     write({"configured": False,
            "reason": "No Home Assistant token yet — create a long-lived "
                      "access token in HA (profile → Security) and save it "
-                     "in /etc/glance-hass.env as HASS_TOKEN=..."})
+                     "on the dashboard's Admin page."})
     sys.exit(0)
 
-req = urllib.request.Request(HASS_URL + "/api/states")
-req.add_header("Authorization", "Bearer " + TOKEN)
-try:
+
+def api(path):
+    req = urllib.request.Request(HASS_URL + path)
+    req.add_header("Authorization", "Bearer " + TOKEN)
     with urllib.request.urlopen(req, timeout=10) as resp:
-        states = json.load(resp)
+        return json.load(resp)
+
+
+try:
+    states = api("/api/states")
 except Exception as e:
     write({"configured": False, "reason": f"Home Assistant unreachable: {e}"})
     sys.exit(0)
 
-# Power sensors, keyed by object id for the member-prefix match below.
+try:
+    version = api("/api/config").get("version") or "?"
+except Exception:
+    version = "?"
+
+# Power sensors (keyed by object id for the member-prefix match below),
+# plus climate readings and low batteries for the page's side widgets.
 sensors = {}
+climate = []
+low_batteries = []
 for s in states:
     domain, _, object_id = s["entity_id"].partition(".")
     attrs = s.get("attributes") or {}
-    if domain != "sensor" or attrs.get("device_class") != "power":
+    if domain != "sensor":
         continue
+    device_class = attrs.get("device_class")
     try:
-        watts = float(s["state"])
+        value = float(s["state"])
     except (TypeError, ValueError):
         continue  # unavailable/unknown
+    name = attrs.get("friendly_name") or object_id
     unit = attrs.get("unit_of_measurement")
-    if unit == "kW":
-        watts *= 1000
-    elif unit != "W":
-        continue
-    sensors[object_id] = (attrs.get("friendly_name") or object_id, watts)
+    if device_class == "power":
+        watts = value * 1000 if unit == "kW" else value
+        if unit in ("W", "kW"):
+            sensors[object_id] = (name, watts)
+    elif device_class in ("temperature", "humidity"):
+        climate.append({"name": name, "value": round(value, 1),
+                        "unit": unit or ""})
+    elif device_class == "battery" and value <= 20:
+        low_batteries.append({"name": name, "percent": round(value)})
+climate.sort(key=lambda c: c["name"].lower())
+low_batteries.sort(key=lambda b: b["percent"])
 
 groups = []
 for s in states:
@@ -98,10 +139,15 @@ devices.sort(key=lambda d: -d["watts"])
 
 write({
     "configured": True,
+    "version": version,
+    "entities": len(states),
     "groups": groups,
+    "groups_on": sum(1 for g in groups if g["on"]),
     "devices": devices,
     # Simple sum of every power sensor — if HA ever gains an aggregate
     # sensor alongside the per-plug ones, this will double-count.
     "total_watts": round(sum(d["watts"] for d in devices), 1),
+    "climate": climate,
+    "low_batteries": low_batteries,
     "synced": datetime.now().strftime("%H:%M:%S"),
 })
