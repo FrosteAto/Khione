@@ -4,10 +4,12 @@ the Glance dashboard: budget.json (Home page's Monthly Spending widget) and
 finance.json (the Finances page).
 
 The timer runs this hourly, but the API is only hit when the last
-successful sync is ~6 hours old — GoCardless institutions typically allow
-~4 transaction calls per day. On any API failure the run still succeeds:
-both JSONs are regenerated from the local cache, flagged "stale" so the
-widgets can show a warning, and the next hourly tick retries.
+successful sync is ~6 hours old — GoCardless allows 4 successful
+transaction calls per account per ROLLING 24h window. On any API failure
+the run still succeeds: both JSONs are regenerated from the local cache,
+flagged "stale" so the widgets can show a warning, and the next hourly
+tick retries. A 429 additionally records the quota-reset time from the
+response in the state file and API attempts are held off until then.
 
 Booked transactions are merged into /var/lib/glance/bank-history.jsonl so
 month-vs-month comparisons and recurring-payment detection can outlive the
@@ -37,8 +39,11 @@ HISTORY = "/var/lib/glance/bank-history.jsonl"
 STATE = "/var/lib/glance/bank-sync-state.json"
 API = "https://bankaccountdata.gocardless.com/api/v2"
 FETCH_DAYS = 90  # most banks' full access window; still a single API call
-SYNC_SECONDS = 6 * 3600 - 600  # ~6h between API hits (slack for timer jitter)
-STALE_SECONDS = 7 * 3600  # a missed sync plus slack -> widgets show a warning
+# The quota is 4 calls per ROLLING 24h, so successes must be spaced
+# STRICTLY over 6h apart — under-6h slack lets drift pack a 5th call into
+# some window, and then every sync 429s for hours (bit us 16 Jul).
+SYNC_SECONDS = 6 * 3600 + 900
+STALE_SECONDS = 8 * 3600  # worst healthy gap (~7h25m: gate+tick+jitter) + slack
 
 
 def write(path, data):
@@ -214,17 +219,34 @@ try:
 except FileNotFoundError:
     pass
 
-last_success = None
+state = {}
 try:
     with open(STATE) as f:
-        last_success = datetime.fromisoformat(json.load(f)["last_success"])
-except (FileNotFoundError, KeyError, ValueError):
+        state = json.load(f)
+except (FileNotFoundError, ValueError):
     pass
+if not isinstance(state, dict):
+    state = {}
+
+
+def state_time(key):
+    try:
+        return datetime.fromisoformat(state[key])
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
+last_success = state_time("last_success")
+backoff_until = state_time("backoff_until")
 
 # Only hit the API when the last successful sync is old enough; on failure
 # fall through and rebuild the outputs from the cache so the widgets stay
 # up (flagged stale below) and the next hourly timer tick retries.
-if last_success is None or (now_utc - last_success).total_seconds() >= SYNC_SECONDS:
+due = last_success is None or (now_utc - last_success).total_seconds() >= SYNC_SECONDS
+if due and backoff_until is not None and now_utc < backoff_until:
+    print(f"sync due but rate-limited until {backoff_until:%H:%M} UTC, "
+          "serving cached data", file=sys.stderr)
+elif due:
     try:
         token = api("/token/new/", payload={"secret_id": secret_id, "secret_key": secret_key})["access"]
         fetch_from = today - timedelta(days=FETCH_DAYS)
@@ -256,7 +278,37 @@ if last_success is None or (now_utc - last_success).total_seconds() >= SYNC_SECO
                 f.write(json.dumps(r) + "\n")
         os.replace(tmp, HISTORY)
         last_success = now_utc
-        write(STATE, {"last_success": now_utc.isoformat()})
+        write(STATE, {"last_success": now_utc.isoformat()})  # clears any backoff
+    except urllib.error.HTTPError as e:
+        # Keep the response body: GoCardless puts the useful detail there
+        # (e.g. "The rate limit for this resource is 4/day. Please try
+        # again in N seconds") while str(e) is just the status line.
+        try:
+            body = e.read().decode(errors="replace")[:300]
+        except Exception:
+            body = ""
+        if e.code == 429:
+            # Rolling 24h quota: hammering hourly is pointless — hold off
+            # until the reset the response advertises (header first, body
+            # as fallback, a conservative 6h if neither parses).
+            m = re.search(r"try again in (\d+) seconds", body)
+            secs = None
+            for cand in (e.headers.get("HTTP_X_RATELIMIT_ACCOUNT_SUCCESS_RESET"),
+                         e.headers.get("X-RateLimit-Account-Success-Reset"),
+                         m.group(1) if m else None):
+                try:
+                    secs = int(cand)
+                    break
+                except (TypeError, ValueError):
+                    continue
+            if secs is None:
+                secs = 6 * 3600
+            state["backoff_until"] = (now_utc + timedelta(seconds=secs + 120)).isoformat()
+            write(STATE, state)
+            print(f"sync failed, serving cached data: {e} — backing off "
+                  f"{secs}s: {body}", file=sys.stderr)
+        else:
+            print(f"sync failed, serving cached data: {e}: {body}", file=sys.stderr)
     except Exception as e:
         print(f"sync failed, serving cached data: {e}", file=sys.stderr)
 
