@@ -8,6 +8,8 @@ User=glance
 Group=glance
 Restart=always
 RestartSec=2
+# HASS_TOKEN for the /hass toggle endpoint (Smart Home page buttons).
+EnvironmentFile=-/etc/glance-hass.env
 ExecStart=/usr/local/bin/glance-weight-server
 
 [Install]

@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+"""Poll Home Assistant and write hass.json for the Glance dashboard's
+Smart Home page: every group entity (light/switch/group domains) with its
+on/off state and summed member power draw, plus every power sensor.
+
+The timer runs this every minute; the :8081 helper also runs it straight
+after a toggle so the redirect lands on fresh state. Group power is
+matched heuristically: a member like switch.desk_plug picks up power
+sensors whose ids start with desk_plug (e.g. sensor.desk_plug_power) —
+the standard ZHA/Z2M smart-plug naming.
+
+Credentials come from /etc/glance-hass.env (via the systemd unit):
+HASS_TOKEN is a long-lived access token from the HA profile's Security
+tab; optional HASS_URL defaults to http://localhost:8123.
+"""
+import json
+import os
+import sys
+import urllib.request
+from datetime import datetime
+
+OUT = "/var/lib/glance/assets/hass.json"
+HASS_URL = os.environ.get("HASS_URL", "http://localhost:8123").rstrip("/")
+TOKEN = os.environ.get("HASS_TOKEN", "").strip()
+GROUP_DOMAINS = ("light", "switch", "group")
+
+
+def write(data):
+    os.makedirs(os.path.dirname(OUT), exist_ok=True)
+    tmp = OUT + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(data, f)
+    os.replace(tmp, OUT)
+
+
+if not TOKEN:
+    write({"configured": False,
+           "reason": "No Home Assistant token yet — create a long-lived "
+                     "access token in HA (profile → Security) and save it "
+                     "in /etc/glance-hass.env as HASS_TOKEN=..."})
+    sys.exit(0)
+
+req = urllib.request.Request(HASS_URL + "/api/states")
+req.add_header("Authorization", "Bearer " + TOKEN)
+try:
+    with urllib.request.urlopen(req, timeout=10) as resp:
+        states = json.load(resp)
+except Exception as e:
+    write({"configured": False, "reason": f"Home Assistant unreachable: {e}"})
+    sys.exit(0)
+
+# Power sensors, keyed by object id for the member-prefix match below.
+sensors = {}
+for s in states:
+    domain, _, object_id = s["entity_id"].partition(".")
+    attrs = s.get("attributes") or {}
+    if domain != "sensor" or attrs.get("device_class") != "power":
+        continue
+    try:
+        watts = float(s["state"])
+    except (TypeError, ValueError):
+        continue  # unavailable/unknown
+    unit = attrs.get("unit_of_measurement")
+    if unit == "kW":
+        watts *= 1000
+    elif unit != "W":
+        continue
+    sensors[object_id] = (attrs.get("friendly_name") or object_id, watts)
+
+groups = []
+for s in states:
+    entity = s["entity_id"]
+    domain, _, object_id = entity.partition(".")
+    attrs = s.get("attributes") or {}
+    members = attrs.get("entity_id")
+    if domain not in GROUP_DOMAINS or not isinstance(members, list) or not members:
+        continue
+    watts, seen = 0.0, set()
+    for m in members:
+        m_object = m.partition(".")[2]
+        for sid, (_, w) in sensors.items():
+            if sid not in seen and sid.startswith(m_object):
+                seen.add(sid)
+                watts += w
+    groups.append({
+        "entity": entity,
+        "name": attrs.get("friendly_name") or object_id.replace("_", " ").title(),
+        "on": s["state"] == "on",
+        "unavailable": s["state"] in ("unavailable", "unknown"),
+        "members": len(members),
+        "has_power": bool(seen),
+        "watts": round(watts, 1),
+    })
+groups.sort(key=lambda g: g["name"].lower())
+
+devices = [{"name": n, "watts": round(w, 1)} for n, w in sensors.values()]
+devices.sort(key=lambda d: -d["watts"])
+
+write({
+    "configured": True,
+    "groups": groups,
+    "devices": devices,
+    # Simple sum of every power sensor — if HA ever gains an aggregate
+    # sensor alongside the per-plug ones, this will double-count.
+    "total_watts": round(sum(d["watts"] for d in devices), 1),
+    "synced": datetime.now().strftime("%H:%M:%S"),
+})

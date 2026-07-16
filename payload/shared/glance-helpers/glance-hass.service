@@ -1,0 +1,18 @@
+[Unit]
+Description=Poll Home Assistant groups and power for Glance dashboard
+Wants=network-online.target
+After=network-online.target
+# Runs once at boot before Glance so hass.json always exists (writes a
+# "not configured" marker until a token is saved). The HA container may
+# still be starting then — the 1-minute timer fills in shortly after.
+Before=glance.service
+
+[Service]
+Type=oneshot
+User=glance
+Group=glance
+EnvironmentFile=-/etc/glance-hass.env
+ExecStart=/usr/local/bin/glance-hass
+
+[Install]
+WantedBy=multi-user.target

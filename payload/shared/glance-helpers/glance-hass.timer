@@ -1,0 +1,9 @@
+[Unit]
+Description=Refresh Glance Home Assistant JSON every minute
+
+[Timer]
+OnBootSec=45s
+OnUnitActiveSec=1min
+
+[Install]
+WantedBy=timers.target

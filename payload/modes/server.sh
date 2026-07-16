@@ -42,6 +42,7 @@ SERVICES_ENABLE=(
   glance-speedtest.timer
   glance-disks.timer glance-disks.service
   glance-bank.timer glance-bank.service glance-bank.path
+  glance-hass.timer glance-hass.service
   glance-system.timer glance-system.service
   glance-meals.timer glance-meals.service
   glance-weight.service
