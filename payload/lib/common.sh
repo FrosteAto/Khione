@@ -239,6 +239,14 @@ configure_glance_helpers() {
   echo "Installing Glance helper scripts and systemd units..."
   # SATA drive temperatures (glance-temps) come from the drivetemp module.
   echo drivetemp | sudo tee /etc/modules-load.d/drivetemp.conf >/dev/null
+  # API-key env files are editable from the dashboard's Admin page (the
+  # :8081 helper runs as glance), so they must exist and belong to glance.
+  local envf
+  for envf in /etc/glance-hass.env /etc/glance-bank.env; do
+    sudo touch "$envf"
+    sudo chown glance:glance "$envf"
+    sudo chmod 600 "$envf"
+  done
   local f name
   for f in "$src_dir"/*; do
     [[ -f "$f" ]] || continue

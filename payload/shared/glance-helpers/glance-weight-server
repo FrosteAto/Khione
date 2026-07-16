@@ -13,8 +13,13 @@ regenerates the widget JSON with the new numbers.
 GET /hass?entity=light.desk toggles a Home Assistant group from the
 Smart Home page's buttons (only entities the glance-hass poller listed
 as groups — this port is LAN-open) and re-runs the poller so the
-redirect lands on fresh state. Needs HASS_TOKEN from /etc/glance-hass.env
-(via the systemd unit).
+redirect lands on fresh state.
+
+GET /admin/hass?token=... and /admin/bank?gc_id=...&gc_key=... save the
+integration API keys from the Admin page into /etc/glance-hass.env and
+/etc/glance-bank.env (glance-owned; re-read per request, so no restarts
+needed). admin.json mirrors what's set — flags and 4-char tails only,
+never the secrets themselves.
 
 GET /finance?salary=30000&bills=...&needs_pct=50&wants_pct=25
 &savings_pct=25 saves the budget-plan constants for the Finances page's
@@ -26,6 +31,7 @@ whenever the file changes, so the dashboard numbers rebuild straight away.
 """
 import json
 import os
+import re
 import subprocess
 import urllib.error
 import urllib.request
@@ -47,9 +53,67 @@ ACTIVITY_FACTORS = ("1.2", "1.375", "1.55", "1.725")  # sedentary..very active
 # Home Assistant toggle endpoint (Smart Home page). hass.json is written
 # by the glance-hass poller and doubles as the allowlist of toggleable
 # entities, so this LAN-open port can't be used for arbitrary HA calls.
-HASS_URL = os.environ.get("HASS_URL", "http://localhost:8123").rstrip("/")
-HASS_TOKEN = os.environ.get("HASS_TOKEN", "").strip()
 HASS_JSON = "/var/lib/glance/assets/hass.json"
+
+# API-key storage for the Admin page. The env files belong to the glance
+# user (installer/deploy sets that up) and are re-read on every request,
+# so saves apply with no service restarts. admin.json only ever carries
+# set/unset flags and the last 4 characters — never the secrets.
+HASS_ENV = "/etc/glance-hass.env"
+BANK_ENV = "/etc/glance-bank.env"
+ADMIN_OUT = "/var/lib/glance/assets/admin.json"
+TOKEN_RE = re.compile(r"[A-Za-z0-9._~-]{16,512}")
+
+
+def read_env(path):
+    vals = {}
+    try:
+        with open(path) as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, _, value = line.partition("=")
+                    vals[key] = value
+    except OSError:
+        pass
+    return vals
+
+
+def save_env(path, updates, header):
+    """Merge updates into the env file, keeping every other key. Written
+    in place (not tmp+rename): the glance user owns the file but can't
+    create new files in /etc."""
+    vals = read_env(path)
+    vals.update(updates)
+    with open(path, "w") as f:
+        f.write(header)
+        for key, value in vals.items():
+            f.write(f"{key}={value}\n")
+    os.chmod(path, 0o600)
+
+
+def hass_conf():
+    env = read_env(HASS_ENV)
+    url = (env.get("HASS_URL") or os.environ.get("HASS_URL")
+           or "http://localhost:8123").rstrip("/")
+    token = (env.get("HASS_TOKEN") or os.environ.get("HASS_TOKEN", "")).strip()
+    return url, token
+
+
+def regenerate_admin():
+    hass_token = read_env(HASS_ENV).get("HASS_TOKEN", "").strip()
+    bank = read_env(BANK_ENV)
+    gc_id = bank.get("GC_SECRET_ID", "").strip()
+    gc_key = bank.get("GC_SECRET_KEY", "").strip()
+    write_json(ADMIN_OUT, {
+        "hass_set": bool(hass_token),
+        "hass_tail": hass_token[-4:] if hass_token else "",
+        "hass_writable": os.access(HASS_ENV, os.W_OK),
+        "gc_set": bool(gc_id and gc_key),
+        "gc_tail": gc_id[-4:] if gc_id else "",
+        "gc_linked": bool(bank.get("GC_ACCOUNT_ID", "").strip()),
+        "bank_writable": os.access(BANK_ENV, os.W_OK),
+    })
 
 # Budget-plan constants for the Finances page. Lives under assets/ so the
 # Budget Settings widget can read it back for display and form prefill.
@@ -203,13 +267,14 @@ class Handler(BaseHTTPRequestHandler):
                                for g in json.load(f).get("groups", [])}
             except (OSError, ValueError, TypeError):
                 allowed = set()
-            if not HASS_TOKEN or entity not in allowed:
+            hass_url, hass_token = hass_conf()
+            if not hass_token or entity not in allowed:
                 self.send_error(400, "unknown group entity")
                 return
             req = urllib.request.Request(
-                HASS_URL + "/api/services/homeassistant/toggle",
+                hass_url + "/api/services/homeassistant/toggle",
                 data=json.dumps({"entity_id": entity}).encode(),
-                headers={"Authorization": "Bearer " + HASS_TOKEN,
+                headers={"Authorization": "Bearer " + hass_token,
                          "Content-Type": "application/json"})
             try:
                 with urllib.request.urlopen(req, timeout=10) as resp:
@@ -223,6 +288,44 @@ class Handler(BaseHTTPRequestHandler):
                 subprocess.run(["/usr/local/bin/glance-hass"], check=False)
             except OSError:
                 pass
+        elif url.path == "/admin/hass":
+            token = query.get("token", [""])[0].strip()
+            if not TOKEN_RE.fullmatch(token):
+                self.send_error(400, "that doesn't look like an HA token")
+                return
+            try:
+                save_env(HASS_ENV, {"HASS_TOKEN": token},
+                         "# Home Assistant token for the Glance dashboard —"
+                         " saved from the Admin page.\n")
+            except OSError:
+                self.send_error(500, "cannot write " + HASS_ENV +
+                                " — run: sudo chown glance:glance " + HASS_ENV)
+                return
+            regenerate_admin()
+            # Rebuild hass.json with the new token so the Smart Home page
+            # (and its widget status on Admin) goes live straight away.
+            try:
+                subprocess.run(["/usr/local/bin/glance-hass"], check=False)
+            except OSError:
+                pass
+        elif url.path == "/admin/bank":
+            gc_id = query.get("gc_id", [""])[0].strip()
+            gc_key = query.get("gc_key", [""])[0].strip()
+            if not (TOKEN_RE.fullmatch(gc_id) and TOKEN_RE.fullmatch(gc_key)):
+                self.send_error(400, "those don't look like GoCardless secrets")
+                return
+            try:
+                # glance-bank.path watches this file, so systemd re-runs
+                # the bank sync with the fresh secrets automatically.
+                save_env(BANK_ENV, {"GC_SECRET_ID": gc_id,
+                                    "GC_SECRET_KEY": gc_key},
+                         "# GoCardless credentials for glance-bank —"
+                         " secrets saved from the Admin page.\n")
+            except OSError:
+                self.send_error(500, "cannot write " + BANK_ENV +
+                                " — run: sudo chown glance:glance " + BANK_ENV)
+                return
+            regenerate_admin()
         elif url.path == "/finance":
             try:
                 fin = {
@@ -281,4 +384,5 @@ class Handler(BaseHTTPRequestHandler):
 if __name__ == "__main__":
     regenerate(load_log())  # ensure weight.json exists before first log
     ensure_finance()
+    regenerate_admin()  # ensure admin.json exists for the Admin page
     HTTPServer(("", PORT), Handler).serve_forever()
