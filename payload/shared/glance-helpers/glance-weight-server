@@ -10,6 +10,12 @@ GET /profile?age=30&height_cm=183&sex=male&activity=1.375 saves the
 maintenance-calorie profile (persisted in weight-profile.json) and
 regenerates the widget JSON with the new numbers.
 
+GET /hass?entity=light.desk toggles a Home Assistant group from the
+Smart Home page's buttons (only entities the glance-hass poller listed
+as groups — this port is LAN-open) and re-runs the poller so the
+redirect lands on fresh state. Needs HASS_TOKEN from /etc/glance-hass.env
+(via the systemd unit).
+
 GET /finance?salary=30000&bills=...&needs_pct=50&wants_pct=25
 &savings_pct=25 saves the budget-plan constants for the Finances page's
 Budget Settings widget to finance-constants.json. Monthly take-home is
@@ -20,6 +26,9 @@ whenever the file changes, so the dashboard numbers rebuild straight away.
 """
 import json
 import os
+import subprocess
+import urllib.error
+import urllib.request
 from datetime import date, datetime
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
@@ -34,6 +43,13 @@ GOAL_KG = 75.0
 DEFAULT_PROFILE = {"age": 30, "height_cm": 183, "sex": "male",
                    "activity": 1.375}
 ACTIVITY_FACTORS = ("1.2", "1.375", "1.55", "1.725")  # sedentary..very active
+
+# Home Assistant toggle endpoint (Smart Home page). hass.json is written
+# by the glance-hass poller and doubles as the allowlist of toggleable
+# entities, so this LAN-open port can't be used for arbitrary HA calls.
+HASS_URL = os.environ.get("HASS_URL", "http://localhost:8123").rstrip("/")
+HASS_TOKEN = os.environ.get("HASS_TOKEN", "").strip()
+HASS_JSON = "/var/lib/glance/assets/hass.json"
 
 # Budget-plan constants for the Finances page. Lives under assets/ so the
 # Budget Settings widget can read it back for display and form prefill.
@@ -179,6 +195,34 @@ class Handler(BaseHTTPRequestHandler):
             entries.append({"date": today, "kg": kg})
             write_json(LOG, sorted(entries, key=lambda e: e["date"]))
             regenerate(entries)
+        elif url.path == "/hass":
+            entity = query.get("entity", [""])[0]
+            try:
+                with open(HASS_JSON) as f:
+                    allowed = {g["entity"]
+                               for g in json.load(f).get("groups", [])}
+            except (OSError, ValueError, TypeError):
+                allowed = set()
+            if not HASS_TOKEN or entity not in allowed:
+                self.send_error(400, "unknown group entity")
+                return
+            req = urllib.request.Request(
+                HASS_URL + "/api/services/homeassistant/toggle",
+                data=json.dumps({"entity_id": entity}).encode(),
+                headers={"Authorization": "Bearer " + HASS_TOKEN,
+                         "Content-Type": "application/json"})
+            try:
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    resp.read()
+            except (urllib.error.URLError, OSError):
+                self.send_error(502, "Home Assistant not reachable")
+                return
+            # Refresh hass.json now so the redirect shows the new state;
+            # the toggle already happened, so never fail the request here.
+            try:
+                subprocess.run(["/usr/local/bin/glance-hass"], check=False)
+            except OSError:
+                pass
         elif url.path == "/finance":
             try:
                 fin = {
