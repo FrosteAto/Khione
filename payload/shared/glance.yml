@@ -566,7 +566,7 @@ pages:
             url: http://localhost:8080/assets/meals.json
             template: |
               <div class="size-h3 color-highlight">{{ .JSON.String "day_name" }}</div>
-              <div class="size-h5">Week {{ .JSON.Int "week" }} of 4</div>
+              <div class="size-h5">Week {{ .JSON.Int "week" }} of {{ .JSON.Int "total_weeks" }}</div>
               <ul class="list list-gap-10" style="margin-top: 0.8rem;">
                 <li>
                   <div class="size-h6">BREAKFAST</div>
@@ -716,7 +716,7 @@ pages:
             cache: 15m
             url: http://localhost:8080/assets/meals.json
             template: |
-              <div class="size-h5">Week {{ .JSON.Int "week" }} of 4 · Week {{ .JSON.Int "next_week" }} starts Monday</div>
+              <div class="size-h5">Week {{ .JSON.Int "week" }} of {{ .JSON.Int "total_weeks" }} · Week {{ .JSON.Int "next_week" }} starts Monday</div>
               <table style="width: 100%; border-collapse: collapse; text-align: left; margin-top: 0.6rem;">
                 <thead>
                   <tr class="size-h6">
@@ -773,191 +773,190 @@ pages:
         widgets:
           - type: group
             widgets:
-              - type: html
+              - type: custom-api
                 title: Breakfast
-                source: |
+                cache: 15m
+                url: http://localhost:8080/assets/meals.json
+                template: |
+                  {{ range .JSON.Array "recipes_breakfast" }}
                   <details style="margin-bottom: 0.6rem;">
-                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Protein porridge + fruit</summary>
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">{{ .String "name" }}</summary>
                     <div class="size-h5" style="margin-top: 0.3rem;">
-                      <p class="color-subdue">~345 kcal · ~19g protein</p>
-                      <p style="margin-top: 0.2rem;">½ cup oats, 200ml semi-skimmed milk, 2 heaped tbsp 0% Greek yoghurt, ½ banana or ½ cup berries.</p>
-                      <p style="margin-top: 0.2rem;">Cook oats with milk. Stir in yoghurt after cooking and top with fruit.</p>
+                      <p class="color-subdue">{{ .String "detail" }}</p>
+                      {{ if .String "ingredients" }}<p style="margin-top: 0.2rem;">{{ .String "ingredients" }}</p>{{ end }}
+                      {{ if .String "instructions" }}<p style="margin-top: 0.2rem;">{{ .String "instructions" }}</p>{{ end }}
                     </div>
+                    <form action="http://@@GLANCE_HOST@@:8081/recipe/save" method="get" style="margin-top: 0.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem;">
+                      <input type="hidden" name="back" value="http://@@GLANCE_HOST@@:8080/meals">
+                      <input type="hidden" name="id" value="{{ .String "id" }}">
+                      <input type="hidden" name="meal_type" value="breakfast">
+                      <input name="name" value="{{ .String "name" }}" required placeholder="name" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="kcal_min" value="{{ .Int "kcal_min" }}" min="0" max="3000" required placeholder="kcal min" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="kcal_max" value="{{ .Int "kcal_max" }}" min="0" max="3000" required placeholder="kcal max" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="protein_min" value="{{ .Int "protein_min" }}" min="0" max="300" required placeholder="protein min" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="protein_max" value="{{ .Int "protein_max" }}" min="0" max="300" required placeholder="protein max" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input name="ingredients" value="{{ .String "ingredients" }}" placeholder="ingredients" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input name="instructions" value="{{ .String "instructions" }}" placeholder="instructions / notes" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <button type="submit" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.8rem; font: inherit; cursor: pointer;">Save</button>
+                      <button type="submit" formaction="http://@@GLANCE_HOST@@:8081/recipe/delete" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.8rem; font: inherit; cursor: pointer;">Delete</button>
+                    </form>
                   </details>
-                  <details style="margin-bottom: 0.6rem;">
-                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Yoghurt + oats + fruit</summary>
-                    <div class="size-h5" style="margin-top: 0.3rem;">
-                      <p class="color-subdue">~315 kcal · ~27g protein</p>
-                      <p style="margin-top: 0.2rem;">1 cup 0% Greek yoghurt, ⅓ cup oats, ½ banana or ½ cup berries.</p>
-                      <p style="margin-top: 0.2rem;">Mix yoghurt, oats, and fruit in a bowl.</p>
-                    </div>
-                  </details>
-                  <details style="margin-bottom: 0.6rem;">
-                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Marmite on toast + protein side</summary>
-                    <div class="size-h5" style="margin-top: 0.3rem;">
-                      <p class="color-subdue">~305–365 kcal · ~15–25g protein</p>
-                      <p style="margin-top: 0.2rem;">2 slices wholemeal bread, thin spreading of Marmite, 200ml semi-skimmed milk or 1 protein drink.</p>
-                      <p style="margin-top: 0.2rem;">Toast bread, spread Marmite thinly, and have milk or a protein drink alongside.</p>
-                    </div>
+                  {{ end }}
+                  <details>
+                    <summary class="size-h5 color-subdue" style="cursor: pointer;">+ Add breakfast recipe</summary>
+                    <form action="http://@@GLANCE_HOST@@:8081/recipe/save" method="get" style="margin-top: 0.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem;">
+                      <input type="hidden" name="back" value="http://@@GLANCE_HOST@@:8080/meals">
+                      <input type="hidden" name="meal_type" value="breakfast">
+                      <input name="name" required placeholder="name" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="kcal_min" min="0" max="3000" required placeholder="kcal min" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="kcal_max" min="0" max="3000" required placeholder="kcal max" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="protein_min" min="0" max="300" required placeholder="protein min" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="protein_max" min="0" max="300" required placeholder="protein max" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input name="ingredients" placeholder="ingredients" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input name="instructions" placeholder="instructions / notes" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <button type="submit" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.8rem; font: inherit; cursor: pointer;">Add</button>
+                    </form>
                   </details>
 
-              - type: html
+              - type: custom-api
                 title: Lunch
-                source: |
+                cache: 15m
+                url: http://localhost:8080/assets/meals.json
+                template: |
+                  {{ range .JSON.Array "recipes_lunch" }}
                   <details style="margin-bottom: 0.6rem;">
-                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Tuna mayo sandwich</summary>
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">{{ .String "name" }}</summary>
                     <div class="size-h5" style="margin-top: 0.3rem;">
-                      <p class="color-subdue">~335 kcal · ~35–40g protein</p>
-                      <p style="margin-top: 0.2rem;">2 slices wholemeal bread, 1 tin tuna in spring water, 1 tbsp light mayo, black pepper.</p>
-                      <p style="margin-top: 0.2rem;">Drain tuna, mix with mayo and pepper, and make the sandwich.</p>
+                      <p class="color-subdue">{{ .String "detail" }}</p>
+                      {{ if .String "ingredients" }}<p style="margin-top: 0.2rem;">{{ .String "ingredients" }}</p>{{ end }}
+                      {{ if .String "instructions" }}<p style="margin-top: 0.2rem;">{{ .String "instructions" }}</p>{{ end }}
                     </div>
+                    <form action="http://@@GLANCE_HOST@@:8081/recipe/save" method="get" style="margin-top: 0.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem;">
+                      <input type="hidden" name="back" value="http://@@GLANCE_HOST@@:8080/meals">
+                      <input type="hidden" name="id" value="{{ .String "id" }}">
+                      <input type="hidden" name="meal_type" value="lunch">
+                      <input name="name" value="{{ .String "name" }}" required placeholder="name" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="kcal_min" value="{{ .Int "kcal_min" }}" min="0" max="3000" required placeholder="kcal min" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="kcal_max" value="{{ .Int "kcal_max" }}" min="0" max="3000" required placeholder="kcal max" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="protein_min" value="{{ .Int "protein_min" }}" min="0" max="300" required placeholder="protein min" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="protein_max" value="{{ .Int "protein_max" }}" min="0" max="300" required placeholder="protein max" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input name="ingredients" value="{{ .String "ingredients" }}" placeholder="ingredients" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input name="instructions" value="{{ .String "instructions" }}" placeholder="instructions / notes" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <button type="submit" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.8rem; font: inherit; cursor: pointer;">Save</button>
+                      <button type="submit" formaction="http://@@GLANCE_HOST@@:8081/recipe/delete" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.8rem; font: inherit; cursor: pointer;">Delete</button>
+                    </form>
                   </details>
-                  <details style="margin-bottom: 0.6rem;">
-                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Chicken + pickle sandwich</summary>
-                    <div class="size-h5" style="margin-top: 0.3rem;">
-                      <p class="color-subdue">~330–380 kcal · ~30–35g protein</p>
-                      <p style="margin-top: 0.2rem;">2 slices wholemeal bread, 100g cooked chicken slices, 1 tbsp pickle, optional cucumber or salad.</p>
-                      <p style="margin-top: 0.2rem;">Layer chicken and pickle in the sandwich; add cucumber or salad if desired.</p>
-                    </div>
-                  </details>
-                  <details style="margin-bottom: 0.6rem;">
-                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Hummus + chicken salad sandwich</summary>
-                    <div class="size-h5" style="margin-top: 0.3rem;">
-                      <p class="color-subdue">~350–400 kcal · ~28–32g protein</p>
-                      <p style="margin-top: 0.2rem;">2 slices wholemeal bread, 1 heaped tbsp hummus, 75g cooked chicken, 1 handful salad.</p>
-                      <p style="margin-top: 0.2rem;">Use hummus as the spread and add chicken plus salad.</p>
-                    </div>
-                  </details>
-                  <details style="margin-bottom: 0.6rem;">
-                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Cheese + tomato/pickle sandwich</summary>
-                    <div class="size-h5" style="margin-top: 0.3rem;">
-                      <p class="color-subdue">~315 kcal · ~17g protein</p>
-                      <p style="margin-top: 0.2rem;">2 slices wholemeal bread, 30g reduced-fat cheddar, ½ tomato, 1 tbsp pickle, optional 200ml milk.</p>
-                      <p style="margin-top: 0.2rem;">Slice tomato, add cheese and pickle, and serve with milk if extra protein is needed.</p>
-                    </div>
-                  </details>
-                  <details style="margin-bottom: 0.6rem;">
-                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Marmite + cucumber sandwich + protein drink</summary>
-                    <div class="size-h5" style="margin-top: 0.3rem;">
-                      <p class="color-subdue">~310–370 kcal · ~15–25g protein</p>
-                      <p style="margin-top: 0.2rem;">2 slices wholemeal bread, thin spreading of Marmite, ¼ cucumber, 1 protein drink.</p>
-                      <p style="margin-top: 0.2rem;">Spread Marmite, add cucumber slices, and have a protein drink alongside.</p>
-                    </div>
+                  {{ end }}
+                  <details>
+                    <summary class="size-h5 color-subdue" style="cursor: pointer;">+ Add lunch recipe</summary>
+                    <form action="http://@@GLANCE_HOST@@:8081/recipe/save" method="get" style="margin-top: 0.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem;">
+                      <input type="hidden" name="back" value="http://@@GLANCE_HOST@@:8080/meals">
+                      <input type="hidden" name="meal_type" value="lunch">
+                      <input name="name" required placeholder="name" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="kcal_min" min="0" max="3000" required placeholder="kcal min" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="kcal_max" min="0" max="3000" required placeholder="kcal max" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="protein_min" min="0" max="300" required placeholder="protein min" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="protein_max" min="0" max="300" required placeholder="protein max" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input name="ingredients" placeholder="ingredients" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input name="instructions" placeholder="instructions / notes" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <button type="submit" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.8rem; font: inherit; cursor: pointer;">Add</button>
+                    </form>
                   </details>
 
-              - type: html
+              - type: custom-api
                 title: Snacks
-                source: |
+                cache: 15m
+                url: http://localhost:8080/assets/meals.json
+                template: |
+                  {{ range .JSON.Array "recipes_snacks" }}
                   <details style="margin-bottom: 0.6rem;">
-                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Protein bar</summary>
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">{{ .String "name" }}</summary>
                     <div class="size-h5" style="margin-top: 0.3rem;">
-                      <p class="color-subdue">~180–230 kcal · ~15–22g protein</p>
-                      <p style="margin-top: 0.2rem;">Best post-run or as a high-protein treat snack.</p>
+                      <p class="color-subdue">{{ .String "detail" }}</p>
+                      {{ if .String "ingredients" }}<p style="margin-top: 0.2rem;">{{ .String "ingredients" }}</p>{{ end }}
+                      {{ if .String "instructions" }}<p style="margin-top: 0.2rem;">{{ .String "instructions" }}</p>{{ end }}
                     </div>
+                    <form action="http://@@GLANCE_HOST@@:8081/recipe/save" method="get" style="margin-top: 0.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem;">
+                      <input type="hidden" name="back" value="http://@@GLANCE_HOST@@:8080/meals">
+                      <input type="hidden" name="id" value="{{ .String "id" }}">
+                      <input type="hidden" name="meal_type" value="snack">
+                      <input name="name" value="{{ .String "name" }}" required placeholder="name" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="kcal_min" value="{{ .Int "kcal_min" }}" min="0" max="3000" required placeholder="kcal min" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="kcal_max" value="{{ .Int "kcal_max" }}" min="0" max="3000" required placeholder="kcal max" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="protein_min" value="{{ .Int "protein_min" }}" min="0" max="300" required placeholder="protein min" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="protein_max" value="{{ .Int "protein_max" }}" min="0" max="300" required placeholder="protein max" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input name="instructions" value="{{ .String "instructions" }}" placeholder="notes" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <button type="submit" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.8rem; font: inherit; cursor: pointer;">Save</button>
+                      <button type="submit" formaction="http://@@GLANCE_HOST@@:8081/recipe/delete" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.8rem; font: inherit; cursor: pointer;">Delete</button>
+                    </form>
                   </details>
-                  <details style="margin-bottom: 0.6rem;">
-                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Protein savoury pack</summary>
-                    <div class="size-h5" style="margin-top: 0.3rem;">
-                      <p class="color-subdue">~80–180 kcal · ~10–25g protein</p>
-                      <p style="margin-top: 0.2rem;">Jerky or chicken bite-style pack; convenient savoury protein.</p>
-                    </div>
-                  </details>
-                  <details style="margin-bottom: 0.6rem;">
-                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Cereal/oat bar</summary>
-                    <div class="size-h5" style="margin-top: 0.3rem;">
-                      <p class="color-subdue">~90–180 kcal · ~2–6g protein</p>
-                      <p style="margin-top: 0.2rem;">Useful pre-run carbohydrate snack.</p>
-                    </div>
-                  </details>
-                  <details style="margin-bottom: 0.6rem;">
-                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Small chocolate bar / biscuit pack</summary>
-                    <div class="size-h5" style="margin-top: 0.3rem;">
-                      <p class="color-subdue">~100–250 kcal · ~1–5g protein</p>
-                      <p style="margin-top: 0.2rem;">Treat option; keep portion-controlled.</p>
-                    </div>
-                  </details>
-                  <details style="margin-bottom: 0.6rem;">
-                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Mini Cheddars / baked crisps</summary>
-                    <div class="size-h5" style="margin-top: 0.3rem;">
-                      <p class="color-subdue">~120–180 kcal · ~3–6g protein</p>
-                      <p style="margin-top: 0.2rem;">Savoury treat option for variety.</p>
-                    </div>
+                  {{ end }}
+                  <details>
+                    <summary class="size-h5 color-subdue" style="cursor: pointer;">+ Add snack</summary>
+                    <form action="http://@@GLANCE_HOST@@:8081/recipe/save" method="get" style="margin-top: 0.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem;">
+                      <input type="hidden" name="back" value="http://@@GLANCE_HOST@@:8080/meals">
+                      <input type="hidden" name="meal_type" value="snack">
+                      <input name="name" required placeholder="name" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="kcal_min" min="0" max="3000" required placeholder="kcal min" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="kcal_max" min="0" max="3000" required placeholder="kcal max" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="protein_min" min="0" max="300" required placeholder="protein min" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="protein_max" min="0" max="300" required placeholder="protein max" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input name="instructions" placeholder="notes" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <button type="submit" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.8rem; font: inherit; cursor: pointer;">Add</button>
+                    </form>
                   </details>
 
-              - type: html
+              - type: custom-api
                 title: Dinner
-                source: |
+                cache: 15m
+                url: http://localhost:8080/assets/meals.json
+                template: |
+                  {{ range .JSON.Array "recipes_dinner" }}
                   <details style="margin-bottom: 0.6rem;">
-                    <summary class="size-h4 color-highlight" style="cursor: pointer;">High-protein chilli</summary>
+                    <summary class="size-h4 color-highlight" style="cursor: pointer;">{{ .String "name" }}</summary>
                     <div class="size-h5" style="margin-top: 0.3rem;">
-                      <p class="color-subdue">~520–560 kcal · ~35–40g protein · batch of 4</p>
-                      <p style="margin-top: 0.2rem;">500g 5% beef mince, 1 tin chopped tomatoes, 1 tin kidney beans, 1 onion, 1 pepper, spinach, spices, rice.</p>
-                      <p style="margin-top: 0.2rem;">Cook mince, onion, and pepper. Add tomatoes, beans, spices, and spinach. Serve with ½ cup cooked rice.</p>
+                      <p class="color-subdue">{{ .String "detail" }} · {{ if .Bool "fresh" }}{{ .Int "batch" }} portions / fresh{{ else }}batch of {{ .Int "batch" }}{{ end }}</p>
+                      <p style="margin-top: 0.2rem;">{{ .String "ingredients" }}</p>
+                      <p style="margin-top: 0.2rem;">{{ .String "instructions" }}</p>
                     </div>
+                    <form action="http://@@GLANCE_HOST@@:8081/recipe/save" method="get" style="margin-top: 0.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem;">
+                      <input type="hidden" name="back" value="http://@@GLANCE_HOST@@:8080/meals">
+                      <input type="hidden" name="id" value="{{ .String "id" }}">
+                      <input type="hidden" name="meal_type" value="dinner">
+                      <input name="name" value="{{ .String "name" }}" required placeholder="name" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="kcal_min" value="{{ .Int "kcal_min" }}" min="0" max="3000" required placeholder="kcal min" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="kcal_max" value="{{ .Int "kcal_max" }}" min="0" max="3000" required placeholder="kcal max" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="protein_min" value="{{ .Int "protein_min" }}" min="0" max="300" required placeholder="protein min" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="protein_max" value="{{ .Int "protein_max" }}" min="0" max="300" required placeholder="protein max" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="batch" value="{{ .Int "batch" }}" min="0" max="20" required placeholder="batch size" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <label class="size-h6" style="display: flex; align-items: center; gap: 0.4rem;">
+                        <input type="checkbox" name="fresh" {{ if .Bool "fresh" }}checked{{ end }}> COOKED FRESH EACH TIME
+                      </label>
+                      <input name="ingredients" value="{{ .String "ingredients" }}" placeholder="ingredients" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input name="instructions" value="{{ .String "instructions" }}" placeholder="instructions" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <button type="submit" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.8rem; font: inherit; cursor: pointer;">Save</button>
+                      <button type="submit" formaction="http://@@GLANCE_HOST@@:8081/recipe/delete" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.8rem; font: inherit; cursor: pointer;">Delete</button>
+                    </form>
                   </details>
-                  <details style="margin-bottom: 0.6rem;">
-                    <summary class="size-h4 color-highlight" style="cursor: pointer;">High-protein bolognese</summary>
-                    <div class="size-h5" style="margin-top: 0.3rem;">
-                      <p class="color-subdue">~500–540 kcal · ~35–40g protein · batch of 4</p>
-                      <p style="margin-top: 0.2rem;">500g 5% beef mince, 1 tin chopped tomatoes, 1 onion, spinach, herbs, 300g dry pasta total.</p>
-                      <p style="margin-top: 0.2rem;">Cook mince and onion, add tomatoes, herbs, and spinach. Serve with 75g dry pasta per portion.</p>
-                    </div>
-                  </details>
-                  <details style="margin-bottom: 0.6rem;">
-                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Chicken curry</summary>
-                    <div class="size-h5" style="margin-top: 0.3rem;">
-                      <p class="color-subdue">~520–580 kcal · ~45–50g protein · batch of 4</p>
-                      <p style="margin-top: 0.2rem;">700g chicken breast, 1 onion, 1 tin chopped tomatoes, spinach, curry paste/sauce, low-fat yoghurt, rice.</p>
-                      <p style="margin-top: 0.2rem;">Cook chicken and onion, add tomatoes and curry paste. Stir in yoghurt at the end and serve with ½ cup cooked rice.</p>
-                    </div>
-                  </details>
-                  <details style="margin-bottom: 0.6rem;">
-                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Salmon + potatoes + veg</summary>
-                    <div class="size-h5" style="margin-top: 0.3rem;">
-                      <p class="color-subdue">~500–620 kcal · ~28–45g protein · 3 portions / fresh</p>
-                      <p style="margin-top: 0.2rem;">1 salmon fillet, 250g potatoes, 1½ cups vegetables, 1 tsp olive oil.</p>
-                      <p style="margin-top: 0.2rem;">Cook salmon, boil or bake potatoes, and serve with a large portion of vegetables.</p>
-                    </div>
-                  </details>
-                  <details style="margin-bottom: 0.6rem;">
-                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Japanese chicken curry</summary>
-                    <div class="size-h5" style="margin-top: 0.3rem;">
-                      <p class="color-subdue">~620–700 kcal · ~45–50g protein · batch of 4</p>
-                      <p style="margin-top: 0.2rem;">700g chicken breast, ½ block Japanese curry mix, onion, carrots, potatoes, spinach, rice.</p>
-                      <p style="margin-top: 0.2rem;">Simmer chicken, onion, carrots, and potatoes. Add curry block and spinach, then serve with ½ cup cooked rice.</p>
-                    </div>
-                  </details>
-                  <details style="margin-bottom: 0.6rem;">
-                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Tuna pesto pasta</summary>
-                    <div class="size-h5" style="margin-top: 0.3rem;">
-                      <p class="color-subdue">~520–580 kcal · ~38–45g protein · batch of 3</p>
-                      <p style="margin-top: 0.2rem;">75g dry pasta, 2 tbsp reduced-fat pesto, spinach, tomato, 1 tin tuna.</p>
-                      <p style="margin-top: 0.2rem;">Cook pasta, stir through pesto, spinach, and tomato, then add drained tuna.</p>
-                    </div>
-                  </details>
-                  <details style="margin-bottom: 0.6rem;">
-                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Baked potato with tuna</summary>
-                    <div class="size-h5" style="margin-top: 0.3rem;">
-                      <p class="color-subdue">~400–500 kcal · ~35–45g protein · 3 portions / fresh</p>
-                      <p style="margin-top: 0.2rem;">1 large potato, 1 tin tuna, 1 tbsp light mayo, ¼ small red onion, salad/veg.</p>
-                      <p style="margin-top: 0.2rem;">Bake or microwave the potato, mix tuna with mayo and onion, and serve with salad or vegetables.</p>
-                    </div>
-                  </details>
-                  <details style="margin-bottom: 0.6rem;">
-                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Sausage tray bake + beans</summary>
-                    <div class="size-h5" style="margin-top: 0.3rem;">
-                      <p class="color-subdue">~540–680 kcal · ~20–32g protein · batch of 3</p>
-                      <p style="margin-top: 0.2rem;">2 reduced-fat sausages, 250g potatoes, carrot, ½ onion, ½ pepper, 1 tsp olive oil, ½ tin beans.</p>
-                      <p style="margin-top: 0.2rem;">Roast sausages and vegetables with oil, then serve with ½ tin beans.</p>
-                    </div>
-                  </details>
-                  <details style="margin-bottom: 0.6rem;">
-                    <summary class="size-h4 color-highlight" style="cursor: pointer;">Tortelloni with tomato + lentils/beans</summary>
-                    <div class="size-h5" style="margin-top: 0.3rem;">
-                      <p class="color-subdue">~560–650 kcal · ~25–35g protein · 3 portions / fresh</p>
-                      <p style="margin-top: 0.2rem;">½ pack tortelloni, tomato sauce/chopped tomatoes, spinach, ½ tin drained lentils or beans.</p>
-                      <p style="margin-top: 0.2rem;">Boil tortelloni, heat sauce with spinach and lentils/beans, then combine.</p>
-                    </div>
+                  {{ end }}
+                  <details>
+                    <summary class="size-h5 color-subdue" style="cursor: pointer;">+ Add dinner recipe</summary>
+                    <form action="http://@@GLANCE_HOST@@:8081/recipe/save" method="get" style="margin-top: 0.5rem; display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem;">
+                      <input type="hidden" name="back" value="http://@@GLANCE_HOST@@:8080/meals">
+                      <input type="hidden" name="meal_type" value="dinner">
+                      <input name="name" required placeholder="name" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="kcal_min" min="0" max="3000" required placeholder="kcal min" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="kcal_max" min="0" max="3000" required placeholder="kcal max" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="protein_min" min="0" max="300" required placeholder="protein min" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="protein_max" min="0" max="300" required placeholder="protein max" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input type="number" name="batch" min="0" max="20" required placeholder="batch size" style="background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <label class="size-h6" style="display: flex; align-items: center; gap: 0.4rem;">
+                        <input type="checkbox" name="fresh"> COOKED FRESH EACH TIME
+                      </label>
+                      <input name="ingredients" placeholder="ingredients" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <input name="instructions" placeholder="instructions" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.5rem; font: inherit;">
+                      <button type="submit" style="grid-column: 1 / -1; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.8rem; font: inherit; cursor: pointer;">Add</button>
+                    </form>
                   </details>
 
   # Smart Home page (touch-first: big cards and full-width buttons for a
