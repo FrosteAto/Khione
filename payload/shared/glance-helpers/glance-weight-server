@@ -28,6 +28,14 @@ estimated from the annual salary (UK PAYE tax + NI) and written as the
 "income" and "budget" fields glance-bank already reads (overriding the
 /etc/glance-bank.env defaults); a glance-bank.path unit re-runs it
 whenever the file changes, so the dashboard numbers rebuild straight away.
+
+GET /recipe/save?id=...&name=...&meal_type=breakfast&kcal_min=...&
+kcal_max=...&protein_min=...&protein_max=...&ingredients=...&
+instructions=...&batch=...&fresh=on adds or updates a recipe in
+recipes.json (blank id creates a new one, slugified from the name).
+GET /recipe/delete?id=... removes a recipe, refusing if the meal plan
+still schedules it anywhere. Both re-run glance-meals so meals.json (and
+the Meals page recipe cards it feeds) reflect the change immediately.
 """
 import json
 import os
@@ -121,6 +129,48 @@ FINANCE = "/var/lib/glance/assets/finance-constants.json"
 DEFAULT_FINANCE = {"salary": 30000.0, "bills": 1000.0,
                    "needs_pct": 50, "wants_pct": 25, "savings_pct": 25}
 
+# Recipe library + meal plan for the Meals page. recipes.json is the only
+# one this server writes; meal-plan.json is read-only here (just to check
+# a recipe isn't scheduled before deleting it) — the rotation itself is
+# edited by hand for now. Both are seeded by glance-meals on first run.
+RECIPES = "/var/lib/glance/recipes.json"
+MEAL_PLAN = "/var/lib/glance/meal-plan.json"
+MEAL_TYPES = ("breakfast", "lunch", "snack", "dinner")
+MEAL_SLOTS = ("breakfast", "lunch", "snacks", "dinner")
+
+
+def load_recipes():
+    if os.path.exists(RECIPES):
+        with open(RECIPES) as f:
+            return json.load(f)
+    return {"recipes": []}
+
+
+def slugify(name):
+    slug = re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+    return slug or "recipe"
+
+
+def unique_id(base, existing_ids):
+    if base not in existing_ids:
+        return base
+    n = 2
+    while f"{base}-{n}" in existing_ids:
+        n += 1
+    return f"{base}-{n}"
+
+
+def recipe_in_use(recipe_id):
+    if not os.path.exists(MEAL_PLAN):
+        return False
+    with open(MEAL_PLAN) as f:
+        plan = json.load(f)
+    return any(recipe_id in span.get(slot, [])
+               for spans in plan.get("weeks", {}).values()
+               for span in spans
+               for slot in MEAL_SLOTS)
+
+
 # UK PAYE income tax + employee Class 1 NI for the salary -> take-home
 # estimate (2026/27 rates; thresholds frozen for years yet). Assumes no
 # pension contributions, student loan or other payslip deductions. Tax
@@ -205,11 +255,11 @@ def load_log():
     return []
 
 
-def write_json(path, data):
+def write_json(path, data, indent=None):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     tmp = path + ".tmp"
     with open(tmp, "w") as f:
-        json.dump(data, f)
+        json.dump(data, f, indent=indent)
     os.replace(tmp, path)
 
 
@@ -365,6 +415,63 @@ class Handler(BaseHTTPRequestHandler):
                 return
             write_json(PROFILE, prof)
             regenerate(load_log())
+        elif url.path == "/recipe/save":
+            try:
+                name = query["name"][0].strip()[:200]
+                meal_type = query["meal_type"][0]
+                kcal_min = int(query["kcal_min"][0])
+                kcal_max = int(query["kcal_max"][0])
+                protein_min = int(query["protein_min"][0])
+                protein_max = int(query["protein_max"][0])
+                ingredients = query.get("ingredients", [""])[0].strip()[:2000]
+                instructions = query.get("instructions", [""])[0].strip()[:2000]
+                batch = int(query["batch"][0]) if query.get("batch", [""])[0] else 0
+                fresh = "fresh" in query
+                rid = query.get("id", [""])[0].strip()
+                if not (name and meal_type in MEAL_TYPES
+                        and 0 <= kcal_min <= kcal_max <= 3000
+                        and 0 <= protein_min <= protein_max <= 300
+                        and 0 <= batch <= 20):
+                    raise ValueError
+            except (KeyError, ValueError, IndexError):
+                self.send_error(400, "bad recipe values")
+                return
+            store = load_recipes()
+            ids = {r["id"] for r in store["recipes"]}
+            if rid and rid in ids:
+                recipe = next(r for r in store["recipes"] if r["id"] == rid)
+            else:
+                rid = unique_id(slugify(name), ids)
+                recipe = {"id": rid}
+                store["recipes"].append(recipe)
+            recipe.update({
+                "name": name, "meal_type": meal_type,
+                "kcal_min": kcal_min, "kcal_max": kcal_max,
+                "protein_min": protein_min, "protein_max": protein_max,
+                "ingredients": ingredients, "instructions": instructions,
+                "batch": batch, "fresh": fresh,
+            })
+            write_json(RECIPES, store, indent=2)
+            try:
+                subprocess.run(["/usr/local/bin/glance-meals"], check=False)
+            except OSError:
+                pass
+        elif url.path == "/recipe/delete":
+            rid = query.get("id", [""])[0].strip()
+            if not rid:
+                self.send_error(400, "missing id")
+                return
+            if recipe_in_use(rid):
+                self.send_error(400, "recipe is still used in the plan, "
+                                 "remove it from the rotation first")
+                return
+            store = load_recipes()
+            store["recipes"] = [r for r in store["recipes"] if r["id"] != rid]
+            write_json(RECIPES, store, indent=2)
+            try:
+                subprocess.run(["/usr/local/bin/glance-meals"], check=False)
+            except OSError:
+                pass
         else:
             self.send_error(404)
             return

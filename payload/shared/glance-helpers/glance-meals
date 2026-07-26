@@ -1,222 +1,268 @@
 #!/usr/bin/env python3
 """Write the current meal-plan day/week JSON for the Glance Meals page.
 
-The plan is a 4-week rotation anchored to WEEK1_MONDAY (change that date
-to shift the rotation). Runs from a systemd timer.
+Recipes live in /var/lib/glance/recipes.json and the weekly rotation plus
+shopping lists live in /var/lib/glance/meal-plan.json — both editable from
+the Meals page (recipes, via glance-weight-server's /recipe/save and
+/recipe/delete) rather than hardcoded here. On first run, whichever of
+those files is missing gets seeded from SEED_RECIPES/SEED_PLAN below, so
+the rotation that used to live in this script carries over automatically.
+Seeding never overwrites an existing file, so live edits always persist.
+Runs from a systemd timer.
 """
 import json
 import os
 from datetime import date, timedelta
 
+RECIPES_PATH = "/var/lib/glance/recipes.json"
+PLAN_PATH = "/var/lib/glance/meal-plan.json"
 OUT = "/var/lib/glance/assets/meals.json"
-WEEK1_MONDAY = date(2026, 7, 13)  # a Monday on which a Week-1 rotation starts
 
 DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+SLOTS = ("breakfast", "lunch", "snacks", "dinner")
 
-# week -> list of (days, meals) spans
-WEEKS = {
-    1: [
-        (["Mon", "Tue", "Wed", "Thu"], {
-            "breakfast": "Yoghurt + oats + fruit",
-            "lunch": "Tuna mayo sandwich",
-            "snacks": "Cereal/oat bar + protein bar",
-            "dinner": "High-protein chilli",
-        }),
-        (["Fri", "Sat", "Sun"], {
-            "breakfast": "Yoghurt + oats + fruit",
-            "lunch": "Tuna mayo sandwich",
-            "snacks": "Cereal/oat bar + protein bar",
-            "dinner": "Tuna pesto pasta",
-        }),
-    ],
-    2: [
-        (["Mon", "Tue", "Wed", "Thu"], {
-            "breakfast": "Protein porridge + fruit",
-            "lunch": "Chicken + pickle sandwich",
-            "snacks": "Cereal/oat bar + protein savoury pack",
-            "dinner": "Chicken curry",
-        }),
-        (["Fri", "Sat", "Sun"], {
-            "breakfast": "Protein porridge + fruit",
-            "lunch": "Chicken + pickle sandwich",
-            "snacks": "Chocolate/biscuit pack + protein savoury pack",
-            "dinner": "Tortelloni with tomato + lentils/beans",
-        }),
-    ],
-    3: [
-        (["Mon", "Tue", "Wed"], {
-            "breakfast": "Yoghurt + oats + fruit",
-            "lunch": "Hummus + chicken salad sandwich",
-            "snacks": "Cereal/oat bar + protein bar",
-            "dinner": "Salmon + potatoes + veg",
-        }),
-        (["Thu", "Fri", "Sat", "Sun"], {
-            "breakfast": "Yoghurt + oats + fruit",
-            "lunch": "Hummus + chicken salad sandwich",
-            "snacks": "Mini Cheddars/baked crisps + protein bar",
-            "dinner": "High-protein bolognese",
-        }),
-    ],
-    4: [
-        (["Mon", "Tue", "Wed", "Thu"], {
-            "breakfast": "Marmite on toast + protein side",
-            "lunch": "Tuna mayo sandwich",
-            "snacks": "Cereal/oat bar + protein savoury pack",
-            "dinner": "Japanese chicken curry",
-        }),
-        (["Fri", "Sat", "Sun"], {
-            "breakfast": "Marmite on toast + protein side",
-            "lunch": "Tuna mayo sandwich",
-            "snacks": "Cereal/oat bar + protein savoury pack",
-            "dinner": "Sausage tray bake + beans",
-        }),
-    ],
+# ---------------------------------------------------------------------------
+# Seed data — the rotation as it used to be hardcoded in this script (WEEKS/
+# MACROS/DINNERS/SHOPPING) plus the recipe cards that used to be hand-typed
+# HTML in glance.yml (breakfast/lunch/snack detail). Only written to disk if
+# recipes.json / meal-plan.json don't exist yet.
+# ---------------------------------------------------------------------------
+SEED_RECIPES = [
+    # Breakfast
+    {"id": "yoghurt-oats-fruit", "name": "Yoghurt + oats + fruit", "meal_type": "breakfast",
+     "kcal_min": 315, "kcal_max": 315, "protein_min": 27, "protein_max": 27,
+     "ingredients": "1 cup 0% Greek yoghurt, ⅓ cup oats, ½ banana or ½ cup berries.",
+     "instructions": "Mix yoghurt, oats, and fruit in a bowl.", "batch": 0, "fresh": False},
+    {"id": "protein-porridge-fruit", "name": "Protein porridge + fruit", "meal_type": "breakfast",
+     "kcal_min": 345, "kcal_max": 345, "protein_min": 19, "protein_max": 19,
+     "ingredients": "½ cup oats, 200ml semi-skimmed milk, 2 heaped tbsp 0% Greek yoghurt, ½ banana or ½ cup berries.",
+     "instructions": "Cook oats with milk. Stir in yoghurt after cooking and top with fruit.", "batch": 0, "fresh": False},
+    {"id": "marmite-toast-protein-side", "name": "Marmite on toast + protein side", "meal_type": "breakfast",
+     "kcal_min": 305, "kcal_max": 365, "protein_min": 15, "protein_max": 25,
+     "ingredients": "2 slices wholemeal bread, thin spreading of Marmite, 200ml semi-skimmed milk or 1 protein drink.",
+     "instructions": "Toast bread, spread Marmite thinly, and have milk or a protein drink alongside.", "batch": 0, "fresh": False},
+    # Lunch
+    {"id": "tuna-mayo-sandwich", "name": "Tuna mayo sandwich", "meal_type": "lunch",
+     "kcal_min": 335, "kcal_max": 335, "protein_min": 35, "protein_max": 40,
+     "ingredients": "2 slices wholemeal bread, 1 tin tuna in spring water, 1 tbsp light mayo, black pepper.",
+     "instructions": "Drain tuna, mix with mayo and pepper, and make the sandwich.", "batch": 0, "fresh": False},
+    {"id": "chicken-pickle-sandwich", "name": "Chicken + pickle sandwich", "meal_type": "lunch",
+     "kcal_min": 330, "kcal_max": 380, "protein_min": 30, "protein_max": 35,
+     "ingredients": "2 slices wholemeal bread, 100g cooked chicken slices, 1 tbsp pickle, optional cucumber or salad.",
+     "instructions": "Layer chicken and pickle in the sandwich; add cucumber or salad if desired.", "batch": 0, "fresh": False},
+    {"id": "hummus-chicken-salad-sandwich", "name": "Hummus + chicken salad sandwich", "meal_type": "lunch",
+     "kcal_min": 350, "kcal_max": 400, "protein_min": 28, "protein_max": 32,
+     "ingredients": "2 slices wholemeal bread, 1 heaped tbsp hummus, 75g cooked chicken, 1 handful salad.",
+     "instructions": "Use hummus as the spread and add chicken plus salad.", "batch": 0, "fresh": False},
+    {"id": "cheese-tomato-pickle-sandwich", "name": "Cheese + tomato/pickle sandwich", "meal_type": "lunch",
+     "kcal_min": 315, "kcal_max": 315, "protein_min": 17, "protein_max": 17,
+     "ingredients": "2 slices wholemeal bread, 30g reduced-fat cheddar, ½ tomato, 1 tbsp pickle, optional 200ml milk.",
+     "instructions": "Slice tomato, add cheese and pickle, and serve with milk if extra protein is needed.", "batch": 0, "fresh": False},
+    {"id": "marmite-cucumber-sandwich-protein-drink", "name": "Marmite + cucumber sandwich + protein drink", "meal_type": "lunch",
+     "kcal_min": 310, "kcal_max": 370, "protein_min": 15, "protein_max": 25,
+     "ingredients": "2 slices wholemeal bread, thin spreading of Marmite, ¼ cucumber, 1 protein drink.",
+     "instructions": "Spread Marmite, add cucumber slices, and have a protein drink alongside.", "batch": 0, "fresh": False},
+    # Snacks (bought items — no real "ingredients", just a usage note)
+    {"id": "protein-bar", "name": "Protein bar", "meal_type": "snack",
+     "kcal_min": 180, "kcal_max": 230, "protein_min": 15, "protein_max": 22,
+     "ingredients": "", "instructions": "Best post-run or as a high-protein treat snack.", "batch": 0, "fresh": False},
+    {"id": "protein-savoury-pack", "name": "Protein savoury pack", "meal_type": "snack",
+     "kcal_min": 80, "kcal_max": 180, "protein_min": 10, "protein_max": 25,
+     "ingredients": "", "instructions": "Jerky or chicken bite-style pack; convenient savoury protein.", "batch": 0, "fresh": False},
+    {"id": "cereal-oat-bar", "name": "Cereal/oat bar", "meal_type": "snack",
+     "kcal_min": 90, "kcal_max": 180, "protein_min": 2, "protein_max": 6,
+     "ingredients": "", "instructions": "Useful pre-run carbohydrate snack.", "batch": 0, "fresh": False},
+    {"id": "choc-biscuit-pack", "name": "Chocolate/biscuit pack", "meal_type": "snack",
+     "kcal_min": 100, "kcal_max": 250, "protein_min": 1, "protein_max": 5,
+     "ingredients": "", "instructions": "Treat option; keep portion-controlled.", "batch": 0, "fresh": False},
+    {"id": "mini-cheddars-baked-crisps", "name": "Mini Cheddars/baked crisps", "meal_type": "snack",
+     "kcal_min": 120, "kcal_max": 180, "protein_min": 3, "protein_max": 6,
+     "ingredients": "", "instructions": "Savoury treat option for variety.", "batch": 0, "fresh": False},
+    # Dinner
+    {"id": "high-protein-chilli", "name": "High-protein chilli", "meal_type": "dinner",
+     "kcal_min": 520, "kcal_max": 560, "protein_min": 35, "protein_max": 40,
+     "ingredients": "500g 5% beef mince, 1 tin chopped tomatoes, 1 tin kidney beans, 1 onion, 1 pepper, spinach, spices, rice.",
+     "instructions": "Cook mince, onion, and pepper. Add tomatoes, beans, spices, and spinach. Serve with ½ cup cooked rice.",
+     "batch": 4, "fresh": False},
+    {"id": "high-protein-bolognese", "name": "High-protein bolognese", "meal_type": "dinner",
+     "kcal_min": 500, "kcal_max": 540, "protein_min": 35, "protein_max": 40,
+     "ingredients": "500g 5% beef mince, 1 tin chopped tomatoes, 1 onion, spinach, herbs, 300g dry pasta total.",
+     "instructions": "Cook mince and onion, add tomatoes, herbs, and spinach. Serve with 75g dry pasta per portion.",
+     "batch": 4, "fresh": False},
+    {"id": "chicken-curry", "name": "Chicken curry", "meal_type": "dinner",
+     "kcal_min": 520, "kcal_max": 580, "protein_min": 45, "protein_max": 50,
+     "ingredients": "700g chicken breast, 1 onion, 1 tin chopped tomatoes, spinach, curry paste/sauce, low-fat yoghurt, rice.",
+     "instructions": "Cook chicken and onion, add tomatoes and curry paste. Stir in yoghurt at the end and serve with ½ cup cooked rice.",
+     "batch": 4, "fresh": False},
+    {"id": "salmon-potatoes-veg", "name": "Salmon + potatoes + veg", "meal_type": "dinner",
+     "kcal_min": 500, "kcal_max": 620, "protein_min": 28, "protein_max": 45,
+     "ingredients": "1 salmon fillet, 250g potatoes, 1½ cups vegetables, 1 tsp olive oil.",
+     "instructions": "Cook salmon, boil or bake potatoes, and serve with a large portion of vegetables.",
+     "batch": 3, "fresh": True},
+    {"id": "japanese-chicken-curry", "name": "Japanese chicken curry", "meal_type": "dinner",
+     "kcal_min": 620, "kcal_max": 700, "protein_min": 45, "protein_max": 50,
+     "ingredients": "700g chicken breast, ½ block Japanese curry mix, onion, carrots, potatoes, spinach, rice.",
+     "instructions": "Simmer chicken, onion, carrots, and potatoes. Add curry block and spinach, then serve with ½ cup cooked rice.",
+     "batch": 4, "fresh": False},
+    {"id": "tuna-pesto-pasta", "name": "Tuna pesto pasta", "meal_type": "dinner",
+     "kcal_min": 520, "kcal_max": 580, "protein_min": 38, "protein_max": 45,
+     "ingredients": "75g dry pasta, 2 tbsp reduced-fat pesto, spinach, tomato, 1 tin tuna.",
+     "instructions": "Cook pasta, stir through pesto, spinach, and tomato, then add drained tuna.",
+     "batch": 3, "fresh": False},
+    {"id": "baked-potato-tuna", "name": "Baked potato with tuna", "meal_type": "dinner",
+     "kcal_min": 400, "kcal_max": 500, "protein_min": 35, "protein_max": 45,
+     "ingredients": "1 large potato, 1 tin tuna, 1 tbsp light mayo, ¼ small red onion, salad/veg.",
+     "instructions": "Bake or microwave the potato, mix tuna with mayo and onion, and serve with salad or vegetables.",
+     "batch": 3, "fresh": True},
+    {"id": "sausage-tray-bake-beans", "name": "Sausage tray bake + beans", "meal_type": "dinner",
+     "kcal_min": 540, "kcal_max": 680, "protein_min": 20, "protein_max": 32,
+     "ingredients": "2 reduced-fat sausages, 250g potatoes, carrot, ½ onion, ½ pepper, 1 tsp olive oil, ½ tin beans.",
+     "instructions": "Roast sausages and vegetables with oil, then serve with ½ tin beans.",
+     "batch": 3, "fresh": False},
+    {"id": "tortelloni-tomato-lentils-beans", "name": "Tortelloni with tomato + lentils/beans", "meal_type": "dinner",
+     "kcal_min": 560, "kcal_max": 650, "protein_min": 25, "protein_max": 35,
+     "ingredients": "½ pack tortelloni, tomato sauce/chopped tomatoes, spinach, ½ tin drained lentils or beans.",
+     "instructions": "Boil tortelloni, heat sauce with spinach and lentils/beans, then combine.",
+     "batch": 3, "fresh": True},
+]
+
+SEED_PLAN = {
+    "week1_monday": "2026-07-13",
+    "weeks": {
+        "1": [
+            {"days": ["Mon", "Tue", "Wed", "Thu"], "breakfast": ["yoghurt-oats-fruit"], "lunch": ["tuna-mayo-sandwich"],
+             "snacks": ["cereal-oat-bar", "protein-bar"], "dinner": ["high-protein-chilli"]},
+            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["yoghurt-oats-fruit"], "lunch": ["tuna-mayo-sandwich"],
+             "snacks": ["cereal-oat-bar", "protein-bar"], "dinner": ["tuna-pesto-pasta"]},
+        ],
+        "2": [
+            {"days": ["Mon", "Tue", "Wed", "Thu"], "breakfast": ["protein-porridge-fruit"], "lunch": ["chicken-pickle-sandwich"],
+             "snacks": ["cereal-oat-bar", "protein-savoury-pack"], "dinner": ["chicken-curry"]},
+            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["protein-porridge-fruit"], "lunch": ["chicken-pickle-sandwich"],
+             "snacks": ["choc-biscuit-pack", "protein-savoury-pack"], "dinner": ["tortelloni-tomato-lentils-beans"]},
+        ],
+        "3": [
+            {"days": ["Mon", "Tue", "Wed"], "breakfast": ["yoghurt-oats-fruit"], "lunch": ["hummus-chicken-salad-sandwich"],
+             "snacks": ["cereal-oat-bar", "protein-bar"], "dinner": ["salmon-potatoes-veg"]},
+            {"days": ["Thu", "Fri", "Sat", "Sun"], "breakfast": ["yoghurt-oats-fruit"], "lunch": ["hummus-chicken-salad-sandwich"],
+             "snacks": ["mini-cheddars-baked-crisps", "protein-bar"], "dinner": ["high-protein-bolognese"]},
+        ],
+        "4": [
+            {"days": ["Mon", "Tue", "Wed", "Thu"], "breakfast": ["marmite-toast-protein-side"], "lunch": ["tuna-mayo-sandwich"],
+             "snacks": ["cereal-oat-bar", "protein-savoury-pack"], "dinner": ["japanese-chicken-curry"]},
+            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["marmite-toast-protein-side"], "lunch": ["tuna-mayo-sandwich"],
+             "snacks": ["cereal-oat-bar", "protein-savoury-pack"], "dinner": ["sausage-tray-bake-beans"]},
+        ],
+    },
+    "shopping": {
+        "1": {
+            "breakfast": ["2 × 500g tubs 0% Greek yoghurt", "1 bag oats", "7 bananas or 2 berry punnets"],
+            "lunch": ["1 loaf wholemeal bread", "7 tins tuna in spring water", "1 bottle/jar light mayo", "Black pepper"],
+            "snacks": ["1 multipack cereal/oat bars", "1 multipack protein bars"],
+            "dinner": ["500g 5% beef mince", "1 tin chopped tomatoes", "1 tin kidney beans", "1 onion", "1 bell pepper",
+                       "1 bag spinach", "1 bag rice", "1 bag dry pasta", "1 jar reduced-fat pesto", "2 medium tomatoes",
+                       "Cumin", "Smoked paprika", "Chilli flakes"],
+        },
+        "2": {
+            "breakfast": ["1 bag oats", "2 litres semi-skimmed milk", "1 × 500g tub 0% Greek yoghurt", "7 bananas or berries"],
+            "lunch": ["1 loaf wholemeal bread", "700g cooked chicken slices", "1 jar pickle", "1 cucumber or 1 bag salad"],
+            "snacks": ["1 multipack cereal/oat bars", "1 multipack small chocolate bars/biscuit packs", "7 protein savoury packs"],
+            "dinner": ["700g chicken breast", "1 onion", "3 tins chopped tomatoes", "1 bag spinach",
+                       "1 jar curry paste or lower-calorie curry sauce", "1 small tub low-fat yoghurt", "1 bag rice",
+                       "2 × 300g packs tortelloni", "2 tins lentils/cannellini beans", "Black pepper"],
+        },
+        "3": {
+            "breakfast": ["2 × 500g tubs 0% Greek yoghurt", "1 bag oats", "7 bananas or berries"],
+            "lunch": ["1 loaf wholemeal bread", "1 × 300g tub hummus", "525–700g cooked chicken slices",
+                      "1–2 bags salad", "1 cucumber"],
+            "snacks": ["1 multipack cereal/oat bars", "1 multipack protein bars", "1 multipack Mini Cheddars/baked crisps"],
+            "dinner": ["3 salmon fillets", "1.5–2kg potatoes", "Broccoli/peas/spinach", "Olive oil", "500g 5% beef mince",
+                       "1 tin chopped tomatoes", "1 onion", "1 bag spinach", "1 bag dry pasta", "Italian herbs", "Black pepper"],
+        },
+        "4": {
+            "breakfast": ["2 loaves wholemeal bread", "1 jar Marmite", "2 litres semi-skimmed milk or 7 protein drinks"],
+            "lunch": ["7 tins tuna in spring water", "1 bottle/jar light mayo", "Black pepper"],
+            "snacks": ["1 multipack cereal/oat bars", "7 protein savoury packs"],
+            "dinner": ["700g chicken breast", "1 box Japanese curry block", "2 onions", "1 bag carrots", "1.5–2kg potatoes",
+                       "1 bag spinach", "1 bag rice", "6 reduced-fat sausages", "2 bell peppers",
+                       "2 tins baked or mixed beans", "Olive oil"],
+        },
+    },
 }
 
-# Midpoint (kcal, protein g) estimates per meal, from the recipe ranges.
-MACROS = {
-    "Yoghurt + oats + fruit": (315, 27),
-    "Protein porridge + fruit": (345, 19),
-    "Marmite on toast + protein side": (335, 20),
-    "Tuna mayo sandwich": (335, 37),
-    "Chicken + pickle sandwich": (355, 33),
-    "Hummus + chicken salad sandwich": (375, 30),
-    "Cereal/oat bar + protein bar": (340, 22),
-    "Cereal/oat bar + protein savoury pack": (265, 21),
-    "Chocolate/biscuit pack + protein savoury pack": (305, 20),
-    "Mini Cheddars/baked crisps + protein bar": (355, 23),
-    "High-protein chilli": (540, 38),
-    "Tuna pesto pasta": (550, 42),
-    "Chicken curry": (550, 48),
-    "Tortelloni with tomato + lentils/beans": (605, 30),
-    "Salmon + potatoes + veg": (560, 37),
-    "High-protein bolognese": (520, 38),
-    "Japanese chicken curry": (660, 48),
-    "Sausage tray bake + beans": (610, 26),
-}
 
-# Rotation dinners: batch size, whether cooked fresh each night, and the
-# recipe card content for the Tonight widget.
-DINNERS = {
-    "High-protein chilli": {
-        "batch": 4, "fresh": False,
-        "detail": "~520–560 kcal · ~35–40g protein",
-        "ingredients": "500g 5% beef mince, 1 tin chopped tomatoes, 1 tin kidney beans, 1 onion, 1 pepper, spinach, spices, rice.",
-        "instructions": "Cook mince, onion, and pepper. Add tomatoes, beans, spices, and spinach. Serve with ½ cup cooked rice.",
-    },
-    "Tuna pesto pasta": {
-        "batch": 3, "fresh": False,
-        "detail": "~520–580 kcal · ~38–45g protein",
-        "ingredients": "75g dry pasta, 2 tbsp reduced-fat pesto, spinach, tomato, 1 tin tuna.",
-        "instructions": "Cook pasta, stir through pesto, spinach, and tomato, then add drained tuna.",
-    },
-    "Chicken curry": {
-        "batch": 4, "fresh": False,
-        "detail": "~520–580 kcal · ~45–50g protein",
-        "ingredients": "700g chicken breast, 1 onion, 1 tin chopped tomatoes, spinach, curry paste/sauce, low-fat yoghurt, rice.",
-        "instructions": "Cook chicken and onion, add tomatoes and curry paste. Stir in yoghurt at the end and serve with ½ cup cooked rice.",
-    },
-    "Tortelloni with tomato + lentils/beans": {
-        "batch": 3, "fresh": True,
-        "detail": "~560–650 kcal · ~25–35g protein",
-        "ingredients": "½ pack tortelloni, tomato sauce/chopped tomatoes, spinach, ½ tin drained lentils or beans.",
-        "instructions": "Boil tortelloni, heat sauce with spinach and lentils/beans, then combine.",
-    },
-    "Salmon + potatoes + veg": {
-        "batch": 3, "fresh": True,
-        "detail": "~500–620 kcal · ~28–45g protein",
-        "ingredients": "1 salmon fillet, 250g potatoes, 1½ cups vegetables, 1 tsp olive oil.",
-        "instructions": "Cook salmon, boil or bake potatoes, and serve with a large portion of vegetables.",
-    },
-    "High-protein bolognese": {
-        "batch": 4, "fresh": False,
-        "detail": "~500–540 kcal · ~35–40g protein",
-        "ingredients": "500g 5% beef mince, 1 tin chopped tomatoes, 1 onion, spinach, herbs, 300g dry pasta total.",
-        "instructions": "Cook mince and onion, add tomatoes, herbs, and spinach. Serve with 75g dry pasta per portion.",
-    },
-    "Japanese chicken curry": {
-        "batch": 4, "fresh": False,
-        "detail": "~620–700 kcal · ~45–50g protein",
-        "ingredients": "700g chicken breast, ½ block Japanese curry mix, onion, carrots, potatoes, spinach, rice.",
-        "instructions": "Simmer chicken, onion, carrots, and potatoes. Add curry block and spinach, then serve with ½ cup cooked rice.",
-    },
-    "Sausage tray bake + beans": {
-        "batch": 3, "fresh": False,
-        "detail": "~540–680 kcal · ~20–32g protein",
-        "ingredients": "2 reduced-fat sausages, 250g potatoes, carrot, ½ onion, ½ pepper, 1 tsp olive oil, ½ tin beans.",
-        "instructions": "Roast sausages and vegetables with oil, then serve with ½ tin beans.",
-    },
-}
+def write_json(path, data, indent=None):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump(data, f, indent=indent)
+    os.replace(tmp, path)
 
-SHOPPING = {
-    1: [
-        ("Breakfast", ["2 × 500g tubs 0% Greek yoghurt", "1 bag oats",
-                       "7 bananas or 2 berry punnets"]),
-        ("Lunch", ["1 loaf wholemeal bread", "7 tins tuna in spring water",
-                   "1 bottle/jar light mayo", "Black pepper"]),
-        ("Snacks", ["1 multipack cereal/oat bars", "1 multipack protein bars"]),
-        ("Dinner", ["500g 5% beef mince", "1 tin chopped tomatoes", "1 tin kidney beans",
-                    "1 onion", "1 bell pepper", "1 bag spinach", "1 bag rice",
-                    "1 bag dry pasta", "1 jar reduced-fat pesto", "2 medium tomatoes",
-                    "Cumin", "Smoked paprika", "Chilli flakes"]),
-    ],
-    2: [
-        ("Breakfast", ["1 bag oats", "2 litres semi-skimmed milk",
-                       "1 × 500g tub 0% Greek yoghurt", "7 bananas or berries"]),
-        ("Lunch", ["1 loaf wholemeal bread", "700g cooked chicken slices",
-                   "1 jar pickle", "1 cucumber or 1 bag salad"]),
-        ("Snacks", ["1 multipack cereal/oat bars",
-                    "1 multipack small chocolate bars/biscuit packs",
-                    "7 protein savoury packs"]),
-        ("Dinner", ["700g chicken breast", "1 onion", "3 tins chopped tomatoes",
-                    "1 bag spinach", "1 jar curry paste or lower-calorie curry sauce",
-                    "1 small tub low-fat yoghurt", "1 bag rice",
-                    "2 × 300g packs tortelloni", "2 tins lentils/cannellini beans",
-                    "Black pepper"]),
-    ],
-    3: [
-        ("Breakfast", ["2 × 500g tubs 0% Greek yoghurt", "1 bag oats",
-                       "7 bananas or berries"]),
-        ("Lunch", ["1 loaf wholemeal bread", "1 × 300g tub hummus",
-                   "525–700g cooked chicken slices", "1–2 bags salad", "1 cucumber"]),
-        ("Snacks", ["1 multipack cereal/oat bars", "1 multipack protein bars",
-                    "1 multipack Mini Cheddars/baked crisps"]),
-        ("Dinner", ["3 salmon fillets", "1.5–2kg potatoes", "Broccoli/peas/spinach",
-                    "Olive oil", "500g 5% beef mince", "1 tin chopped tomatoes",
-                    "1 onion", "1 bag spinach", "1 bag dry pasta", "Italian herbs",
-                    "Black pepper"]),
-    ],
-    4: [
-        ("Breakfast", ["2 loaves wholemeal bread", "1 jar Marmite",
-                       "2 litres semi-skimmed milk or 7 protein drinks"]),
-        ("Lunch", ["7 tins tuna in spring water", "1 bottle/jar light mayo",
-                   "Black pepper"]),
-        ("Snacks", ["1 multipack cereal/oat bars", "7 protein savoury packs"]),
-        ("Dinner", ["700g chicken breast", "1 box Japanese curry block", "2 onions",
-                    "1 bag carrots", "1.5–2kg potatoes", "1 bag spinach", "1 bag rice",
-                    "6 reduced-fat sausages", "2 bell peppers",
-                    "2 tins baked or mixed beans", "Olive oil"]),
-    ],
-}
+
+def ensure_seed_data():
+    if not os.path.exists(RECIPES_PATH):
+        write_json(RECIPES_PATH, {"recipes": SEED_RECIPES}, indent=2)
+    if not os.path.exists(PLAN_PATH):
+        write_json(PLAN_PATH, SEED_PLAN, indent=2)
+
+
+def load_json(path):
+    with open(path) as f:
+        return json.load(f)
+
+
+def midpoint(lo, hi):
+    return round((lo + hi) / 2)
+
+
+def macro_detail(r):
+    kcal = f"{r['kcal_min']}" if r["kcal_min"] == r["kcal_max"] else f"{r['kcal_min']}–{r['kcal_max']}"
+    protein = f"{r['protein_min']}" if r["protein_min"] == r["protein_max"] else f"{r['protein_min']}–{r['protein_max']}"
+    return f"~{kcal} kcal · ~{protein}g protein"
+
+
+ensure_seed_data()
+RECIPES = load_json(RECIPES_PATH)["recipes"]
+RECIPES_BY_ID = {r["id"]: r for r in RECIPES}
+PLAN = load_json(PLAN_PATH)
+WEEK1_MONDAY = date.fromisoformat(PLAN["week1_monday"])
+TOTAL_WEEKS = len(PLAN["weeks"])
 
 
 def week_for(day):
-    return ((day - WEEK1_MONDAY).days // 7) % 4 + 1
+    return ((day - WEEK1_MONDAY).days // 7) % TOTAL_WEEKS + 1
 
 
 def span_for(day):
-    """Return (meals, position_in_span) for a date."""
+    """Return (span, position_in_span) for a date."""
     day_name = DAY_NAMES[day.weekday()]
-    for days, meals in WEEKS[week_for(day)]:
-        if day_name in days:
-            return meals, days.index(day_name)
+    for span in PLAN["weeks"][str(week_for(day))]:
+        if day_name in span["days"]:
+            return span, span["days"].index(day_name)
     raise KeyError(day_name)
+
+
+def day_span(week_num, day_name):
+    for span in PLAN["weeks"][str(week_num)]:
+        if day_name in span["days"]:
+            return span
+    raise KeyError(day_name)
+
+
+def slot_names(ids):
+    return " + ".join(RECIPES_BY_ID[i]["name"] for i in ids)
+
+
+def slot_macros(ids):
+    kcal = sum(midpoint(RECIPES_BY_ID[i]["kcal_min"], RECIPES_BY_ID[i]["kcal_max"]) for i in ids)
+    protein = sum(midpoint(RECIPES_BY_ID[i]["protein_min"], RECIPES_BY_ID[i]["protein_max"]) for i in ids)
+    return kcal, protein
 
 
 def dinner_status(day):
     """Return (kind, status_label) for a date's dinner."""
-    meals, position = span_for(day)
-    info = DINNERS[meals["dinner"]]
+    span, position = span_for(day)
+    info = RECIPES_BY_ID[span["dinner"][0]]
     if info["fresh"]:
         return "cook", "COOK FRESH TONIGHT"
     if position == 0:
@@ -227,55 +273,57 @@ def dinner_status(day):
 today = date.today()
 week = week_for(today)
 day_idx = today.weekday()
-today_meals, _ = span_for(today)
+today_span, _ = span_for(today)
 
-kcal = sum(MACROS[m][0] for m in today_meals.values())
-protein = sum(MACROS[m][1] for m in today_meals.values())
+kcal = sum(slot_macros(today_span[slot])[0] for slot in SLOTS)
+protein = sum(slot_macros(today_span[slot])[1] for slot in SLOTS)
 
-tonight_info = DINNERS[today_meals["dinner"]]
+dinner_recipe = RECIPES_BY_ID[today_span["dinner"][0]]
 kind, status = dinner_status(today)
 
 tomorrow = today + timedelta(days=1)
-tomorrow_meals, _ = span_for(tomorrow)
+tomorrow_span, _ = span_for(tomorrow)
 tomorrow_kind, _ = dinner_status(tomorrow)
-tomorrow_label = f"{tomorrow_meals['dinner']} ({'cooking' if tomorrow_kind == 'cook' else 'leftovers'})"
-
-
-def day_meals(week_num, day_name):
-    for days, meals in WEEKS[week_num]:
-        if day_name in days:
-            return meals
-    raise KeyError(day_name)
-
+tomorrow_recipe = RECIPES_BY_ID[tomorrow_span["dinner"][0]]
+tomorrow_label = f"{tomorrow_recipe['name']} ({'cooking' if tomorrow_kind == 'cook' else 'leftovers'})"
 
 data = {
     "week": week,
-    "next_week": week % 4 + 1,
+    "next_week": week % TOTAL_WEEKS + 1,
+    "total_weeks": TOTAL_WEEKS,
     "day_name": today.strftime("%A"),
-    "today": today_meals,
+    "today": {slot: slot_names(today_span[slot]) for slot in SLOTS},
     "kcal": kcal,
     "kcal_percent": min(100, round(kcal / 1800 * 100)),
     "protein": protein,
     "protein_percent": min(100, round(protein / 120 * 100)),
     "tonight": {
-        "name": today_meals["dinner"],
+        "name": dinner_recipe["name"],
         "kind": kind,
         "status": status,
-        "detail": tonight_info["detail"],
-        "ingredients": tonight_info["ingredients"],
-        "instructions": tonight_info["instructions"],
+        "detail": macro_detail(dinner_recipe),
+        "ingredients": dinner_recipe["ingredients"],
+        "instructions": dinner_recipe["instructions"],
         "tomorrow": tomorrow_label,
     },
     "days": [{"name": name,
               "is_today": i == day_idx,
-              **day_meals(week, name)}
+              **{slot: slot_names(day_span(week, name)[slot]) for slot in SLOTS}}
              for i, name in enumerate(DAY_NAMES)],
 }
-for section, items in SHOPPING[week]:
-    data[f"shopping_{section.lower()}"] = [{"t": item} for item in items]
 
-os.makedirs(os.path.dirname(OUT), exist_ok=True)
-tmp = OUT + ".tmp"
-with open(tmp, "w") as f:
-    json.dump(data, f)
-os.replace(tmp, OUT)
+for section, items in PLAN["shopping"][str(week)].items():
+    data[f"shopping_{section}"] = [{"t": item} for item in items]
+
+for key, meal_type in (("recipes_breakfast", "breakfast"), ("recipes_lunch", "lunch"),
+                        ("recipes_snacks", "snack"), ("recipes_dinner", "dinner")):
+    data[key] = [{
+        "id": r["id"], "name": r["name"],
+        "kcal_min": r["kcal_min"], "kcal_max": r["kcal_max"],
+        "protein_min": r["protein_min"], "protein_max": r["protein_max"],
+        "detail": macro_detail(r),
+        "ingredients": r["ingredients"], "instructions": r["instructions"],
+        "batch": r["batch"], "fresh": r["fresh"],
+    } for r in RECIPES if r["meal_type"] == meal_type]
+
+write_json(OUT, data)
