@@ -562,7 +562,7 @@ pages:
         widgets:
           - type: custom-api
             title: Today
-            cache: 15m
+            cache: 5s
             url: http://localhost:8080/assets/meals.json
             template: |
               <div class="size-h3 color-highlight">{{ .JSON.String "day_name" }}</div>
@@ -589,7 +589,7 @@ pages:
           # Estimated from the midpoints of each recipe's kcal/protein range.
           - type: custom-api
             title: Today's Macros
-            cache: 15m
+            cache: 5s
             url: http://localhost:8080/assets/meals.json
             template: |
               <div class="flex justify-between items-end">
@@ -697,7 +697,7 @@ pages:
           # Tonight's dinner with batch-cooking status and the full recipe.
           - type: custom-api
             title: Tonight
-            cache: 15m
+            cache: 5s
             url: http://localhost:8080/assets/meals.json
             template: |
               <div class="flex justify-between items-end">
@@ -713,10 +713,29 @@ pages:
 
           - type: custom-api
             title: This Week
-            cache: 15m
-            url: http://localhost:8080/assets/meals.json
+            cache: 5s
+            url: http://localhost:8080/assets/meals-preview.json
             template: |
-              <div class="size-h5">Week {{ .JSON.Int "week" }} of {{ .JSON.Int "total_weeks" }} · Week {{ .JSON.Int "next_week" }} starts Monday</div>
+              <div class="flex justify-between items-center">
+                <div class="size-h5">
+                  Week {{ .JSON.Int "week" }} of {{ .JSON.Int "total_weeks" }}
+                  {{ if .JSON.Bool "is_current" }}
+                    · Week {{ .JSON.Int "next_week" }} starts Monday
+                  {{ else }}
+                    · <span class="color-highlight">PREVIEWING</span> (today is week {{ .JSON.Int "actual_current_week" }})
+                  {{ end }}
+                </div>
+                <div style="display: flex; gap: 0.4rem; flex-shrink: 0;">
+                  <a href="http://@@GLANCE_HOST@@:8081/meals/preview?week={{ .JSON.Int "prev_week" }}&back=http://@@GLANCE_HOST@@:8080/meals"
+                    style="display: inline-block; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.7rem; font: inherit; text-decoration: none; cursor: pointer;">&lsaquo; Prev</a>
+                  {{ if not (.JSON.Bool "is_current") }}
+                  <a href="http://@@GLANCE_HOST@@:8081/meals/preview?week={{ .JSON.Int "actual_current_week" }}&back=http://@@GLANCE_HOST@@:8080/meals"
+                    style="display: inline-block; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.7rem; font: inherit; text-decoration: none; cursor: pointer;">Today</a>
+                  {{ end }}
+                  <a href="http://@@GLANCE_HOST@@:8081/meals/preview?week={{ .JSON.Int "next_week" }}&back=http://@@GLANCE_HOST@@:8080/meals"
+                    style="display: inline-block; background: transparent; color: inherit; border: 1px solid rgba(128, 128, 128, 0.4); border-radius: 4px; padding: 0.3rem 0.7rem; font: inherit; text-decoration: none; cursor: pointer;">Next &rsaquo;</a>
+                </div>
+              </div>
               <table style="width: 100%; border-collapse: collapse; text-align: left; margin-top: 0.6rem;">
                 <thead>
                   <tr class="size-h6">
@@ -742,10 +761,10 @@ pages:
 
           - type: custom-api
             title: Shopping List
-            cache: 15m
-            url: http://localhost:8080/assets/meals.json
+            cache: 5s
+            url: http://localhost:8080/assets/meals-preview.json
             template: |
-              <div class="size-h5">For week {{ .JSON.Int "week" }} of 4</div>
+              <div class="size-h5">For week {{ .JSON.Int "week" }} of {{ .JSON.Int "total_weeks" }}{{ if not (.JSON.Bool "is_current") }} <span class="color-highlight">(previewing)</span>{{ end }}</div>
               <div class="flex" style="gap: 1.5rem; flex-wrap: wrap; margin-top: 0.6rem;">
                 <div style="flex: 1; min-width: 11rem;">
                   <div class="size-h6">BREAKFAST</div>
@@ -775,7 +794,7 @@ pages:
             widgets:
               - type: custom-api
                 title: Breakfast
-                cache: 15m
+                cache: 5s
                 url: http://localhost:8080/assets/meals.json
                 template: |
                   {{ range .JSON.Array "recipes_breakfast" }}
@@ -820,7 +839,7 @@ pages:
 
               - type: custom-api
                 title: Lunch
-                cache: 15m
+                cache: 5s
                 url: http://localhost:8080/assets/meals.json
                 template: |
                   {{ range .JSON.Array "recipes_lunch" }}
@@ -865,7 +884,7 @@ pages:
 
               - type: custom-api
                 title: Snacks
-                cache: 15m
+                cache: 5s
                 url: http://localhost:8080/assets/meals.json
                 template: |
                   {{ range .JSON.Array "recipes_snacks" }}
@@ -908,7 +927,7 @@ pages:
 
               - type: custom-api
                 title: Dinner
-                cache: 15m
+                cache: 5s
                 url: http://localhost:8080/assets/meals.json
                 template: |
                   {{ range .JSON.Array "recipes_dinner" }}

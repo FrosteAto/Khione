@@ -36,6 +36,13 @@ recipes.json (blank id creates a new one, slugified from the name).
 GET /recipe/delete?id=... removes a recipe, refusing if the meal plan
 still schedules it anywhere. Both re-run glance-meals so meals.json (and
 the Meals page recipe cards it feeds) reflect the change immediately.
+
+GET /meals/preview?week=N re-runs glance-meals with --preview N, which
+regenerates meals-preview.json for week N (wrapped into range) without
+touching meals.json — this is what the Meals page's Prev/Next/Today
+controls hit. It's a page reload, not a persistent per-viewer state: the
+regular 6-hourly timer run of glance-meals (no --preview flag) always
+resets the preview back to the real current week.
 """
 import json
 import os
@@ -470,6 +477,16 @@ class Handler(BaseHTTPRequestHandler):
             write_json(RECIPES, store, indent=2)
             try:
                 subprocess.run(["/usr/local/bin/glance-meals"], check=False)
+            except OSError:
+                pass
+        elif url.path == "/meals/preview":
+            try:
+                week = int(query["week"][0])
+            except (KeyError, ValueError, IndexError):
+                self.send_error(400, "bad week value")
+                return
+            try:
+                subprocess.run(["/usr/local/bin/glance-meals", "--preview", str(week)], check=False)
             except OSError:
                 pass
         else:
