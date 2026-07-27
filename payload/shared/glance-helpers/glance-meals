@@ -124,6 +124,34 @@ SEED_RECIPES = [
      "ingredients": "½ pack tortelloni, tomato sauce/chopped tomatoes, spinach, ½ tin drained lentils or beans.",
      "instructions": "Boil tortelloni, heat sauce with spinach and lentils/beans, then combine.",
      "batch": 3, "fresh": True},
+    {"id": "greek-yoghurt-tuna-pasta-salad", "name": "Greek yoghurt tuna pasta salad", "meal_type": "dinner",
+     "kcal_min": 500, "kcal_max": 540, "protein_min": 38, "protein_max": 42,
+     "ingredients": "225g dry pasta, 2 tins tuna in spring water, 165g 0% Greek yoghurt, 1 tbsp light mayo, "
+                     "⅓ cucumber, 200g cherry tomatoes, ½ small red onion, black pepper, garlic powder, paprika, "
+                     "optional squeeze of lemon juice.",
+     "instructions": "Cook the pasta and allow it to cool. Mix together the Greek yoghurt, mayo, garlic powder, "
+                      "paprika, black pepper and optional lemon juice. Stir through the pasta, drained tuna, "
+                      "diced cucumber, halved tomatoes and finely diced red onion. Chill before serving.",
+     "batch": 3, "fresh": True},
+    {"id": "chicken-fajita-rice-bowls", "name": "Chicken fajita rice bowls", "meal_type": "dinner",
+     "kcal_min": 510, "kcal_max": 560, "protein_min": 45, "protein_max": 50,
+     "ingredients": "700g chicken breast, 300g dry rice, 2 onions, 3 bell peppers, 1 tbsp olive oil, "
+                     "1 packet fajita seasoning, optional lime juice and fresh coriander.",
+     "instructions": "Cook the rice. Slice the chicken, onions and peppers. Fry the chicken in the oil until "
+                      "browned, then add the onions, peppers and fajita seasoning with a splash of water. Cook "
+                      "until the vegetables soften and the chicken is cooked through. Serve over the rice with "
+                      "optional lime juice and coriander.",
+     "batch": 4, "fresh": True},
+    {"id": "spam-rice-bowl", "name": "Sweet & sticky Spam rice bowl", "meal_type": "dinner",
+     "kcal_min": 580, "kcal_max": 620, "protein_min": 23, "protein_max": 26,
+     "ingredients": "2 tins Spam, 300g dry rice, 2 onions, 2 bell peppers, 300g mushrooms, 4 cloves garlic, "
+                     "4 tbsp light soy sauce, 2 tbsp brown sugar, 2 tsp sriracha (optional), "
+                     "2 tsp sesame or vegetable oil.",
+     "instructions": "Cook the rice. Fry the onion, pepper, mushrooms and garlic until softened, then remove "
+                      "from the pan. Brown the Spam slices, add the soy sauce, brown sugar and optional "
+                      "sriracha, cooking until the glaze thickens. Return the vegetables, toss together, and "
+                      "serve over the rice.",
+     "batch": 4, "fresh": True},
 ]
 
 SEED_PLAN = {
@@ -152,6 +180,18 @@ SEED_PLAN = {
              "snacks": ["cereal-oat-bar", "protein-savoury-pack"], "dinner": ["japanese-chicken-curry"]},
             {"days": ["Fri", "Sat", "Sun"], "breakfast": ["marmite-toast-protein-side"], "lunch": ["tuna-mayo-sandwich"],
              "snacks": ["cereal-oat-bar", "protein-savoury-pack"], "dinner": ["sausage-tray-bake-beans"]},
+        ],
+        "5": [
+            {"days": ["Mon", "Tue", "Wed", "Thu"], "breakfast": ["yoghurt-oats-fruit"], "lunch": ["marmite-cucumber-sandwich-protein-drink"],
+             "snacks": ["cereal-oat-bar", "protein-bar"], "dinner": ["chicken-fajita-rice-bowls"]},
+            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["yoghurt-oats-fruit"], "lunch": ["marmite-cucumber-sandwich-protein-drink"],
+             "snacks": ["cereal-oat-bar", "protein-savoury-pack"], "dinner": ["baked-potato-tuna"]},
+        ],
+        "6": [
+            {"days": ["Mon", "Tue", "Wed", "Thu"], "breakfast": ["protein-porridge-fruit"], "lunch": ["chicken-pickle-sandwich"],
+             "snacks": ["choc-biscuit-pack", "protein-savoury-pack"], "dinner": ["spam-rice-bowl"]},
+            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["protein-porridge-fruit"], "lunch": ["chicken-pickle-sandwich"],
+             "snacks": ["mini-cheddars-baked-crisps", "protein-bar"], "dinner": ["greek-yoghurt-tuna-pasta-salad"]},
         ],
     },
     "shopping": {
@@ -187,6 +227,25 @@ SEED_PLAN = {
                        "1 bag spinach", "1 bag rice", "6 reduced-fat sausages", "2 bell peppers",
                        "2 tins baked or mixed beans", "Olive oil"],
         },
+        "5": {
+            "breakfast": ["2 × 500g tubs 0% Greek yoghurt", "1 bag oats", "7 bananas or 2 berry punnets"],
+            "lunch": ["1 loaf wholemeal bread", "1 jar Marmite", "2 cucumbers", "7 protein drinks"],
+            "snacks": ["1 multipack cereal/oat bars", "1 multipack protein bars", "3 protein savoury packs"],
+            "dinner": ["700g chicken breast", "1 bag rice", "2 onions", "3 bell peppers", "1 packet fajita seasoning",
+                       "Olive oil", "3 large potatoes", "3 tins tuna in spring water", "1 bottle/jar light mayo",
+                       "1 small red onion", "1–2 bags salad or mixed veg"],
+        },
+        "6": {
+            "breakfast": ["1 bag oats", "2 litres semi-skimmed milk", "1 × 500g tub 0% Greek yoghurt", "7 bananas or berries"],
+            "lunch": ["1 loaf wholemeal bread", "700g cooked chicken slices", "1 jar pickle", "1 cucumber or 1 bag salad"],
+            "snacks": ["1 multipack small chocolate bars/biscuit packs", "4 protein savoury packs",
+                       "1 multipack Mini Cheddars/baked crisps", "1 multipack protein bars"],
+            "dinner": ["2 tins Spam", "1 bag rice", "2 onions", "2 bell peppers", "1 pack mushrooms", "1 bulb garlic",
+                       "1 bottle light soy sauce", "Brown sugar", "Sriracha (optional)", "Sesame or vegetable oil",
+                       "1 bag dry pasta", "2 tins tuna in spring water", "1 small tub 0% Greek yoghurt",
+                       "1 bottle/jar light mayo", "1 cucumber", "1 punnet cherry tomatoes", "1 small red onion",
+                       "Garlic powder", "Paprika", "Black pepper"],
+        },
     },
 }
 
@@ -195,7 +254,7 @@ def write_json(path, data, indent=None):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     tmp = path + ".tmp"
     with open(tmp, "w") as f:
-        json.dump(data, f, indent=indent)
+        json.dump(data, f, indent=indent, ensure_ascii=False)
     os.replace(tmp, path)
 
 
