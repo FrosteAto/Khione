@@ -713,7 +713,14 @@ pages:
 
           - type: custom-api
             title: This Week
-            cache: 5s
+            # Glance's cache is a background timer decoupled from page
+            # requests (refetches on its own schedule, serves whatever it
+            # has to every request in between) — not a per-request
+            # freshness check. Prev/Next is the one widget pair that gets
+            # clicked rapidly in succession, so it needs the shortest
+            # window Glance allows to avoid showing a stale week right
+            # after a click; every other widget's cache stays at 5s.
+            cache: 1s
             url: http://localhost:8080/assets/meals-preview.json
             template: |
               <div class="flex justify-between items-center">
@@ -761,7 +768,7 @@ pages:
 
           - type: custom-api
             title: Shopping List
-            cache: 5s
+            cache: 1s
             url: http://localhost:8080/assets/meals-preview.json
             template: |
               <div class="size-h5">For week {{ .JSON.Int "week" }} of {{ .JSON.Int "total_weeks" }}{{ if not (.JSON.Bool "is_current") }} <span class="color-highlight">(previewing)</span>{{ end }}</div>
