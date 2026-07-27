@@ -9,14 +9,23 @@ those files is missing gets seeded from SEED_RECIPES/SEED_PLAN below, so
 the rotation that used to live in this script carries over automatically.
 Seeding never overwrites an existing file, so live edits always persist.
 Runs from a systemd timer.
+
+`glance-meals --preview N` additionally regenerates meals-preview.json for
+week N (wrapped into range) instead of the actual current week — used by
+the Meals page's Prev/Next/Today controls (glance-weight-server's
+/meals/preview endpoint shells out to this). meals.json (today/tonight/
+macros) is always written for the real current day regardless of
+--preview, so the Today/Tonight widgets never show a previewed week.
 """
 import json
 import os
+import sys
 from datetime import date, timedelta
 
 RECIPES_PATH = "/var/lib/glance/recipes.json"
 PLAN_PATH = "/var/lib/glance/meal-plan.json"
 OUT = "/var/lib/glance/assets/meals.json"
+PREVIEW_OUT = "/var/lib/glance/assets/meals-preview.json"
 
 DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 SLOTS = ("breakfast", "lunch", "snacks", "dinner")
@@ -346,10 +355,38 @@ tomorrow_kind, _ = dinner_status(tomorrow)
 tomorrow_recipe = RECIPES_BY_ID[tomorrow_span["dinner"][0]]
 tomorrow_label = f"{tomorrow_recipe['name']} ({'cooking' if tomorrow_kind == 'cook' else 'leftovers'})"
 
+
+def week_view(target_week):
+    """Day table + shopping lists for an arbitrary week — the shared shape
+    behind both meals.json's (always-current) week and meals-preview.json's
+    (browsable) week. is_today only lights up when target_week is actually
+    the real current week; otherwise nothing in the previewed table should
+    look like "today"."""
+    is_current = target_week == week
+    return {
+        "week": target_week,
+        "total_weeks": TOTAL_WEEKS,
+        "actual_current_week": week,
+        "is_current": is_current,
+        "next_week": target_week % TOTAL_WEEKS + 1,
+        "prev_week": (target_week - 2) % TOTAL_WEEKS + 1,
+        "days": [{"name": name,
+                  "is_today": is_current and i == day_idx,
+                  **{slot: slot_names(day_span(target_week, name)[slot]) for slot in SLOTS}}
+                 for i, name in enumerate(DAY_NAMES)],
+        **{f"shopping_{section}": [{"t": item} for item in items]
+           for section, items in PLAN["shopping"][str(target_week)].items()},
+    }
+
+
+requested_week = None
+if len(sys.argv) >= 3 and sys.argv[1] == "--preview":
+    try:
+        requested_week = ((int(sys.argv[2]) - 1) % TOTAL_WEEKS) + 1
+    except ValueError:
+        requested_week = None
+
 data = {
-    "week": week,
-    "next_week": week % TOTAL_WEEKS + 1,
-    "total_weeks": TOTAL_WEEKS,
     "day_name": today.strftime("%A"),
     "today": {slot: slot_names(today_span[slot]) for slot in SLOTS},
     "kcal": kcal,
@@ -365,14 +402,10 @@ data = {
         "instructions": dinner_recipe["instructions"],
         "tomorrow": tomorrow_label,
     },
-    "days": [{"name": name,
-              "is_today": i == day_idx,
-              **{slot: slot_names(day_span(week, name)[slot]) for slot in SLOTS}}
-             for i, name in enumerate(DAY_NAMES)],
+    **week_view(week),
 }
 
-for section, items in PLAN["shopping"][str(week)].items():
-    data[f"shopping_{section}"] = [{"t": item} for item in items]
+write_json(PREVIEW_OUT, week_view(week if requested_week is None else requested_week))
 
 for key, meal_type in (("recipes_breakfast", "breakfast"), ("recipes_lunch", "lunch"),
                         ("recipes_snacks", "snack"), ("recipes_dinner", "dinner")):
