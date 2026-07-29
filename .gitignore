@@ -13,6 +13,8 @@ archiso-tmp/
 *.tmp
 *.swp
 *.swo
+__pycache__/
+*.pyc
 .git/
 .gitmodules
 .gitignore~
@@ -26,6 +28,8 @@ Thumbs.db
 **/sys/**
 **/dev/**
 **/run/**
-iso/airootfs/root/installer/
+# build-iso.sh stages this fresh into the temp build copy of each profile;
+# it never belongs in the source iso-*/ trees themselves
+iso-*/airootfs/root/installer-src/
 # OBS websocket config holds the remote-control password — never track it
 payload/themes/desktop/dotfiles/config/obs-studio/plugin_config/obs-websocket/

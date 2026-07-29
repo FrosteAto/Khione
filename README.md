@@ -2,16 +2,19 @@
   <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="./payload/images/FrosteArch Logo 2.png" />
 </p>
 
-FrosteArch is a custom Arch Linux distro built around a practical, opinionated setup for both desktop and server use.
+FrosteArch is a custom Arch Linux distro built around a practical, opinionated setup for desktop, server, and appliance use.
 
-There are two editions to choose:
+There are three editions to choose:
 
 - Desktop Edition
 - Server Edition
+- Node Edition
 
 FrosteArch Desktop is a full daily-driver environment with programming, productivity, gaming, and creative tools already installed.
 
 FrosteArch Server is a lean profile tuned for long-running services, including Plex defaults and enough local tooling to debug directly on the machine.
+
+FrosteArch Node is a minimal profile whose only job is to boot, log in, and show a dashboard in Firefox — the base system plus Firefox, nothing else.
 
 ---
 
@@ -43,10 +46,19 @@ FrosteArch Server is a lean profile tuned for long-running services, including P
 
 ---
 
+<h2 align="center">FrosteArch Node</h2>
+
+FrosteArch Node is the minimal edition: base system, KDE Plasma shell, and Firefox — that's it. It exists to sit quietly on a spare box or display and show a dashboard (for example a FrosteArch Server's Glance page), so it skips Plex, Samba, Home Assistant, gaming, and creative tooling entirely.
+
+Node's theme currently reuses the Server konsave profile and wallpaper as a placeholder until a dedicated one is ready — see Roadmap.
+
+---
+
 <h2 align="center">Roadmap</h2>
 
 - Update desktop images
-- Update server konsave / dotfiles
+- Add Node screenshots
+- Give Node its own konsave / dotfiles / wallpaper (currently borrows Server's)
 - Nvidia support
 
 ---
@@ -61,6 +73,7 @@ The FrosteArch install flow is mostly automated, while keeping the key Archinsta
 - Decide which ISO you want:
   - Desktop Edition: full daily-driver setup.
   - Server Edition: lightweight setup with server defaults.
+  - Node Edition: minimal setup with just the base system and Firefox.
 
 ## Step 1: Download the ISO
 
@@ -94,6 +107,8 @@ If it does not auto-start, run one of these manually:
 /root/start-install-desktop.sh
 # or
 /root/start-install-server.sh
+# or
+/root/start-install-node.sh
 ```
 
 ## Step 4: Complete Archinstall base configuration

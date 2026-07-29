@@ -15,6 +15,10 @@ case "$TARGET" in
     MESSAGE_FILE="$SCRIPT_DIR/first-boot-server.md"
     TITLE="Welcome to FrosteArch Server"
     ;;
+  node)
+    MESSAGE_FILE="$SCRIPT_DIR/first-boot-node.md"
+    TITLE="Welcome to FrosteArch Node"
+    ;;
   generic|default)
     MESSAGE_FILE="$SCRIPT_DIR/first-boot-message.md"
     TITLE="FrosteArch"
@@ -24,7 +28,7 @@ case "$TARGET" in
       MESSAGE_FILE="$TARGET"
       TITLE="FrosteArch"
     else
-      echo "Usage: $0 [desktop|server|generic|/path/to/message.md] [optional-title]"
+      echo "Usage: $0 [desktop|server|node|generic|/path/to/message.md] [optional-title]"
       exit 1
     fi
     ;;

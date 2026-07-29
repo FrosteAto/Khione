@@ -81,8 +81,9 @@ require_user "$ARCH_USER"
 case "$MODE" in
   desktop) MODE_FILE="$REPO_ROOT/modes/desktop.sh" ;;
   server)  MODE_FILE="$REPO_ROOT/modes/server.sh" ;;
+  node)    MODE_FILE="$REPO_ROOT/modes/node.sh" ;;
   *)
-    log "ERROR: MODE must be 'desktop' or 'server' (got: $MODE)"
+    log "ERROR: MODE must be 'desktop', 'server', or 'node' (got: $MODE)"
     exit 1
     ;;
 esac
