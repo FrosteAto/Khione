@@ -36,9 +36,6 @@ SERVICES_MASK=()
 
 FIREWALL_RULES=()
 
-DOTFILES_SUBDIR="themes/desktop/dotfiles"
-
 FIRST_BOOT_DIALOG_TITLE="Welcome to FrosteArch Desktop"
-FIRST_BOOT_DIALOG_MARKDOWN_REL="shared/first-boot-desktop.md"
 
 SETUP_AUDIO_PRODUCTION=true

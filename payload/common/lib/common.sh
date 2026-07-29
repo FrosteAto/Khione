@@ -13,7 +13,9 @@ init_paths() {
   local repo_root="$1"
   local arch_user="$2"
 
-  DOTFILES_DIR="$repo_root/$DOTFILES_SUBDIR"
+  # Every edition carries its dotfiles at editions/<mode>/dotfiles by
+  # convention; MODE_NAME is set by the mode.sh sourced before this runs.
+  DOTFILES_DIR="$repo_root/editions/$MODE_NAME/dotfiles"
 
   USER_HOME="/home/$arch_user"
   USER_CONFIG="$USER_HOME/.config"
@@ -813,7 +815,7 @@ apply_theme_via_switcher_required() {
 install_audio_base() {
   local arch_user="$1"
   local repo_root="$2"
-  local setup_script_source="$repo_root/shared/fl-miku-setup.sh"
+  local setup_script_source="$repo_root/editions/desktop/fl-miku-setup.sh"
 
   echo "Setting up audio production environment..."
 

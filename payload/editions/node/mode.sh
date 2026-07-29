@@ -20,7 +20,4 @@ SERVICES_MASK=( sleep.target suspend.target hibernate.target hybrid-sleep.target
 
 FIREWALL_RULES=()
 
-DOTFILES_SUBDIR="themes/node/dotfiles"
-
 FIRST_BOOT_DIALOG_TITLE="Welcome to FrosteArch Node"
-FIRST_BOOT_DIALOG_MARKDOWN_REL="shared/first-boot-node.md"

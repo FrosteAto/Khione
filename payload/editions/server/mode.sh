@@ -63,10 +63,8 @@ FIREWALL_RULES=(
   8123/tcp        # Home Assistant web UI
 )
 
-DOTFILES_SUBDIR="themes/server/dotfiles"
-GLANCE_CONFIG_REL="shared/glance.yml"
-GLANCE_HELPERS_REL="shared/glance-helpers"
-HOME_ASSISTANT_UNIT_REL="shared/home-assistant.service"
+GLANCE_CONFIG_REL="editions/server/glance.yml"
+GLANCE_HELPERS_REL="editions/server/glance-helpers"
+HOME_ASSISTANT_UNIT_REL="editions/server/home-assistant.service"
 
 FIRST_BOOT_DIALOG_TITLE="Welcome to FrosteArch Server"
-FIRST_BOOT_DIALOG_MARKDOWN_REL="shared/first-boot-server.md"
