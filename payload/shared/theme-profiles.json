@@ -19,6 +19,16 @@
       "colorScheme": "Miku",
       "wallpaper": "server-wallpaper.png",
       "dotfiles": "server"
+    },
+    {
+      "id": "node",
+      "name": "FrosteArch Node",
+      "description": "Miku node profile",
+      "knsv": "nodeSetup.knsv",
+      "profileName": "nodeSetup",
+      "colorScheme": "Miku",
+      "wallpaper": "node-wallpaper.png",
+      "dotfiles": "node"
     }
   ]
 }

@@ -33,14 +33,16 @@ prepare_profile() {
 	chmod -R a+rX "$installer_dir"
 }
 
-sudo rm -rf /tmp/work-desktop /tmp/work-server "$OUT_DIR"
+sudo rm -rf /tmp/work-desktop /tmp/work-server /tmp/work-node "$OUT_DIR"
 mkdir -p "$OUT_DIR"
 
 prepare_profile "$REPO_ROOT/iso-desktop" "$TMP_PROFILE_ROOT/iso-desktop"
 prepare_profile "$REPO_ROOT/iso-server" "$TMP_PROFILE_ROOT/iso-server"
+prepare_profile "$REPO_ROOT/iso-node" "$TMP_PROFILE_ROOT/iso-node"
 
 sudo mkarchiso -v -w /tmp/work-desktop -o "$OUT_DIR" "$TMP_PROFILE_ROOT/iso-desktop"
 sudo mkarchiso -v -w /tmp/work-server  -o "$OUT_DIR" "$TMP_PROFILE_ROOT/iso-server"
+sudo mkarchiso -v -w /tmp/work-node    -o "$OUT_DIR" "$TMP_PROFILE_ROOT/iso-node"
 
 rename_iso() {
 	local pattern="$1"
@@ -59,5 +61,6 @@ rename_iso() {
 
 rename_iso "FrosteArch-desktop-*.iso" "FrosteArch_Desktop.iso"
 rename_iso "FrosteArch-server-*.iso" "FrosteArch_Server.iso"
+rename_iso "FrosteArch-node-*.iso" "FrosteArch_Node.iso"
 
 ls -lah "$OUT_DIR"
