@@ -2,25 +2,27 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
+PAYLOAD_DIR="$REPO_ROOT/payload"
 
 TARGET="${1:-server}"
 TITLE_OVERRIDE="${2:-}"
 
 case "$TARGET" in
   desktop)
-    MESSAGE_FILE="$SCRIPT_DIR/first-boot-desktop.md"
+    MESSAGE_FILE="$PAYLOAD_DIR/editions/desktop/first-boot.md"
     TITLE="Welcome to FrosteArch Desktop"
     ;;
   server)
-    MESSAGE_FILE="$SCRIPT_DIR/first-boot-server.md"
+    MESSAGE_FILE="$PAYLOAD_DIR/editions/server/first-boot.md"
     TITLE="Welcome to FrosteArch Server"
     ;;
   node)
-    MESSAGE_FILE="$SCRIPT_DIR/first-boot-node.md"
+    MESSAGE_FILE="$PAYLOAD_DIR/editions/node/first-boot.md"
     TITLE="Welcome to FrosteArch Node"
     ;;
   generic|default)
-    MESSAGE_FILE="$SCRIPT_DIR/first-boot-message.md"
+    MESSAGE_FILE="$PAYLOAD_DIR/common/first-boot/first-boot-message.md"
     TITLE="FrosteArch"
     ;;
   *)
@@ -44,7 +46,7 @@ if [[ ! -f "$MESSAGE_FILE" ]]; then
 fi
 
 HTML_FILE="$(mktemp -t frostearch-firstboot-preview-XXXXXX.html)"
-RENDERER_SCRIPT="$SCRIPT_DIR/render-first-boot-dialog.py"
+RENDERER_SCRIPT="$PAYLOAD_DIR/common/first-boot/render-first-boot-dialog.py"
 cleanup() {
   rm -f "$HTML_FILE"
 }
