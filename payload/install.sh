@@ -57,7 +57,7 @@ trap cleanup EXIT INT TERM
 REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 # shellcheck source=/dev/null
-source "$REPO_ROOT/lib/common.sh"
+source "$REPO_ROOT/common/lib/common.sh"
 
 MODE="${MODE:-desktop}"
 ARCH_USER="${ARCH_USER:-}"
@@ -78,18 +78,18 @@ fi
 
 require_user "$ARCH_USER"
 
-case "$MODE" in
-  desktop) MODE_FILE="$REPO_ROOT/modes/desktop.sh" ;;
-  server)  MODE_FILE="$REPO_ROOT/modes/server.sh" ;;
-  node)    MODE_FILE="$REPO_ROOT/modes/node.sh" ;;
-  *)
-    log "ERROR: MODE must be 'desktop', 'server', or 'node' (got: $MODE)"
-    exit 1
-    ;;
-esac
+# Editions are discovered from the directory layout (editions/<name>/mode.sh)
+# rather than a hardcoded list, so adding an edition never means touching this
+# file. MODE is validated before use since it feeds directly into a path.
+if [[ ! "$MODE" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+  log "ERROR: Invalid MODE '$MODE' (must be alphanumeric, - or _)"
+  exit 1
+fi
+
+MODE_FILE="$REPO_ROOT/editions/$MODE/mode.sh"
 
 if [[ ! -f "$MODE_FILE" ]]; then
-  log "Missing mode file: $MODE_FILE"
+  log "ERROR: Unknown MODE '$MODE' (no editions/$MODE/mode.sh found)"
   exit 1
 fi
 
@@ -138,14 +138,16 @@ fi
 init_paths "$REPO_ROOT" "$ARCH_USER"
 
 FIRST_BOOT_DIALOG_TITLE="${FIRST_BOOT_DIALOG_TITLE:-FrosteArch}"
-FIRST_BOOT_DIALOG_MARKDOWN_REL="${FIRST_BOOT_DIALOG_MARKDOWN_REL:-shared/first-boot-message.md}"
+# Every edition carries its own editions/<mode>/first-boot.md by convention;
+# this default only needs overriding by modes that want the generic message.
+FIRST_BOOT_DIALOG_MARKDOWN_REL="${FIRST_BOOT_DIALOG_MARKDOWN_REL:-editions/$MODE_NAME/first-boot.md}"
 FIRST_BOOT_DIALOG_MARKDOWN_FILE="$REPO_ROOT/$FIRST_BOOT_DIALOG_MARKDOWN_REL"
-FIRST_BOOT_DIALOG_RENDERER_FILE="${FIRST_BOOT_DIALOG_RENDERER_FILE:-$REPO_ROOT/shared/render-first-boot-dialog.py}"
-THEME_PROFILES_DIR="${THEME_PROFILES_DIR:-$REPO_ROOT/themes}"
-THEME_METADATA_FILE="${THEME_METADATA_FILE:-$REPO_ROOT/shared/theme-profiles.json}"
-THEME_SWITCHER_FILE="${THEME_SWITCHER_FILE:-$REPO_ROOT/shared/frostearch-theme-switcher.sh}"
-THEME_METADATA_HELPER_FILE="${THEME_METADATA_HELPER_FILE:-$REPO_ROOT/shared/theme-metadata-tool.py}"
-THEME_WALLPAPERS_DIR="${THEME_WALLPAPERS_DIR:-$REPO_ROOT/themes}"
+FIRST_BOOT_DIALOG_RENDERER_FILE="${FIRST_BOOT_DIALOG_RENDERER_FILE:-$REPO_ROOT/common/first-boot/render-first-boot-dialog.py}"
+THEME_PROFILES_DIR="${THEME_PROFILES_DIR:-$REPO_ROOT/editions}"
+THEME_METADATA_FILE="${THEME_METADATA_FILE:-$REPO_ROOT/common/theme-switcher/theme-profiles.json}"
+THEME_SWITCHER_FILE="${THEME_SWITCHER_FILE:-$REPO_ROOT/common/theme-switcher/frostearch-theme-switcher.sh}"
+THEME_METADATA_HELPER_FILE="${THEME_METADATA_HELPER_FILE:-$REPO_ROOT/common/theme-switcher/theme-metadata-tool.py}"
+THEME_WALLPAPERS_DIR="${THEME_WALLPAPERS_DIR:-$REPO_ROOT/editions}"
 THEME_DEFAULT_ID="${THEME_DEFAULT_ID:-$MODE_NAME}"
 GLANCE_CONFIG_REL="${GLANCE_CONFIG_REL:-}"
 GLANCE_HELPERS_REL="${GLANCE_HELPERS_REL:-}"
