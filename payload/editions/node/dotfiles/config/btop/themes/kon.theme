@@ -1,0 +1,89 @@
+# ===============================
+#  K-On! btop – Wood & Uniform
+# ===============================
+
+# Base
+theme[main_bg]="#1D1510"
+theme[main_fg]="#F0E6D3"
+
+# Titles (navy keeps it readable)
+theme[title]="#6B83C2"
+
+# Keyboard highlight (Yui's hairclip gold!)
+theme[hi_fg]="#EAB64E"
+
+# Selected process (gold pop)
+theme[selected_bg]="#3D2E1E"
+theme[selected_fg]="#EAB64E"
+
+# Inactive text
+theme[inactive_fg]="#A6927C"
+
+# Graph overlay text
+theme[graph_text]="#F0E6D3"
+
+# Meter background
+theme[meter_bg]="#2E2216"
+
+# Process misc
+theme[proc_misc]="#A6927C"
+
+# Box outlines
+theme[cpu_box]="#6B83C2"    # Navy = CPU
+theme[mem_box]="#D98A3D"    # Warm oak
+theme[net_box]="#EAB64E"    # Gold
+theme[proc_box]="#33478A"   # Deep navy
+
+# Dividers (soft navy so gold stands out)
+theme[div_line]="#6B83C2"
+
+# -------------------------------
+# Temperature (navy -> gold -> rust)
+# -------------------------------
+theme[temp_start]="#435A9E"
+theme[temp_mid]="#EAB64E"
+theme[temp_end]="#C8555A"
+
+# -------------------------------
+# CPU graph (navy -> gold -> oak)
+# -------------------------------
+theme[cpu_start]="#6B83C2"
+theme[cpu_mid]="#EAB64E"
+theme[cpu_end]="#D98A3D"
+
+# -------------------------------
+# Memory / Disk meters
+# -------------------------------
+theme[free_start]="#6B83C2"
+theme[free_mid]="#EAB64E"
+theme[free_end]="#D98A3D"
+
+theme[cached_start]="#7A92C9"
+theme[cached_mid]="#EAB64E"
+theme[cached_end]="#D98A3D"
+
+theme[available_start]="#EAB64E"
+theme[available_mid]="#D98A3D"
+theme[available_end]="#C8555A"
+
+theme[used_start]="#6B83C2"
+theme[used_mid]="#EAB64E"
+theme[used_end]="#D98A3D"
+
+# -------------------------------
+# Network graphs
+# -------------------------------
+theme[download_start]="#D98A3D"
+theme[download_mid]="#EAB64E"
+theme[download_end]="#C8555A"
+
+theme[upload_start]="#6B83C2"
+theme[upload_mid]="#EAB64E"
+theme[upload_end]="#D98A3D"
+
+# -------------------------------
+# Process usage gradient
+# -------------------------------
+theme[process_start]="#EAB64E"
+theme[process_mid]="#D98A3D"
+theme[process_end]="#C8555A"
