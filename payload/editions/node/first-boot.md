@@ -1,10 +1,6 @@
 # Welcome to FrosteArch Node
 
-Setup has finished. This is the Node edition — a minimal FrosteArch install whose only job is to open Firefox and show your dashboard.
-
-## About this edition
-
-Node strips away everything that isn't needed to boot, log in, and browse: no gaming, creative, or audio tools, and no Plex / Samba / Home Assistant / Glance hosting. Point Firefox at whatever dashboard you host elsewhere (for example a FrosteArch Server's Glance instance) and it's ready to go.
+Setup has finished. This is the Node edition — a minimal FrosteArch flavour whose only job is to open Firefox and show your dashboard.
 
 ## Quick start
 
