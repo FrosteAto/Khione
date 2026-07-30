@@ -23,10 +23,10 @@
     {
       "id": "node",
       "name": "FrosteArch Node",
-      "description": "Miku node profile",
+      "description": "K-On! node profile",
       "knsv": "nodeSetup.knsv",
       "profileName": "nodeSetup",
-      "colorScheme": "Miku",
+      "colorScheme": "KOn",
       "wallpaper": "node-wallpaper.png",
       "dotfiles": "node"
     }
