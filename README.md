@@ -21,13 +21,13 @@ FrosteArch Node is a minimal profile whose only job is to boot, log in, and show
 <h2 align="center">FrosteArch Desktop</h2>
 
 <p align="center">
-  <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="./docs/images/Desktop1.png" />
+  <img width="3440" height="1440" alt="FrosteArch Desktop screenshot 1" src="./docs/images/Desktop1.png" />
 </p>
 
 <br>
 
 <p align="center">
-  <img width="3440" height="1440" alt="Screenshot_20260112_201312" src="./docs/images/Desktop2.png" />
+  <img width="3440" height="1440" alt="FrosteArch Desktop screenshot 2" src="./docs/images/Desktop2.png" />
 </p>
 
 ---
@@ -35,13 +35,13 @@ FrosteArch Node is a minimal profile whose only job is to boot, log in, and show
 <h2 align="center">FrosteArch Server</h2>
 
 <p align="center">
-  <img width="1920" height="1200" alt="Screenshot_20260212_192443" src="./docs/images/Server1.png" />
+  <img width="1920" height="1200" alt="FrosteArch Server screenshot 1" src="./docs/images/Server1.png" />
 </p>
 
 <br>
 
 <p align="center">
-  <img width="1920" height="1200" alt="Screenshot_20260212_192431" src="./docs/images/Server2.png" />
+  <img width="1920" height="1200" alt="FrosteArch Server screenshot 2" src="./docs/images/Server2.png" />
 </p>
 
 ---
@@ -49,13 +49,13 @@ FrosteArch Node is a minimal profile whose only job is to boot, log in, and show
 <h2 align="center">FrosteArch Node</h2>
 
 <p align="center">
-  <img width="1920" height="1200" alt="Screenshot_20260212_192443" src="./docs/images/Node1.png" />
+  <img width="1920" height="1200" alt="FrosteArch Node screenshot 1" src="./docs/images/Node1.png" />
 </p>
 
 <br>
 
 <p align="center">
-  <img width="1920" height="1200" alt="Screenshot_20260212_192431" src="./docs/images/Node2.png" />
+  <img width="1920" height="1200" alt="FrosteArch Node screenshot 2" src="./docs/images/Node2.png" />
 </p>
 
 
@@ -81,7 +81,7 @@ The FrosteArch install flow is mostly automated, while keeping the key Archinsta
 
 ## Step 1: Download the ISO
 
-Download the Desktop or Server ISO from the Releases page.
+Download the Desktop, Server, or Node ISO from the Releases page.
 
 Optional but recommended checksum verification:
 
