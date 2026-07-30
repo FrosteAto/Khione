@@ -48,17 +48,21 @@ FrosteArch Node is a minimal profile whose only job is to boot, log in, and show
 
 <h2 align="center">FrosteArch Node</h2>
 
-FrosteArch Node is the minimal edition: base system, KDE Plasma shell, and Firefox — that's it. It exists to sit quietly on a spare box or display and show a dashboard (for example a FrosteArch Server's Glance page), so it skips Plex, Samba, Home Assistant, gaming, and creative tooling entirely.
+<p align="center">
+  <img width="1920" height="1200" alt="Screenshot_20260212_192443" src="./docs/images/Node1.png" />
+</p>
 
-Node's theme currently reuses the Server konsave profile and wallpaper as a placeholder until a dedicated one is ready — see Roadmap.
+<br>
+
+<p align="center">
+  <img width="1920" height="1200" alt="Screenshot_20260212_192431" src="./docs/images/Node2.png" />
+</p>
+
 
 ---
 
 <h2 align="center">Roadmap</h2>
 
-- Update desktop images
-- Add Node screenshots
-- Give Node its own konsave / dotfiles / wallpaper (currently borrows Server's)
 - Nvidia support
 
 ---
@@ -101,14 +105,10 @@ sudo dd if=<your-iso-file>.iso of=/dev/<usb-device> bs=4M status=progress oflag=
 - Select the FrosteArch install option in the boot menu.
 - The installer launcher should auto-start on tty1.
 
-If it does not auto-start, run one of these manually:
+If it does not auto-start, run it manually:
 
 ```bash
-/root/start-install-desktop.sh
-# or
-/root/start-install-server.sh
-# or
-/root/start-install-node.sh
+/root/start-install.sh
 ```
 
 ## Step 4: Complete Archinstall base configuration
