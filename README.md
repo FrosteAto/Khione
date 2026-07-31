@@ -14,7 +14,7 @@ FrosteArch Desktop is a full daily-driver environment with programming, producti
 
 FrosteArch Server is a lean profile tuned for long-running services, including Plex defaults and enough local tooling to debug directly on the machine.
 
-FrosteArch Node is a minimal profile whose only job is to boot, log in, and show a dashboard in Firefox — the base system plus Firefox, nothing else.
+FrosteArch Node is a minimal profile whose only job is to boot, log in, and show a dashboard in Firefox.
 
 ---
 
