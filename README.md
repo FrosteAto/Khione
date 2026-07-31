@@ -259,6 +259,7 @@ My scripts and changes are stapled onto & around Archinstall. Without their incr
 
 - Ina: https://www.pixiv.net/en/artworks/103938068
 - Miku: https://www.pixiv.net/en/artworks/73597952
+- K-On!: https://www.kyotoanimation.co.jp/en/ Promo Image
 
 ---
 
