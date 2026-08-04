@@ -50,9 +50,10 @@ SEED_RECIPES = [
      "kcal_min": 305, "kcal_max": 365, "protein_min": 15, "protein_max": 25,
      "ingredients": "2 slices wholemeal bread, thin spreading of Marmite, 200ml semi-skimmed milk or 1 protein drink.",
      "instructions": "Toast bread, spread Marmite thinly, and have milk or a protein drink alongside.", "batch": 0, "fresh": False},
-    # Breakfast shakes — alternate with the solid breakfasts above (one span/week solid,
-    # the other blended); frozen-prep weeks run on a shake all week. Fresh fruit only,
-    # nothing frozen, to keep freezer space free for the freezer-prep dinner wraps.
+    # Breakfast shakes — one per frozen-prep week (whole week, same as the solid
+    # breakfasts get one full cooking week each), so solid/shake naturally alternates
+    # week to week without ever mixing within a single week. Fresh fruit only, nothing
+    # frozen, to keep freezer space free for the freezer-prep dinner wraps.
     {"id": "banana-cinnamon-protein-shake", "name": "Banana cinnamon protein shake", "meal_type": "breakfast",
      "kcal_min": 225, "kcal_max": 250, "protein_min": 25, "protein_max": 27,
      "ingredients": "1 banana, 1 scoop protein powder, ¼ tsp ground cinnamon, splash of water, ice (if using fresh banana).",
@@ -246,7 +247,7 @@ SEED_PLAN = {
         "1": [
             {"days": ["Mon", "Tue", "Wed", "Thu"], "breakfast": ["yoghurt-oats-fruit"], "lunch": ["tuna-mayo-sandwich"],
              "snacks": ["protein-savoury-pack"], "dinner": ["high-protein-chilli"]},
-            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["banana-cinnamon-protein-shake"], "lunch": ["tuna-mayo-sandwich"],
+            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["yoghurt-oats-fruit"], "lunch": ["tuna-mayo-sandwich"],
              "snacks": ["protein-savoury-pack"], "dinner": ["tuna-pesto-pasta"]},
         ],
         "2": [
@@ -257,7 +258,7 @@ SEED_PLAN = {
         "3": [
             {"days": ["Mon", "Tue", "Wed", "Thu"], "breakfast": ["protein-porridge-fruit"], "lunch": ["chicken-pickle-sandwich"],
              "snacks": ["choc-biscuit-pack"], "dinner": ["chicken-curry"]},
-            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["mixed-berry-protein-shake"], "lunch": ["chicken-pickle-sandwich"],
+            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["protein-porridge-fruit"], "lunch": ["chicken-pickle-sandwich"],
              "snacks": ["choc-biscuit-pack"], "dinner": ["tortelloni-tomato-lentils-beans"]},
         ],
         "4": [
@@ -268,7 +269,7 @@ SEED_PLAN = {
         "5": [
             {"days": ["Mon", "Tue", "Wed"], "breakfast": ["yoghurt-oats-fruit"], "lunch": ["hummus-chicken-salad-sandwich"],
              "snacks": ["protein-savoury-pack"], "dinner": ["salmon-potatoes-veg"]},
-            {"days": ["Thu", "Fri", "Sat", "Sun"], "breakfast": ["apple-cinnamon-protein-shake"], "lunch": ["hummus-chicken-salad-sandwich"],
+            {"days": ["Thu", "Fri", "Sat", "Sun"], "breakfast": ["yoghurt-oats-fruit"], "lunch": ["hummus-chicken-salad-sandwich"],
              "snacks": ["protein-savoury-pack"], "dinner": ["high-protein-bolognese"]},
         ],
         "6": [
@@ -279,7 +280,7 @@ SEED_PLAN = {
         "7": [
             {"days": ["Mon", "Tue", "Wed", "Thu"], "breakfast": ["marmite-toast-protein-side"], "lunch": ["tuna-mayo-sandwich"],
              "snacks": ["choc-biscuit-pack"], "dinner": ["japanese-chicken-curry"]},
-            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["apple-cinnamon-protein-shake"], "lunch": ["tuna-mayo-sandwich"],
+            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["marmite-toast-protein-side"], "lunch": ["tuna-mayo-sandwich"],
              "snacks": ["choc-biscuit-pack"], "dinner": ["sausage-tray-bake-beans"]},
         ],
         "8": [
@@ -290,7 +291,7 @@ SEED_PLAN = {
         "9": [
             {"days": ["Mon", "Tue", "Wed", "Thu"], "breakfast": ["yoghurt-oats-fruit"], "lunch": ["marmite-cucumber-sandwich-protein-drink"],
              "snacks": ["protein-savoury-pack"], "dinner": ["chicken-fajita-rice-bowls"]},
-            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["mixed-berry-protein-shake"], "lunch": ["marmite-cucumber-sandwich-protein-drink"],
+            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["yoghurt-oats-fruit"], "lunch": ["marmite-cucumber-sandwich-protein-drink"],
              "snacks": ["protein-savoury-pack"], "dinner": ["baked-potato-tuna"]},
         ],
         "10": [
@@ -301,7 +302,7 @@ SEED_PLAN = {
         "11": [
             {"days": ["Mon", "Tue", "Wed", "Thu"], "breakfast": ["protein-porridge-fruit"], "lunch": ["chicken-pickle-sandwich"],
              "snacks": ["choc-biscuit-pack"], "dinner": ["spam-rice-bowl"]},
-            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["banana-cinnamon-protein-shake"], "lunch": ["chicken-pickle-sandwich"],
+            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["protein-porridge-fruit"], "lunch": ["chicken-pickle-sandwich"],
              "snacks": ["choc-biscuit-pack"], "dinner": ["greek-yoghurt-tuna-pasta-salad"]},
         ],
         "12": [
@@ -312,8 +313,7 @@ SEED_PLAN = {
     },
     "shopping": {
         "1": {
-            "breakfast": ["1 × 500g tub 0% Greek yoghurt", "1 bag oats", "7 bananas total (4 for yoghurt bowls, 3 for shakes)",
-                          "Ground cinnamon", "Protein powder (from your tub)"],
+            "breakfast": ["2 × 500g tubs 0% Greek yoghurt", "1 bag oats", "7 bananas or 2 berry punnets"],
             "lunch": ["1 loaf wholemeal bread", "7 tins tuna in spring water", "1 bottle/jar light mayo", "Black pepper"],
             "snacks": ["7 protein savoury packs"],
             "dinner": ["500g 5% beef mince", "1 tin chopped tomatoes", "1 tin kidney beans", "1 onion", "1 bell pepper",
@@ -329,8 +329,7 @@ SEED_PLAN = {
                        "1 × 8-pack large tortilla wraps"],
         },
         "3": {
-            "breakfast": ["1 bag oats", "1.2 litres semi-skimmed milk (for porridge)", "1 × 500g tub 0% Greek yoghurt",
-                          "4 bananas (for porridge)", "1-2 punnets fresh mixed berries (for shakes)", "Protein powder (from your tub)"],
+            "breakfast": ["1 bag oats", "2 litres semi-skimmed milk", "1 × 500g tub 0% Greek yoghurt", "7 bananas or berries"],
             "lunch": ["1 loaf wholemeal bread", "700g cooked chicken slices", "1 jar pickle", "1 cucumber or 1 bag salad"],
             "snacks": ["1 multipack small chocolate bars/biscuit packs"],
             "dinner": ["700g chicken breast", "1 onion", "3 tins chopped tomatoes", "1 bag spinach",
@@ -346,8 +345,7 @@ SEED_PLAN = {
                        "1 × 200g reduced-fat mozzarella", "1 × 8-pack large tortilla wraps"],
         },
         "5": {
-            "breakfast": ["1 × 500g tub 0% Greek yoghurt", "1 bag oats", "3 bananas (for yoghurt bowls)",
-                          "4 apples (for shakes)", "Ground cinnamon", "Protein powder (from your tub)"],
+            "breakfast": ["2 × 500g tubs 0% Greek yoghurt", "1 bag oats", "7 bananas or berries"],
             "lunch": ["1 loaf wholemeal bread", "1 × 300g tub hummus", "525–700g cooked chicken slices",
                       "1–2 bags salad", "1 cucumber"],
             "snacks": ["7 protein savoury packs"],
@@ -364,8 +362,7 @@ SEED_PLAN = {
                        "1 × 8-pack large tortilla wraps"],
         },
         "7": {
-            "breakfast": ["2 loaves wholemeal bread", "1 jar Marmite", "1.2 litres semi-skimmed milk or 4 protein drinks (for toast side)",
-                          "3 apples (for shakes)", "Ground cinnamon", "Protein powder (from your tub)"],
+            "breakfast": ["2 loaves wholemeal bread", "1 jar Marmite", "2 litres semi-skimmed milk or 7 protein drinks"],
             "lunch": ["7 tins tuna in spring water", "1 bottle/jar light mayo", "Black pepper"],
             "snacks": ["1 multipack small chocolate bars/biscuit packs"],
             "dinner": ["700g chicken breast", "1 box Japanese curry block", "2 onions", "1 bag carrots", "1.5–2kg potatoes",
@@ -381,8 +378,7 @@ SEED_PLAN = {
                        "1 × 8-pack large tortilla wraps"],
         },
         "9": {
-            "breakfast": ["1 × 500g tub 0% Greek yoghurt", "1 bag oats", "4 bananas (for yoghurt bowls)",
-                          "1-2 punnets fresh mixed berries (for shakes)", "Protein powder (from your tub)"],
+            "breakfast": ["2 × 500g tubs 0% Greek yoghurt", "1 bag oats", "7 bananas or 2 berry punnets"],
             "lunch": ["1 loaf wholemeal bread", "1 jar Marmite", "2 cucumbers", "7 protein drinks"],
             "snacks": ["7 protein savoury packs"],
             "dinner": ["700g chicken breast", "1 bag rice", "2 onions", "3 bell peppers", "1 packet fajita seasoning",
@@ -398,8 +394,7 @@ SEED_PLAN = {
                        "Garlic and ginger paste", "1 × 8-pack large tortilla wraps"],
         },
         "11": {
-            "breakfast": ["1 bag oats", "1.2 litres semi-skimmed milk", "1 × 500g tub 0% Greek yoghurt",
-                          "7 bananas total (4 for porridge, 3 for shakes)", "Ground cinnamon", "Protein powder (from your tub)"],
+            "breakfast": ["1 bag oats", "2 litres semi-skimmed milk", "1 × 500g tub 0% Greek yoghurt", "7 bananas or berries"],
             "lunch": ["1 loaf wholemeal bread", "700g cooked chicken slices", "1 jar pickle", "1 cucumber or 1 bag salad"],
             "snacks": ["1 multipack small chocolate bars/biscuit packs"],
             "dinner": ["2 tins Spam", "1 bag rice", "2 onions", "2 bell peppers", "1 pack mushrooms", "1 bulb garlic",
