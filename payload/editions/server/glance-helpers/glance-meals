@@ -50,6 +50,25 @@ SEED_RECIPES = [
      "kcal_min": 305, "kcal_max": 365, "protein_min": 15, "protein_max": 25,
      "ingredients": "2 slices wholemeal bread, thin spreading of Marmite, 200ml semi-skimmed milk or 1 protein drink.",
      "instructions": "Toast bread, spread Marmite thinly, and have milk or a protein drink alongside.", "batch": 0, "fresh": False},
+    # Breakfast shakes — alternate with the solid breakfasts above (one span/week solid,
+    # the other blended); frozen-prep weeks run on a shake all week. Fresh fruit only,
+    # nothing frozen, to keep freezer space free for the freezer-prep dinner wraps.
+    {"id": "banana-cinnamon-protein-shake", "name": "Banana cinnamon protein shake", "meal_type": "breakfast",
+     "kcal_min": 225, "kcal_max": 250, "protein_min": 25, "protein_max": 27,
+     "ingredients": "1 banana, 1 scoop protein powder, ¼ tsp ground cinnamon, splash of water, ice (if using fresh banana).",
+     "instructions": "Blend the banana, protein powder, cinnamon, a splash of water and a handful of ice until "
+                      "smooth. Add a little more water if it's too thick to blend.",
+     "batch": 0, "fresh": False},
+    {"id": "mixed-berry-protein-shake", "name": "Mixed berry protein shake", "meal_type": "breakfast",
+     "kcal_min": 180, "kcal_max": 220, "protein_min": 25, "protein_max": 27,
+     "ingredients": "Small punnet fresh mixed berries (~125-150g), 1 scoop protein powder, splash of water, handful of ice.",
+     "instructions": "Blend the berries, protein powder, a splash of water and a handful of ice until smooth.",
+     "batch": 0, "fresh": False},
+    {"id": "apple-cinnamon-protein-shake", "name": "Apple cinnamon protein shake", "meal_type": "breakfast",
+     "kcal_min": 215, "kcal_max": 240, "protein_min": 25, "protein_max": 27,
+     "ingredients": "1 apple, cored and chopped, 1 scoop protein powder, pinch of ground cinnamon, splash of water, handful of ice.",
+     "instructions": "Blend the apple, protein powder, cinnamon, a splash of water and a handful of ice until smooth.",
+     "batch": 0, "fresh": False},
     # Lunch
     {"id": "tuna-mayo-sandwich", "name": "Tuna mayo sandwich", "meal_type": "lunch",
      "kcal_min": 335, "kcal_max": 335, "protein_min": 35, "protein_max": 40,
@@ -72,9 +91,6 @@ SEED_RECIPES = [
      "ingredients": "2 slices wholemeal bread, thin spreading of Marmite, ¼ cucumber, 1 protein drink.",
      "instructions": "Spread Marmite, add cucumber slices, and have a protein drink alongside.", "batch": 0, "fresh": False},
     # Snacks (bought items — no real "ingredients", just a usage note)
-    {"id": "protein-bar", "name": "Protein bar", "meal_type": "snack",
-     "kcal_min": 180, "kcal_max": 230, "protein_min": 15, "protein_max": 22,
-     "ingredients": "", "instructions": "Best post-run or as a high-protein treat snack.", "batch": 0, "fresh": False},
     {"id": "protein-savoury-pack", "name": "Protein savoury pack", "meal_type": "snack",
      "kcal_min": 80, "kcal_max": 180, "protein_min": 10, "protein_max": 25,
      "ingredients": "", "instructions": "Jerky or chicken bite-style pack; convenient savoury protein.", "batch": 0, "fresh": False},
@@ -161,99 +177,244 @@ SEED_RECIPES = [
                       "sriracha, cooking until the glaze thickens. Return the vegetables, toss together, and "
                       "serve over the rice.",
      "batch": 4, "fresh": True},
+    # Freezer-prep wraps — cook once, wrap and freeze 7 portions, microwave to reheat.
+    # No fresh assembly at serving time, so these carry a whole week (batch 7) on their own.
+    {"id": "beef-bean-freezer-wraps", "name": "Beef & bean freezer wraps", "meal_type": "dinner",
+     "kcal_min": 460, "kcal_max": 480, "protein_min": 42, "protein_max": 44,
+     "ingredients": "1kg beef mince, 1 onion, 2 tins black beans, 2 tins chopped tomatoes, 1 tin sweetcorn, "
+                     "2 sachets taco seasoning, jarred sliced jalapeños to taste, 8 large tortilla wraps (uses 7).",
+     "instructions": "Brown the mince with onion, stir in the beans, tomatoes, corn, taco seasoning and "
+                      "jalapeños, and simmer until thick. Cool, divide between 7 wraps, roll tightly, and "
+                      "freeze individually. Microwave from frozen to reheat.",
+     "batch": 7, "fresh": False},
+    {"id": "beef-cheese-freezer-wraps", "name": "Beef & cheese freezer wraps", "meal_type": "dinner",
+     "kcal_min": 510, "kcal_max": 530, "protein_min": 46, "protein_max": 48,
+     "ingredients": "1kg beef mince, 1 onion, 1 tin chopped tomatoes, dried oregano, garlic powder, black "
+                     "pepper, 5 Laughing Cow cheese wedges, 200g reduced-fat mozzarella (use ~140g), "
+                     "8 large tortilla wraps (uses 7).",
+     "instructions": "Brown the mince with onion, tomatoes and herbs, then stir through both cheeses until "
+                      "melted and creamy. Cool, divide between 7 wraps, roll tightly, and freeze individually. "
+                      "Microwave from frozen to reheat.",
+     "batch": 7, "fresh": False},
+    {"id": "beef-keema-curry-wraps", "name": "Beef keema curry wraps", "meal_type": "dinner",
+     "kcal_min": 480, "kcal_max": 520, "protein_min": 40, "protein_max": 44,
+     "ingredients": "1kg beef mince, 2 onions, garlic and ginger paste, 7 tbsp curry paste, ~260g frozen peas, "
+                     "700g/700ml passata, 5 tbsp mango chutney, 8 large tortilla wraps (uses 7).",
+     "instructions": "Soften the onion, garlic and ginger, stir in the curry paste, then brown the mince. Add "
+                      "the peas, passata and mango chutney and simmer until thick. Cool, divide between 7 "
+                      "wraps, roll tightly, and freeze individually. Microwave from frozen to reheat.",
+     "batch": 7, "fresh": False},
+    {"id": "teriyaki-beef-wraps", "name": "Teriyaki beef wraps", "meal_type": "dinner",
+     "kcal_min": 430, "kcal_max": 470, "protein_min": 38, "protein_max": 42,
+     "ingredients": "1kg beef mince, 500g bag frozen stir-fry vegetables, 100ml soy sauce, 3-4 tbsp brown "
+                     "sugar, garlic and ginger paste, 1 tsp sesame oil, 1 tbsp cornflour, 8 large tortilla "
+                     "wraps (uses 7).",
+     "instructions": "Brown the mince, stir in the frozen vegetables and cook until tender with most moisture "
+                      "gone. Add soy sauce, brown sugar, garlic, ginger and sesame oil, then thicken with a "
+                      "cornflour slurry until it coats everything and isn't wet. Cool, divide between 7 wraps, "
+                      "roll tightly, and freeze individually. Microwave from frozen to reheat.",
+     "batch": 7, "fresh": False},
+    {"id": "hoisin-chicken-wraps", "name": "Hoisin chicken wraps", "meal_type": "dinner",
+     "kcal_min": 420, "kcal_max": 460, "protein_min": 38, "protein_max": 42,
+     "ingredients": "1kg boneless skinless chicken thighs, diced, 500g bag frozen stir-fry vegetables, 4-5 "
+                     "tbsp hoisin sauce, splash dark soy sauce, 1 tsp Chinese five-spice, garlic and ginger "
+                     "paste, 8 large tortilla wraps (uses 7).",
+     "instructions": "Fry the diced chicken thigh with garlic, ginger and five-spice until cooked through. Add "
+                      "the frozen vegetables and cook until tender with most moisture gone. Stir in the hoisin "
+                      "and soy sauce until thick and coating. Cool, divide between 7 wraps, roll tightly, and "
+                      "freeze individually. Microwave from frozen to reheat.",
+     "batch": 7, "fresh": False},
+    {"id": "piri-piri-chicken-wraps", "name": "Piri piri chicken wraps", "meal_type": "dinner",
+     "kcal_min": 420, "kcal_max": 460, "protein_min": 40, "protein_max": 44,
+     "ingredients": "1kg boneless skinless chicken thighs, diced, 1 onion, garlic paste, peri-peri seasoning, "
+                     "peri-peri marinade, 200g light soft cheese, 8 large tortilla wraps (uses 7).",
+     "instructions": "Fry the diced chicken thigh with onion and garlic, season generously with peri-peri "
+                      "seasoning, and cook through. Stir in the soft cheese and peri-peri marinade until "
+                      "creamy and coating. Cool, divide between 7 wraps, roll tightly, and freeze individually. "
+                      "Microwave from frozen to reheat, stirring the filling once hot if the cheese sauce "
+                      "looks grainy.",
+     "batch": 7, "fresh": False},
 ]
 
 SEED_PLAN = {
+    # Cooking weeks (odd) keep the original stove-cooked rotation untouched. Frozen-prep
+    # weeks (even) sit between them: one freezer-wrap recipe cooked once and eaten all 7
+    # days, no fresh assembly. Alternating this way needs 12 weeks to fit all 6 original
+    # cooking weeks without any of them losing their own dedicated frozen-prep week.
     "week1_monday": "2026-07-13",
     "weeks": {
         "1": [
             {"days": ["Mon", "Tue", "Wed", "Thu"], "breakfast": ["yoghurt-oats-fruit"], "lunch": ["tuna-mayo-sandwich"],
-             "snacks": ["cereal-oat-bar", "protein-bar"], "dinner": ["high-protein-chilli"]},
-            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["yoghurt-oats-fruit"], "lunch": ["tuna-mayo-sandwich"],
-             "snacks": ["cereal-oat-bar", "protein-bar"], "dinner": ["tuna-pesto-pasta"]},
+             "snacks": ["protein-savoury-pack"], "dinner": ["high-protein-chilli"]},
+            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["banana-cinnamon-protein-shake"], "lunch": ["tuna-mayo-sandwich"],
+             "snacks": ["protein-savoury-pack"], "dinner": ["tuna-pesto-pasta"]},
         ],
         "2": [
-            {"days": ["Mon", "Tue", "Wed", "Thu"], "breakfast": ["protein-porridge-fruit"], "lunch": ["chicken-pickle-sandwich"],
-             "snacks": ["cereal-oat-bar", "protein-savoury-pack"], "dinner": ["chicken-curry"]},
-            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["protein-porridge-fruit"], "lunch": ["chicken-pickle-sandwich"],
-             "snacks": ["choc-biscuit-pack", "protein-savoury-pack"], "dinner": ["tortelloni-tomato-lentils-beans"]},
+            {"days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], "breakfast": ["banana-cinnamon-protein-shake"],
+             "lunch": ["tuna-mayo-sandwich"], "snacks": ["cereal-oat-bar"],
+             "dinner": ["beef-bean-freezer-wraps"]},
         ],
         "3": [
-            {"days": ["Mon", "Tue", "Wed"], "breakfast": ["yoghurt-oats-fruit"], "lunch": ["hummus-chicken-salad-sandwich"],
-             "snacks": ["cereal-oat-bar", "protein-bar"], "dinner": ["salmon-potatoes-veg"]},
-            {"days": ["Thu", "Fri", "Sat", "Sun"], "breakfast": ["yoghurt-oats-fruit"], "lunch": ["hummus-chicken-salad-sandwich"],
-             "snacks": ["mini-cheddars-baked-crisps", "protein-bar"], "dinner": ["high-protein-bolognese"]},
+            {"days": ["Mon", "Tue", "Wed", "Thu"], "breakfast": ["protein-porridge-fruit"], "lunch": ["chicken-pickle-sandwich"],
+             "snacks": ["choc-biscuit-pack"], "dinner": ["chicken-curry"]},
+            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["mixed-berry-protein-shake"], "lunch": ["chicken-pickle-sandwich"],
+             "snacks": ["choc-biscuit-pack"], "dinner": ["tortelloni-tomato-lentils-beans"]},
         ],
         "4": [
-            {"days": ["Mon", "Tue", "Wed", "Thu"], "breakfast": ["marmite-toast-protein-side"], "lunch": ["tuna-mayo-sandwich"],
-             "snacks": ["cereal-oat-bar", "protein-savoury-pack"], "dinner": ["japanese-chicken-curry"]},
-            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["marmite-toast-protein-side"], "lunch": ["tuna-mayo-sandwich"],
-             "snacks": ["cereal-oat-bar", "protein-savoury-pack"], "dinner": ["sausage-tray-bake-beans"]},
+            {"days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], "breakfast": ["mixed-berry-protein-shake"],
+             "lunch": ["chicken-pickle-sandwich"], "snacks": ["mini-cheddars-baked-crisps"],
+             "dinner": ["beef-cheese-freezer-wraps"]},
         ],
         "5": [
-            {"days": ["Mon", "Tue", "Wed", "Thu"], "breakfast": ["yoghurt-oats-fruit"], "lunch": ["marmite-cucumber-sandwich-protein-drink"],
-             "snacks": ["cereal-oat-bar", "protein-bar"], "dinner": ["chicken-fajita-rice-bowls"]},
-            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["yoghurt-oats-fruit"], "lunch": ["marmite-cucumber-sandwich-protein-drink"],
-             "snacks": ["cereal-oat-bar", "protein-savoury-pack"], "dinner": ["baked-potato-tuna"]},
+            {"days": ["Mon", "Tue", "Wed"], "breakfast": ["yoghurt-oats-fruit"], "lunch": ["hummus-chicken-salad-sandwich"],
+             "snacks": ["protein-savoury-pack"], "dinner": ["salmon-potatoes-veg"]},
+            {"days": ["Thu", "Fri", "Sat", "Sun"], "breakfast": ["apple-cinnamon-protein-shake"], "lunch": ["hummus-chicken-salad-sandwich"],
+             "snacks": ["protein-savoury-pack"], "dinner": ["high-protein-bolognese"]},
         ],
         "6": [
+            {"days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], "breakfast": ["apple-cinnamon-protein-shake"],
+             "lunch": ["hummus-chicken-salad-sandwich"], "snacks": ["cereal-oat-bar"],
+             "dinner": ["beef-keema-curry-wraps"]},
+        ],
+        "7": [
+            {"days": ["Mon", "Tue", "Wed", "Thu"], "breakfast": ["marmite-toast-protein-side"], "lunch": ["tuna-mayo-sandwich"],
+             "snacks": ["choc-biscuit-pack"], "dinner": ["japanese-chicken-curry"]},
+            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["apple-cinnamon-protein-shake"], "lunch": ["tuna-mayo-sandwich"],
+             "snacks": ["choc-biscuit-pack"], "dinner": ["sausage-tray-bake-beans"]},
+        ],
+        "8": [
+            {"days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], "breakfast": ["apple-cinnamon-protein-shake"],
+             "lunch": ["tuna-mayo-sandwich"], "snacks": ["mini-cheddars-baked-crisps"],
+             "dinner": ["teriyaki-beef-wraps"]},
+        ],
+        "9": [
+            {"days": ["Mon", "Tue", "Wed", "Thu"], "breakfast": ["yoghurt-oats-fruit"], "lunch": ["marmite-cucumber-sandwich-protein-drink"],
+             "snacks": ["protein-savoury-pack"], "dinner": ["chicken-fajita-rice-bowls"]},
+            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["mixed-berry-protein-shake"], "lunch": ["marmite-cucumber-sandwich-protein-drink"],
+             "snacks": ["protein-savoury-pack"], "dinner": ["baked-potato-tuna"]},
+        ],
+        "10": [
+            {"days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], "breakfast": ["mixed-berry-protein-shake"],
+             "lunch": ["marmite-cucumber-sandwich-protein-drink"], "snacks": ["cereal-oat-bar"],
+             "dinner": ["hoisin-chicken-wraps"]},
+        ],
+        "11": [
             {"days": ["Mon", "Tue", "Wed", "Thu"], "breakfast": ["protein-porridge-fruit"], "lunch": ["chicken-pickle-sandwich"],
-             "snacks": ["choc-biscuit-pack", "protein-savoury-pack"], "dinner": ["spam-rice-bowl"]},
-            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["protein-porridge-fruit"], "lunch": ["chicken-pickle-sandwich"],
-             "snacks": ["mini-cheddars-baked-crisps", "protein-bar"], "dinner": ["greek-yoghurt-tuna-pasta-salad"]},
+             "snacks": ["choc-biscuit-pack"], "dinner": ["spam-rice-bowl"]},
+            {"days": ["Fri", "Sat", "Sun"], "breakfast": ["banana-cinnamon-protein-shake"], "lunch": ["chicken-pickle-sandwich"],
+             "snacks": ["choc-biscuit-pack"], "dinner": ["greek-yoghurt-tuna-pasta-salad"]},
+        ],
+        "12": [
+            {"days": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], "breakfast": ["banana-cinnamon-protein-shake"],
+             "lunch": ["chicken-pickle-sandwich"], "snacks": ["mini-cheddars-baked-crisps"],
+             "dinner": ["piri-piri-chicken-wraps"]},
         ],
     },
     "shopping": {
         "1": {
-            "breakfast": ["2 × 500g tubs 0% Greek yoghurt", "1 bag oats", "7 bananas or 2 berry punnets"],
+            "breakfast": ["1 × 500g tub 0% Greek yoghurt", "1 bag oats", "7 bananas total (4 for yoghurt bowls, 3 for shakes)",
+                          "Ground cinnamon", "Protein powder (from your tub)"],
             "lunch": ["1 loaf wholemeal bread", "7 tins tuna in spring water", "1 bottle/jar light mayo", "Black pepper"],
-            "snacks": ["1 multipack cereal/oat bars", "1 multipack protein bars"],
+            "snacks": ["7 protein savoury packs"],
             "dinner": ["500g 5% beef mince", "1 tin chopped tomatoes", "1 tin kidney beans", "1 onion", "1 bell pepper",
                        "1 bag spinach", "1 bag rice", "1 bag dry pasta", "1 jar reduced-fat pesto", "2 medium tomatoes",
                        "Cumin", "Smoked paprika", "Chilli flakes"],
         },
         "2": {
-            "breakfast": ["1 bag oats", "2 litres semi-skimmed milk", "1 × 500g tub 0% Greek yoghurt", "7 bananas or berries"],
+            "breakfast": ["7 bananas", "Ground cinnamon", "Protein powder (from your tub)"],
+            "lunch": ["1 loaf wholemeal bread", "7 tins tuna in spring water", "1 bottle/jar light mayo", "Black pepper"],
+            "snacks": ["1 multipack cereal/oat bars"],
+            "dinner": ["2 × 500g lean beef mince", "1 onion", "2 tins black beans", "2 tins chopped tomatoes",
+                       "1 tin sweetcorn", "2 sachets taco seasoning", "1 jar sliced jalapeños",
+                       "1 × 8-pack large tortilla wraps"],
+        },
+        "3": {
+            "breakfast": ["1 bag oats", "1.2 litres semi-skimmed milk (for porridge)", "1 × 500g tub 0% Greek yoghurt",
+                          "4 bananas (for porridge)", "1-2 punnets fresh mixed berries (for shakes)", "Protein powder (from your tub)"],
             "lunch": ["1 loaf wholemeal bread", "700g cooked chicken slices", "1 jar pickle", "1 cucumber or 1 bag salad"],
-            "snacks": ["1 multipack cereal/oat bars", "1 multipack small chocolate bars/biscuit packs", "7 protein savoury packs"],
+            "snacks": ["1 multipack small chocolate bars/biscuit packs"],
             "dinner": ["700g chicken breast", "1 onion", "3 tins chopped tomatoes", "1 bag spinach",
                        "1 jar curry paste or lower-calorie curry sauce", "1 small tub low-fat yoghurt", "1 bag rice",
                        "2 × 300g packs tortelloni", "2 tins lentils/cannellini beans", "Black pepper"],
         },
-        "3": {
-            "breakfast": ["2 × 500g tubs 0% Greek yoghurt", "1 bag oats", "7 bananas or berries"],
+        "4": {
+            "breakfast": ["2-3 punnets fresh mixed berries", "Protein powder (from your tub)"],
+            "lunch": ["1 loaf wholemeal bread", "700g cooked chicken slices", "1 jar pickle", "1 cucumber or 1 bag salad"],
+            "snacks": ["1 multipack Mini Cheddars/baked crisps"],
+            "dinner": ["2 × 500g lean beef mince", "1 onion", "1 tin chopped tomatoes",
+                       "Dried oregano, garlic powder, black pepper", "1 box Laughing Cow cheese wedges",
+                       "1 × 200g reduced-fat mozzarella", "1 × 8-pack large tortilla wraps"],
+        },
+        "5": {
+            "breakfast": ["1 × 500g tub 0% Greek yoghurt", "1 bag oats", "3 bananas (for yoghurt bowls)",
+                          "4 apples (for shakes)", "Ground cinnamon", "Protein powder (from your tub)"],
             "lunch": ["1 loaf wholemeal bread", "1 × 300g tub hummus", "525–700g cooked chicken slices",
                       "1–2 bags salad", "1 cucumber"],
-            "snacks": ["1 multipack cereal/oat bars", "1 multipack protein bars", "1 multipack Mini Cheddars/baked crisps"],
+            "snacks": ["7 protein savoury packs"],
             "dinner": ["3 salmon fillets", "1.5–2kg potatoes", "Broccoli/peas/spinach", "Olive oil", "500g 5% beef mince",
                        "1 tin chopped tomatoes", "1 onion", "1 bag spinach", "1 bag dry pasta", "Italian herbs", "Black pepper"],
         },
-        "4": {
-            "breakfast": ["2 loaves wholemeal bread", "1 jar Marmite", "2 litres semi-skimmed milk or 7 protein drinks"],
+        "6": {
+            "breakfast": ["7 apples", "Ground cinnamon", "Protein powder (from your tub)"],
+            "lunch": ["1 loaf wholemeal bread", "1 × 300g tub hummus", "525–700g cooked chicken slices",
+                      "1–2 bags salad", "1 cucumber"],
+            "snacks": ["1 multipack cereal/oat bars"],
+            "dinner": ["2 × 500g lean beef mince", "2 onions", "Garlic and ginger paste", "1 jar curry paste",
+                       "1 × 300g bag frozen peas", "700g/700ml passata", "1 jar mango chutney",
+                       "1 × 8-pack large tortilla wraps"],
+        },
+        "7": {
+            "breakfast": ["2 loaves wholemeal bread", "1 jar Marmite", "1.2 litres semi-skimmed milk or 4 protein drinks (for toast side)",
+                          "3 apples (for shakes)", "Ground cinnamon", "Protein powder (from your tub)"],
             "lunch": ["7 tins tuna in spring water", "1 bottle/jar light mayo", "Black pepper"],
-            "snacks": ["1 multipack cereal/oat bars", "7 protein savoury packs"],
+            "snacks": ["1 multipack small chocolate bars/biscuit packs"],
             "dinner": ["700g chicken breast", "1 box Japanese curry block", "2 onions", "1 bag carrots", "1.5–2kg potatoes",
                        "1 bag spinach", "1 bag rice", "6 reduced-fat sausages", "2 bell peppers",
                        "2 tins baked or mixed beans", "Olive oil"],
         },
-        "5": {
-            "breakfast": ["2 × 500g tubs 0% Greek yoghurt", "1 bag oats", "7 bananas or 2 berry punnets"],
+        "8": {
+            "breakfast": ["7 apples", "Ground cinnamon", "Protein powder (from your tub)"],
+            "lunch": ["7 tins tuna in spring water", "1 bottle/jar light mayo", "Black pepper"],
+            "snacks": ["1 multipack Mini Cheddars/baked crisps"],
+            "dinner": ["2 × 500g lean beef mince", "1 × 500g bag frozen stir-fry vegetables", "1 bottle soy sauce",
+                       "Brown sugar", "Garlic and ginger paste", "Sesame oil", "Cornflour",
+                       "1 × 8-pack large tortilla wraps"],
+        },
+        "9": {
+            "breakfast": ["1 × 500g tub 0% Greek yoghurt", "1 bag oats", "4 bananas (for yoghurt bowls)",
+                          "1-2 punnets fresh mixed berries (for shakes)", "Protein powder (from your tub)"],
             "lunch": ["1 loaf wholemeal bread", "1 jar Marmite", "2 cucumbers", "7 protein drinks"],
-            "snacks": ["1 multipack cereal/oat bars", "1 multipack protein bars", "3 protein savoury packs"],
+            "snacks": ["7 protein savoury packs"],
             "dinner": ["700g chicken breast", "1 bag rice", "2 onions", "3 bell peppers", "1 packet fajita seasoning",
                        "Olive oil", "3 large potatoes", "3 tins tuna in spring water", "1 bottle/jar light mayo",
                        "1 small red onion", "1–2 bags salad or mixed veg"],
         },
-        "6": {
-            "breakfast": ["1 bag oats", "2 litres semi-skimmed milk", "1 × 500g tub 0% Greek yoghurt", "7 bananas or berries"],
+        "10": {
+            "breakfast": ["2-3 punnets fresh mixed berries", "Protein powder (from your tub)"],
+            "lunch": ["1 loaf wholemeal bread", "1 jar Marmite", "2 cucumbers", "7 protein drinks"],
+            "snacks": ["1 multipack cereal/oat bars"],
+            "dinner": ["2 × 500g boneless skinless chicken thighs", "1 × 500g bag frozen stir-fry vegetables",
+                       "1 jar hoisin sauce", "1 bottle dark soy sauce", "Chinese five-spice",
+                       "Garlic and ginger paste", "1 × 8-pack large tortilla wraps"],
+        },
+        "11": {
+            "breakfast": ["1 bag oats", "1.2 litres semi-skimmed milk", "1 × 500g tub 0% Greek yoghurt",
+                          "7 bananas total (4 for porridge, 3 for shakes)", "Ground cinnamon", "Protein powder (from your tub)"],
             "lunch": ["1 loaf wholemeal bread", "700g cooked chicken slices", "1 jar pickle", "1 cucumber or 1 bag salad"],
-            "snacks": ["1 multipack small chocolate bars/biscuit packs", "4 protein savoury packs",
-                       "1 multipack Mini Cheddars/baked crisps", "1 multipack protein bars"],
+            "snacks": ["1 multipack small chocolate bars/biscuit packs"],
             "dinner": ["2 tins Spam", "1 bag rice", "2 onions", "2 bell peppers", "1 pack mushrooms", "1 bulb garlic",
                        "1 bottle light soy sauce", "Brown sugar", "Sriracha (optional)", "Sesame or vegetable oil",
                        "1 bag dry pasta", "2 tins tuna in spring water", "1 small tub 0% Greek yoghurt",
                        "1 bottle/jar light mayo", "1 cucumber", "1 punnet cherry tomatoes", "1 small red onion",
                        "Garlic powder", "Paprika", "Black pepper"],
+        },
+        "12": {
+            "breakfast": ["7 bananas", "Ground cinnamon", "Protein powder (from your tub)"],
+            "lunch": ["1 loaf wholemeal bread", "700g cooked chicken slices", "1 jar pickle", "1 cucumber or 1 bag salad"],
+            "snacks": ["1 multipack Mini Cheddars/baked crisps"],
+            "dinner": ["2 × 500g boneless skinless chicken thighs", "1 onion", "Garlic paste", "Peri-peri seasoning",
+                       "1 bottle peri-peri marinade", "1 × 200g light soft cheese (e.g. Philadelphia Light)",
+                       "1 × 8-pack large tortilla wraps"],
         },
     },
 }
