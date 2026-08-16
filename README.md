@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="./docs/images/FrosteArch Logo 2.png" />
+  <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="./docs/images/FrosteArchLogov2.png" />
 </p>
 
 FrosteArch is a custom Arch Linux distro built around a practical, opinionated setup for desktop, server, and appliance use.
@@ -18,7 +18,9 @@ FrosteArch Node is a minimal profile whose only job is to boot, log in, and show
 
 ---
 
-<h2 align="center">FrosteArch Desktop</h2>
+<p align="center">
+  <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="./docs/images/FrosteArchLogov2Desktop.png" />
+</p>
 
 <p align="center">
   <img width="3440" height="1440" alt="FrosteArch Desktop screenshot 1" src="./docs/images/Desktop1.png" />
@@ -32,7 +34,10 @@ FrosteArch Node is a minimal profile whose only job is to boot, log in, and show
 
 ---
 
-<h2 align="center">FrosteArch Server</h2>
+<p align="center">
+  <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="./docs/images/FrosteArchLogov2Server.png" />
+</p>
+
 
 <p align="center">
   <img width="1920" height="1200" alt="FrosteArch Server screenshot 1" src="./docs/images/Server1.png" />
@@ -46,7 +51,10 @@ FrosteArch Node is a minimal profile whose only job is to boot, log in, and show
 
 ---
 
-<h2 align="center">FrosteArch Node</h2>
+<p align="center">
+  <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="./docs/images/FrosteArchLogov2Node.png" />
+</p>
+
 
 <p align="center">
   <img width="1920" height="1200" alt="FrosteArch Node screenshot 1" src="./docs/images/Node1.png" />
