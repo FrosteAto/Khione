@@ -7,13 +7,12 @@ OFFICIAL_PACKAGES=(
   xorg plasma plasma-workspace greetd greetd-tuigreet kwallet kwallet-pam libsecret
   kdialog
   ufw nano btop fastfetch flatpak kitty dolphin
-  firefox steam krita godot obs-studio audacity blender kdenlive libreoffice gwenview mpv easyeffects calf darktable anki
+  firefox steam krita godot obs-studio audacity elisa blender kdenlive libreoffice gwenview mpv easyeffects calf darktable anki
   python python-markdown python-pip python-pipx python-virtualenv php composer nodejs npm docker docker-compose make cmake git archiso partitionmanager
   cups cups-pdf print-manager sane skanlite hplip avahi nss-mdns
   libinput libwacom wacomtablet xf86-input-wacom
   noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu ttf-jetbrains-mono
   sof-firmware
-  # Audio production / Wine (fl-miku prefix)
   wine wine-mono wine-gecko winetricks p7zip
   realtime-privileges
   lib32-pipewire lib32-libpulse lib32-alsa-lib lib32-alsa-plugins
