@@ -1,6 +1,6 @@
-# Welcome to FrosteArch Node
+# Welcome to Khione Node
 
-Setup has finished. This is the Node edition — a minimal FrosteArch flavour whose only job is to open Firefox and show your dashboard.
+Setup has finished. This is the Node edition — a minimal Khione flavour whose only job is to open Firefox and show your dashboard.
 
 ## Quick start
 
@@ -17,7 +17,7 @@ yay
 - Review installation logs if needed:
 
 ```bash
-ls -1 /var/log/frostearch/
+ls -1 /var/log/khione/
 cat /var/log/archinstall/install.log
 ```
 

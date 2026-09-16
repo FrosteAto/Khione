@@ -1,7 +1,7 @@
 #!/bin/bash
 # fl-miku-setup: initialise the fl-miku Wine prefix for FL Studio + Piapro + Miku.
 #
-# Run this once from a live KDE Plasma session after the main FrosteArch install.
+# Run this once from a live KDE Plasma session after the main Khione install.
 # Safe to re-run (idempotent where possible).
 #
 # What this script does:

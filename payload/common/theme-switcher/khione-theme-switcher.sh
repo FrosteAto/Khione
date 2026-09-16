@@ -1,11 +1,11 @@
 #!/bin/bash
 set -euo pipefail
 
-PROFILE_DIR="${FROSTEARCH_KNSV_DIR:-$HOME/.local/share/frostearch/konsave-profiles}"
-CONFIG_FILE="${FROSTEARCH_THEME_CONFIG:-$HOME/.local/share/frostearch/theme-profiles.json}"
-WALLPAPER_DIR="${FROSTEARCH_WALLPAPER_DIR:-$HOME/.local/share/frostearch/wallpapers}"
-DOTFILES_DIR="${FROSTEARCH_DOTFILES_DIR:-$HOME/.local/share/frostearch/theme-dotfiles}"
-METADATA_HELPER="${FROSTEARCH_THEME_METADATA_HELPER:-$HOME/.local/bin/frostearch-theme-metadata}"
+PROFILE_DIR="${KHIONE_KNSV_DIR:-$HOME/.local/share/khione/konsave-profiles}"
+CONFIG_FILE="${KHIONE_THEME_CONFIG:-$HOME/.local/share/khione/theme-profiles.json}"
+WALLPAPER_DIR="${KHIONE_WALLPAPER_DIR:-$HOME/.local/share/khione/wallpapers}"
+DOTFILES_DIR="${KHIONE_DOTFILES_DIR:-$HOME/.local/share/khione/theme-dotfiles}"
+METADATA_HELPER="${KHIONE_THEME_METADATA_HELPER:-$HOME/.local/bin/khione-theme-metadata}"
 
 ENTRY_SEP=$'\x1f'
 
@@ -284,7 +284,7 @@ restore_kara_plasmoid() {
   # konsave -a restores an older QML-only Kara snapshot from the .knsv export,
   # overwriting the compiled C++ plasmoid.  This function restores the backup
   # that was saved during install_kara_pager_from_source.
-  local backup_dir="$HOME/.local/share/frostearch/kara-plasmoid-backup"
+  local backup_dir="$HOME/.local/share/khione/kara-plasmoid-backup"
   local target_dir="$HOME/.local/share/plasma/plasmoids/org.dhruv8sh.kara"
 
   [ -d "$backup_dir" ] || return 0
@@ -320,7 +320,7 @@ apply_theme_dotfiles() {
     return 1
   fi
 
-  local state_dir="$HOME/.local/share/frostearch"
+  local state_dir="$HOME/.local/share/khione"
   local state_file="$state_dir/active-theme-dotfiles.txt"
   mkdir -p "$state_dir" "$HOME/.config" "$HOME/.local"
 
@@ -397,7 +397,7 @@ pick_profile_kdialog() {
     args+=("${_ids_ref[$i]}" "${_labels_ref[$i]}" "$state")
   done
 
-  kdialog --title "FrosteArch Theme Switcher" \
+  kdialog --title "Khione Theme Switcher" \
     --radiolist "Select a theme profile:" "${args[@]}"
 }
 
@@ -437,7 +437,7 @@ main() {
   fi
 
   if [ "$interactive_mode" -eq 1 ] && ! command -v kdialog >/dev/null 2>&1; then
-    echo "kdialog is required for the FrosteArch Theme Switcher." >&2
+    echo "kdialog is required for the Khione Theme Switcher." >&2
     exit 1
   fi
 
@@ -548,14 +548,14 @@ main() {
   # removed (e.g. switching server→desktop removes kitty.conf — kitty should still be
   # told to reload so it picks up the change).
   local _old_dotfiles_entries=""
-  local _dotfiles_state_path="$HOME/.local/share/frostearch/active-theme-dotfiles.txt"
+  local _dotfiles_state_path="$HOME/.local/share/khione/active-theme-dotfiles.txt"
   if [ -f "$_dotfiles_state_path" ]; then
     _old_dotfiles_entries="$(cat "$_dotfiles_state_path")"
   fi
 
   if ! apply_theme_dotfiles "$selected_dotfiles_key" "$selected"; then
     if [ "$interactive_mode" -eq 1 ] && command -v kdialog >/dev/null 2>&1; then
-      kdialog --title "FrosteArch Theme Switcher" --sorry "Could not apply dotfiles for theme: $selected_name\n\nThe main theme has been applied successfully."
+      kdialog --title "Khione Theme Switcher" --sorry "Could not apply dotfiles for theme: $selected_name\n\nThe main theme has been applied successfully."
     else
       echo "Warning: Could not apply dotfiles for theme: $selected_name" >&2
     fi
@@ -570,7 +570,7 @@ main() {
     fi
     if ! patch_wallpaper_config "$selected_wallpaper"; then
       if [ "$interactive_mode" -eq 1 ] && command -v kdialog >/dev/null 2>&1; then
-        kdialog --title "FrosteArch Theme Switcher" --error "Failed to apply wallpaper: $selected_wallpaper"
+        kdialog --title "Khione Theme Switcher" --error "Failed to apply wallpaper: $selected_wallpaper"
       else
         echo "Failed to apply wallpaper: $selected_wallpaper" >&2
       fi
@@ -609,7 +609,7 @@ main() {
     # AND from the previous theme's entries (captured before apply_theme_dotfiles
     # overwrote the state file).  This ensures apps whose configs were removed
     # during a theme switch are also told to reload.
-    local dotfiles_state="$HOME/.local/share/frostearch/active-theme-dotfiles.txt"
+    local dotfiles_state="$HOME/.local/share/khione/active-theme-dotfiles.txt"
     local _combined_entries=""
     if [ -f "$dotfiles_state" ]; then
       _combined_entries="$(cat "$dotfiles_state")"
@@ -657,9 +657,9 @@ main() {
 
   if [ "$interactive_mode" -eq 1 ] && command -v kdialog >/dev/null 2>&1; then
     if [ "$no_reload" -eq 0 ]; then
-      kdialog --title "FrosteArch Theme Switcher" --msgbox "Applied theme profile: $selected_name\n\nPlasma components were reloaded to apply changes immediately."
+      kdialog --title "Khione Theme Switcher" --msgbox "Applied theme profile: $selected_name\n\nPlasma components were reloaded to apply changes immediately."
     else
-      kdialog --title "FrosteArch Theme Switcher" --msgbox "Applied theme profile: $selected_name"
+      kdialog --title "Khione Theme Switcher" --msgbox "Applied theme profile: $selected_name"
     fi
   fi
 }

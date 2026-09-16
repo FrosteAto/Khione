@@ -1,8 +1,8 @@
 <p align="center">
-  <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="./docs/images/FrosteArchLogov2.png" />
+  <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2.png" />
 </p>
 
-FrosteArch is a custom Arch Linux distro built around a practical, opinionated setup for desktop, server, and appliance use.
+Khione is a custom Arch Linux distro built around a practical, opinionated setup for desktop, server, and appliance use.
 
 There are three editions to choose:
 
@@ -10,60 +10,60 @@ There are three editions to choose:
 - Server Edition
 - Node Edition
 
-FrosteArch Desktop is a full daily-driver environment with programming, productivity, gaming, and creative tools already installed.
+Khione Desktop is a full daily-driver environment with programming, productivity, gaming, and creative tools already installed.
 
-FrosteArch Server is a lean profile tuned for long-running services, including Plex defaults and enough local tooling to debug directly on the machine.
+Khione Server is a lean profile tuned for long-running services, including Plex defaults and enough local tooling to debug directly on the machine.
 
-FrosteArch Node is a minimal profile whose only job is to boot, log in, and show a dashboard in Firefox.
+Khione Node is a minimal profile whose only job is to boot, log in, and show a dashboard in Firefox.
 
 ---
 
 <p align="center">
-  <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="./docs/images/FrosteArchLogov2Desktop.png" />
+  <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2Desktop.png" />
 </p>
 
 <p align="center">
-  <img width="3440" height="1440" alt="FrosteArch Desktop screenshot 1" src="./docs/images/Desktop1.png" />
+  <img width="3440" height="1440" alt="Khione Desktop screenshot 1" src="./docs/images/Desktop1.png" />
 </p>
 
 <br>
 
 <p align="center">
-  <img width="3440" height="1440" alt="FrosteArch Desktop screenshot 2" src="./docs/images/Desktop2.png" />
+  <img width="3440" height="1440" alt="Khione Desktop screenshot 2" src="./docs/images/Desktop2.png" />
 </p>
 
 ---
 
 <p align="center">
-  <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="./docs/images/FrosteArchLogov2Server.png" />
+  <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2Server.png" />
 </p>
 
 
 <p align="center">
-  <img width="1920" height="1200" alt="FrosteArch Server screenshot 1" src="./docs/images/Server1.png" />
+  <img width="1920" height="1200" alt="Khione Server screenshot 1" src="./docs/images/Server1.png" />
 </p>
 
 <br>
 
 <p align="center">
-  <img width="1920" height="1200" alt="FrosteArch Server screenshot 2" src="./docs/images/Server2.png" />
+  <img width="1920" height="1200" alt="Khione Server screenshot 2" src="./docs/images/Server2.png" />
 </p>
 
 ---
 
 <p align="center">
-  <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="./docs/images/FrosteArchLogov2Node.png" />
+  <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2Node.png" />
 </p>
 
 
 <p align="center">
-  <img width="1920" height="1200" alt="FrosteArch Node screenshot 1" src="./docs/images/Node1.png" />
+  <img width="1920" height="1200" alt="Khione Node screenshot 1" src="./docs/images/Node1.png" />
 </p>
 
 <br>
 
 <p align="center">
-  <img width="1920" height="1200" alt="FrosteArch Node screenshot 2" src="./docs/images/Node2.png" />
+  <img width="1920" height="1200" alt="Khione Node screenshot 2" src="./docs/images/Node2.png" />
 </p>
 
 
@@ -77,7 +77,7 @@ FrosteArch Node is a minimal profile whose only job is to boot, log in, and show
 
 <h2 align="center">Installation Guide</h2>
 
-The FrosteArch install flow is mostly automated, while keeping the key Archinstall choices in your hands.
+The Khione install flow is mostly automated, while keeping the key Archinstall choices in your hands.
 
 ## Before you begin
 
@@ -110,7 +110,7 @@ sudo dd if=<your-iso-file>.iso of=/dev/<usb-device> bs=4M status=progress oflag=
 ## Step 3: Boot from the USB
 
 - Boot the target machine from the USB.
-- Select the FrosteArch install option in the boot menu.
+- Select the Khione install option in the boot menu.
 - The installer launcher should auto-start on tty1.
 
 If it does not auto-start, run it manually:
@@ -130,17 +130,17 @@ In Archinstall, configure the basics:
 
 Then let Archinstall complete the base system installation.
 
-## Step 5: Let FrosteArch finish setup
+## Step 5: Let Khione finish setup
 
-After Archinstall finishes, FrosteArch continues automatically and applies packages, services, and system configuration.
+After Archinstall finishes, Khione continues automatically and applies packages, services, and system configuration.
 
 Install output is logged to:
 
 ```bash
-/var/log/frostearch/install-<timestamp>.log
+/var/log/khione/install-<timestamp>.log
 ```
 
-## Step 6: Reboot into FrosteArch
+## Step 6: Reboot into Khione
 
 Once setup fully completes:
 
@@ -161,18 +161,18 @@ For troubleshooting logs:
 
 ```bash
 cat /var/log/archinstall/install.log
-ls -1 /var/log/frostearch/
+ls -1 /var/log/khione/
 ```
 
 ## Step 8: Success!
 
-FrosteArch is now installed and ready to use, tweak, and build on.
+Khione is now installed and ready to use, tweak, and build on.
 
 ---
 
 <h2 align="center">Music Production Support</h2>
 
-Linux and music production have historically not gotten along, especially in the PulseAudio days. DAW support isn't great and wine tends to fight back. FrosteArch includes a dedicated setup script that handles the fiddly bits for you.
+Linux and music production have historically not gotten along, especially in the PulseAudio days. DAW support isn't great and wine tends to fight back. Khione includes a dedicated setup script that handles the fiddly bits for you.
 
 ## FL Studio + Hatsune Miku
 
