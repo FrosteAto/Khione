@@ -12,7 +12,7 @@ section() {
   echo
 }
 
-LOG_DIR="/var/log/frostearch"
+LOG_DIR="/var/log/khione"
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/install-$(date +%F_%H-%M-%S).log"
 
@@ -137,7 +137,7 @@ fi
 
 init_paths "$REPO_ROOT" "$ARCH_USER"
 
-FIRST_BOOT_DIALOG_TITLE="${FIRST_BOOT_DIALOG_TITLE:-FrosteArch}"
+FIRST_BOOT_DIALOG_TITLE="${FIRST_BOOT_DIALOG_TITLE:-Khione}"
 # Every edition carries its own editions/<mode>/first-boot.md by convention;
 # this default only needs overriding by modes that want the generic message.
 FIRST_BOOT_DIALOG_MARKDOWN_REL="${FIRST_BOOT_DIALOG_MARKDOWN_REL:-editions/$MODE_NAME/first-boot.md}"
@@ -145,7 +145,7 @@ FIRST_BOOT_DIALOG_MARKDOWN_FILE="$REPO_ROOT/$FIRST_BOOT_DIALOG_MARKDOWN_REL"
 FIRST_BOOT_DIALOG_RENDERER_FILE="${FIRST_BOOT_DIALOG_RENDERER_FILE:-$REPO_ROOT/common/first-boot/render-first-boot-dialog.py}"
 THEME_PROFILES_DIR="${THEME_PROFILES_DIR:-$REPO_ROOT/editions}"
 THEME_METADATA_FILE="${THEME_METADATA_FILE:-$REPO_ROOT/common/theme-switcher/theme-profiles.json}"
-THEME_SWITCHER_FILE="${THEME_SWITCHER_FILE:-$REPO_ROOT/common/theme-switcher/frostearch-theme-switcher.sh}"
+THEME_SWITCHER_FILE="${THEME_SWITCHER_FILE:-$REPO_ROOT/common/theme-switcher/khione-theme-switcher.sh}"
 THEME_METADATA_HELPER_FILE="${THEME_METADATA_HELPER_FILE:-$REPO_ROOT/common/theme-switcher/theme-metadata-tool.py}"
 THEME_WALLPAPERS_DIR="${THEME_WALLPAPERS_DIR:-$REPO_ROOT/editions}"
 THEME_DEFAULT_ID="${THEME_DEFAULT_ID:-$MODE_NAME}"

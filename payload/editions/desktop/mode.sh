@@ -35,6 +35,6 @@ SERVICES_MASK=()
 
 FIREWALL_RULES=()
 
-FIRST_BOOT_DIALOG_TITLE="Welcome to FrosteArch Desktop"
+FIRST_BOOT_DIALOG_TITLE="Welcome to Khione Desktop"
 
 SETUP_AUDIO_PRODUCTION=true

@@ -172,7 +172,7 @@ pages:
           - type: server-stats
             servers:
               - type: local
-                name: FrosteArch Server
+                name: Khione Server
 
           # All disks, always visible (server-stats only shows disks on
           # hover). Data comes from the glance-disks systemd timer.
