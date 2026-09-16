@@ -426,7 +426,7 @@ fi
 
   # Back up the freshly compiled plasmoid so the theme switcher can restore it
   # after konsave -a clobbers it with a stale QML-only snapshot from the .knsv.
-  local kara_backup_dir="/home/$arch_user/.local/share/frostearch/kara-plasmoid-backup"
+  local kara_backup_dir="/home/$arch_user/.local/share/khione/kara-plasmoid-backup"
   if [ -d "$plasmoid_dir" ]; then
     sudo -u "$arch_user" rm -rf "$kara_backup_dir"
     sudo -u "$arch_user" mkdir -p "$(dirname "$kara_backup_dir")"
@@ -464,7 +464,7 @@ EOF
 install_first_boot_dialog_autostart_required() {
   local arch_user="$1"
   local markdown_file="$2"
-  local dialog_title="${3:-FrosteArch}"
+  local dialog_title="${3:-Khione}"
   local renderer_source="${4:-$(dirname "$markdown_file")/render-first-boot-dialog.py}"
 
   if [ ! -f "$markdown_file" ]; then
@@ -479,13 +479,13 @@ install_first_boot_dialog_autostart_required() {
 
   echo "Installing first-boot dialog one-shot autostart..."
 
-  local state_dir="/home/$arch_user/.config/frostearch"
+  local state_dir="/home/$arch_user/.config/khione"
   local message_file="$state_dir/first-boot-dialog.md"
   local title_file="$state_dir/first-boot-dialog-title.txt"
-  local renderer_script="/home/$arch_user/.local/bin/frostearch-render-first-boot-dialog.py"
-  local user_script="/home/$arch_user/.local/bin/frostearch-first-boot-dialog-once.sh"
+  local renderer_script="/home/$arch_user/.local/bin/khione-render-first-boot-dialog.py"
+  local user_script="/home/$arch_user/.local/bin/khione-first-boot-dialog-once.sh"
   local autostart_dir="/home/$arch_user/.config/autostart"
-  local desktop_file="$autostart_dir/frostearch-first-boot-dialog.desktop"
+  local desktop_file="$autostart_dir/khione-first-boot-dialog.desktop"
 
   sudo -u "$arch_user" mkdir -p "/home/$arch_user/.local/bin" "$autostart_dir" "$state_dir"
   sudo -u "$arch_user" cp "$markdown_file" "$message_file"
@@ -497,13 +497,13 @@ install_first_boot_dialog_autostart_required() {
 #!/bin/bash
 set -euo pipefail
 
-AUTOSTART_FILE="$HOME/.config/autostart/frostearch-first-boot-dialog.desktop"
-STATE_DIR="$HOME/.config/frostearch"
+AUTOSTART_FILE="$HOME/.config/autostart/khione-first-boot-dialog.desktop"
+STATE_DIR="$HOME/.config/khione"
 STATE_FILE="$STATE_DIR/first-boot-dialog-shown"
 MESSAGE_FILE="$STATE_DIR/first-boot-dialog.md"
 TITLE_FILE="$STATE_DIR/first-boot-dialog-title.txt"
 HTML_FILE="$STATE_DIR/first-boot-dialog.html"
-RENDERER_SCRIPT="$HOME/.local/bin/frostearch-render-first-boot-dialog.py"
+RENDERER_SCRIPT="$HOME/.local/bin/khione-render-first-boot-dialog.py"
 
 mkdir -p "$STATE_DIR"
 
@@ -512,13 +512,13 @@ if [ -f "$STATE_FILE" ]; then
   exit 0
 fi
 
-TITLE="FrosteArch"
+TITLE="Khione"
 if [ -f "$TITLE_FILE" ]; then
   TITLE="$(cat "$TITLE_FILE")"
 fi
 
 if [ ! -f "$MESSAGE_FILE" ]; then
-  printf '%s\n' "Welcome to FrosteArch." >"$MESSAGE_FILE"
+  printf '%s\n' "Welcome to Khione." >"$MESSAGE_FILE"
 fi
 
 calc_dialog_size() {
@@ -569,7 +569,7 @@ EOF
   sudo -u "$arch_user" tee "$desktop_file" >/dev/null <<EOF
 [Desktop Entry]
 Type=Application
-Name=FrosteArch First Boot Message
+Name=Khione First Boot Message
 Exec=$user_script
 X-KDE-autostart-after=plasma-desktop
 OnlyShowIn=KDE;
@@ -644,15 +644,15 @@ install_theme_switcher_required() {
 
   local user_home="/home/$arch_user"
   local user_bin="$user_home/.local/bin"
-  local user_data_dir="$user_home/.local/share/frostearch"
+  local user_data_dir="$user_home/.local/share/khione"
   local user_profiles_dir="$user_data_dir/konsave-profiles"
   local user_metadata_file="$user_data_dir/theme-profiles.json"
   local user_wallpapers_dir="$user_data_dir/wallpapers"
   local user_dotfiles_dir="$user_data_dir/theme-dotfiles"
-  local switcher_script="$user_bin/frostearch-theme-switcher"
-  local metadata_helper_script="$user_bin/frostearch-theme-metadata"
+  local switcher_script="$user_bin/khione-theme-switcher"
+  local metadata_helper_script="$user_bin/khione-theme-metadata"
   local app_dir="$user_home/.local/share/applications"
-  local desktop_file="$app_dir/frostearch-theme-switcher.desktop"
+  local desktop_file="$app_dir/khione-theme-switcher.desktop"
   sudo -u "$arch_user" mkdir -p "$user_bin" "$user_profiles_dir" "$user_wallpapers_dir" "$user_dotfiles_dir" "$app_dir"
 
   # konsave is the core dependency of the theme switcher — install it now via pipx
@@ -753,7 +753,7 @@ install_theme_switcher_required() {
   sudo -u "$arch_user" tee "$desktop_file" >/dev/null <<EOF
 [Desktop Entry]
 Type=Application
-Name=FrosteArch Theme Switcher
+Name=Khione Theme Switcher
 Comment=Apply a saved KDE/Konsave profile
 Exec=$switcher_script
 Icon=preferences-desktop-theme
@@ -767,9 +767,9 @@ apply_theme_via_switcher_required() {
   local theme_id="$2"
 
   local user_home="/home/$arch_user"
-  local switcher_script="$user_home/.local/bin/frostearch-theme-switcher"
-  local metadata_helper_script="$user_home/.local/bin/frostearch-theme-metadata"
-  local user_data_dir="$user_home/.local/share/frostearch"
+  local switcher_script="$user_home/.local/bin/khione-theme-switcher"
+  local metadata_helper_script="$user_home/.local/bin/khione-theme-metadata"
+  local user_data_dir="$user_home/.local/share/khione"
   local user_profiles_dir="$user_data_dir/konsave-profiles"
   local user_metadata_file="$user_data_dir/theme-profiles.json"
   local user_wallpapers_dir="$user_data_dir/wallpapers"
@@ -789,11 +789,11 @@ apply_theme_via_switcher_required() {
 
   sudo -u "$arch_user" env \
     HOME="$user_home" \
-    FROSTEARCH_KNSV_DIR="$user_profiles_dir" \
-    FROSTEARCH_THEME_CONFIG="$user_metadata_file" \
-    FROSTEARCH_WALLPAPER_DIR="$user_wallpapers_dir" \
-    FROSTEARCH_DOTFILES_DIR="$user_dotfiles_dir" \
-    FROSTEARCH_THEME_METADATA_HELPER="$metadata_helper_script" \
+    KHIONE_KNSV_DIR="$user_profiles_dir" \
+    KHIONE_THEME_CONFIG="$user_metadata_file" \
+    KHIONE_WALLPAPER_DIR="$user_wallpapers_dir" \
+    KHIONE_DOTFILES_DIR="$user_dotfiles_dir" \
+    KHIONE_THEME_METADATA_HELPER="$metadata_helper_script" \
     "$switcher_script" --apply-id "$theme_id" --no-reload
 
   # Resolve the absolute wallpaper path for this theme so we can install a
@@ -870,11 +870,11 @@ install_wallpaper_autostart() {
   local wallpaper_abs="$2"
 
   local user_home="/home/$arch_user"
-  local state_dir="$user_home/.config/frostearch"
+  local state_dir="$user_home/.config/khione"
   local wallpaper_state="$state_dir/pending-wallpaper.txt"
-  local user_script="$user_home/.local/bin/frostearch-set-wallpaper-once.sh"
+  local user_script="$user_home/.local/bin/khione-set-wallpaper-once.sh"
   local autostart_dir="$user_home/.config/autostart"
-  local desktop_file="$autostart_dir/frostearch-set-wallpaper.desktop"
+  local desktop_file="$autostart_dir/khione-set-wallpaper.desktop"
 
   echo "Installing first-login wallpaper autostart..."
 
@@ -891,9 +891,9 @@ set -euo pipefail
 # First-login one-shot: apply wallpaper via Plasma's live scripting API.
 # Removes itself after a successful run.
 
-STATE_DIR="$HOME/.config/frostearch"
+STATE_DIR="$HOME/.config/khione"
 WALLPAPER_STATE="$STATE_DIR/pending-wallpaper.txt"
-AUTOSTART_FILE="$HOME/.config/autostart/frostearch-set-wallpaper.desktop"
+AUTOSTART_FILE="$HOME/.config/autostart/khione-set-wallpaper.desktop"
 SELF="$0"
 
 if [ ! -f "$WALLPAPER_STATE" ]; then
@@ -904,7 +904,7 @@ fi
 
 WALLPAPER_PATH="$(cat "$WALLPAPER_STATE")"
 if [ ! -f "$WALLPAPER_PATH" ]; then
-  echo "FrosteArch wallpaper autostart: wallpaper file missing: $WALLPAPER_PATH" >&2
+  echo "Khione wallpaper autostart: wallpaper file missing: $WALLPAPER_PATH" >&2
   rm -f "$WALLPAPER_STATE" "$AUTOSTART_FILE" "$SELF"
   exit 0
 fi
@@ -918,7 +918,7 @@ for candidate in qdbus6 qdbus; do
   fi
 done
 if [ -z "$QDBUS" ]; then
-  echo "FrosteArch wallpaper autostart: qdbus/qdbus6 not found" >&2
+  echo "Khione wallpaper autostart: qdbus/qdbus6 not found" >&2
   exit 0
 fi
 
@@ -944,14 +944,14 @@ MAX_RETRIES=10
 DELAY=3
 for attempt in $(seq 1 "$MAX_RETRIES"); do
   if "$QDBUS" org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell.evaluateScript "$JS_SCRIPT" 2>/dev/null; then
-    echo "FrosteArch: wallpaper applied successfully."
+    echo "Khione: wallpaper applied successfully."
     rm -f "$WALLPAPER_STATE" "$AUTOSTART_FILE" "$SELF"
     exit 0
   fi
   sleep "$DELAY"
 done
 
-echo "FrosteArch wallpaper autostart: all retries exhausted" >&2
+echo "Khione wallpaper autostart: all retries exhausted" >&2
 # Leave the autostart in place so it retries on next login.
 SCRIPT
 
@@ -960,7 +960,7 @@ SCRIPT
   sudo -u "$arch_user" tee "$desktop_file" >/dev/null <<EOF
 [Desktop Entry]
 Type=Application
-Name=FrosteArch Wallpaper Setup
+Name=Khione Wallpaper Setup
 Exec=$user_script
 X-KDE-autostart-after=plasma-desktop
 OnlyShowIn=KDE;

@@ -1,4 +1,4 @@
-# Welcome to FrosteArch
+# Welcome to Khione
 
 Your first boot setup is complete.
 

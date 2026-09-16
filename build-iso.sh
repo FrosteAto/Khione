@@ -4,7 +4,7 @@ set -euo pipefail
 REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 OUT_DIR="$REPO_ROOT/out"
 ISO_COMMON="$REPO_ROOT/iso-common"
-TMP_PROFILE_ROOT="$(mktemp -d /tmp/frostearch-profiles.XXXXXX)"
+TMP_PROFILE_ROOT="$(mktemp -d /tmp/khione-profiles.XXXXXX)"
 
 cleanup() {
 	rm -rf "$TMP_PROFILE_ROOT"
@@ -59,9 +59,9 @@ prepare_profile() {
 sudo rm -rf /tmp/work-desktop /tmp/work-server /tmp/work-node "$OUT_DIR"
 mkdir -p "$OUT_DIR"
 
-prepare_profile desktop DSK  FrosteArch-PC   linux
-prepare_profile server  SRV  FrosteArch-SVR  linux-lts
-prepare_profile node    NODE FrosteArch-NODE linux-lts
+prepare_profile desktop DSK  Khione-PC   linux
+prepare_profile server  SRV  Khione-SVR  linux-lts
+prepare_profile node    NODE Khione-NODE linux-lts
 
 sudo mkarchiso -v -w /tmp/work-desktop -o "$OUT_DIR" "$TMP_PROFILE_ROOT/iso-desktop"
 sudo mkarchiso -v -w /tmp/work-server  -o "$OUT_DIR" "$TMP_PROFILE_ROOT/iso-server"
@@ -82,8 +82,8 @@ rename_iso() {
 	mv "$source_iso" "$OUT_DIR/$target_name"
 }
 
-rename_iso "FrosteArch-desktop-*.iso" "FrosteArch_Desktop.iso"
-rename_iso "FrosteArch-server-*.iso" "FrosteArch_Server.iso"
-rename_iso "FrosteArch-node-*.iso" "FrosteArch_Node.iso"
+rename_iso "Khione-desktop-*.iso" "Khione_Desktop.iso"
+rename_iso "Khione-server-*.iso" "Khione_Server.iso"
+rename_iso "Khione-node-*.iso" "Khione_Node.iso"
 
 ls -lah "$OUT_DIR"

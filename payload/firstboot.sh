@@ -5,7 +5,7 @@ set -euo pipefail
 bash /root/installer/install.sh
 
 # Disable and delete itself if successful
-systemctl disable frostearch-firstboot.service || true
-rm -f /etc/systemd/system/frostearch-firstboot.service
-rm -f /usr/local/bin/frostearch-firstboot
+systemctl disable khione-firstboot.service || true
+rm -f /etc/systemd/system/khione-firstboot.service
+rm -f /usr/local/bin/khione-firstboot
 systemctl daemon-reload || true

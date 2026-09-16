@@ -11,24 +11,24 @@ TITLE_OVERRIDE="${2:-}"
 case "$TARGET" in
   desktop)
     MESSAGE_FILE="$PAYLOAD_DIR/editions/desktop/first-boot.md"
-    TITLE="Welcome to FrosteArch Desktop"
+    TITLE="Welcome to Khione Desktop"
     ;;
   server)
     MESSAGE_FILE="$PAYLOAD_DIR/editions/server/first-boot.md"
-    TITLE="Welcome to FrosteArch Server"
+    TITLE="Welcome to Khione Server"
     ;;
   node)
     MESSAGE_FILE="$PAYLOAD_DIR/editions/node/first-boot.md"
-    TITLE="Welcome to FrosteArch Node"
+    TITLE="Welcome to Khione Node"
     ;;
   generic|default)
     MESSAGE_FILE="$PAYLOAD_DIR/common/first-boot/first-boot-message.md"
-    TITLE="FrosteArch"
+    TITLE="Khione"
     ;;
   *)
     if [[ -f "$TARGET" ]]; then
       MESSAGE_FILE="$TARGET"
-      TITLE="FrosteArch"
+      TITLE="Khione"
     else
       echo "Usage: $0 [desktop|server|node|generic|/path/to/message.md] [optional-title]"
       exit 1
@@ -45,7 +45,7 @@ if [[ ! -f "$MESSAGE_FILE" ]]; then
   exit 1
 fi
 
-HTML_FILE="$(mktemp -t frostearch-firstboot-preview-XXXXXX.html)"
+HTML_FILE="$(mktemp -t khione-firstboot-preview-XXXXXX.html)"
 RENDERER_SCRIPT="$PAYLOAD_DIR/common/first-boot/render-first-boot-dialog.py"
 cleanup() {
   rm -f "$HTML_FILE"

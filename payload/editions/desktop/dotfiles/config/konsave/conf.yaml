@@ -32,7 +32,7 @@
 # The best example for this is the "*.default-release" folder of firefox.
 # ${BEGINS_WITH="text"}: for folders with different names on different computers whose names start with the same thing.
 
-# NOTE: Color scheme activation is handled by frostearch-theme-switcher after
+# NOTE: Color scheme activation is handled by khione-theme-switcher after
 # konsave is applied. Konsave's role here is to export the scheme assets
 # (for example color-schemes/) and baseline KDE config files.
 
