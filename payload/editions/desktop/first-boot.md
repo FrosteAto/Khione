@@ -1,4 +1,4 @@
-# Welcome to FrosteArch Desktop 2.2
+# Welcome to Khione Desktop 2.2
 
 Setup has finished successfully.
 
@@ -14,7 +14,7 @@ Setup has finished successfully.
 
 ## Music Workflow
 
-You can now easily produce music on FrosteArch! Simply download the relevant windows installlers, place them in the correct folder, and watch as it automatically creates a new wine prefix with perfect compatibility for `FL Studio`, `Piapro Studio` and `Hatsune Miku V4X`!
+You can now easily produce music on Khione! Simply download the relevant windows installlers, place them in the correct folder, and watch as it automatically creates a new wine prefix with perfect compatibility for `FL Studio`, `Piapro Studio` and `Hatsune Miku V4X`!
 
 Messing around has never been easier.
 
@@ -34,7 +34,7 @@ yay
 - Review installation logs if needed:
 
 ```bash
-ls -1 /var/log/frostearch/
+ls -1 /var/log/khione/
 cat /var/log/archinstall/install.log
 ```
 

@@ -2,7 +2,7 @@
   "profiles": [
     {
       "id": "desktop",
-      "name": "FrosteArch Desktop",
+      "name": "Khione Desktop",
       "description": "Catppuccin desktop profile",
       "knsv": "desktopSetup.knsv",
       "profileName": "desktopSetup",
@@ -12,7 +12,7 @@
     },
     {
       "id": "server",
-      "name": "FrosteArch Server",
+      "name": "Khione Server",
       "description": "Miku server profile",
       "knsv": "serverSetup.knsv",
       "profileName": "serverSetup",
@@ -22,7 +22,7 @@
     },
     {
       "id": "node",
-      "name": "FrosteArch Node",
+      "name": "Khione Node",
       "description": "K-On! node profile",
       "knsv": "nodeSetup.knsv",
       "profileName": "nodeSetup",

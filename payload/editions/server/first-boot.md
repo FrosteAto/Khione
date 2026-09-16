@@ -1,4 +1,4 @@
-# Welcome to FrosteArch Server
+# Welcome to Khione Server
 
 Setup has finished and services are configured.
 
@@ -44,7 +44,7 @@ systemctl status ufw
 - Review installation logs if needed:
 
 ```bash
-ls -1 /var/log/frostearch/
+ls -1 /var/log/khione/
 cat /var/log/archinstall/install.log
 ```
 

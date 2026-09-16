@@ -126,7 +126,7 @@ def extract_code_blocks(source, block_bg_css, border_css):
     def repl(match):
         code_attrs = match.group(2) or ""
         code_content = match.group(3) or ""
-        token = f"__FROSTEARCH_CODE_BLOCK_{len(blocks)}__"
+        token = f"__KHIONE_CODE_BLOCK_{len(blocks)}__"
         blocks[token] = (
             '<table role="presentation" cellspacing="0" cellpadding="0" width="100%" '
             'style="margin: 0.5em 0 1.1em 0; border-collapse: collapse; table-layout: fixed;">'
