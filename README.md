@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2.png" />
+  <img width="3070" height="2984" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2.png" />
 </p>
 
 Khione is a custom Arch Linux distro built around a practical, opinionated setup for desktop, server, and appliance use.
@@ -10,17 +10,13 @@ There are three editions to choose:
 - Server Edition
 - Node Edition
 
-Khione Desktop is a full daily-driver environment with programming, productivity, gaming, and creative tools already installed.
-
-Khione Server is a lean profile tuned for long-running services, including Plex defaults and enough local tooling to debug directly on the machine.
-
-Khione Node is a minimal profile whose only job is to boot, log in, and show a dashboard in Firefox.
-
 ---
 
 <p align="center">
-  <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2Desktop.png" />
+  <img width="3478" height="1240" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2Desktop.png" />
 </p>
+
+Khione Desktop is a full daily-driver environment with programming, productivity, gaming, and creative tools already installed.
 
 <p align="center">
   <img width="3440" height="1440" alt="Khione Desktop screenshot 1" src="./docs/images/Desktop1.png" />
@@ -35,9 +31,10 @@ Khione Node is a minimal profile whose only job is to boot, log in, and show a d
 ---
 
 <p align="center">
-  <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2Server.png" />
+  <img width="3100" height="1240" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2Server.png" />
 </p>
 
+Khione Server is a lean profile tuned for long-running services, including Plex defaults and enough local tooling to debug directly on the machine.
 
 <p align="center">
   <img width="1920" height="1200" alt="Khione Server screenshot 1" src="./docs/images/Server1.png" />
@@ -52,9 +49,10 @@ Khione Node is a minimal profile whose only job is to boot, log in, and show a d
 ---
 
 <p align="center">
-  <img width="3440" height="1440" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2Node.png" />
+  <img width="2851" height="1240" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2Node.png" />
 </p>
 
+Khione Node is a minimal profile whose only job is to boot, log in, and show a dashboard in Firefox.
 
 <p align="center">
   <img width="1920" height="1200" alt="Khione Node screenshot 1" src="./docs/images/Node1.png" />
@@ -65,7 +63,6 @@ Khione Node is a minimal profile whose only job is to boot, log in, and show a d
 <p align="center">
   <img width="1920" height="1200" alt="Khione Node screenshot 2" src="./docs/images/Node2.png" />
 </p>
-
 
 ---
 
