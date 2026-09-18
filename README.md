@@ -39,7 +39,7 @@ Khione Server is a lean profile tuned for long-running services, including Plex 
 ---
 
 <p align="center">
-  <img width="2851" height="1240" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2Node.png" />
+  <img width="2807" height="1240" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2Node.png" />
 </p>
 
 Khione Node is a minimal profile whose only job is to boot, log in, and show a dashboard in Firefox.
