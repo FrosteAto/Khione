@@ -97,8 +97,8 @@
             "id": "image_reaction_source",
             "versioned_id": "image_reaction_source",
             "settings": {
-                "file1": "/home/dob/Downloads/frosteato V2/frosteato.png",
-                "file2": "/home/dob/Downloads/frosteato.webp",
+                "file1": "",
+                "file2": "",
                 "anim_reset_1": true,
                 "anim_reset_2": true,
                 "linear_alpha": false,

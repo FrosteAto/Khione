@@ -51,7 +51,7 @@ A dedicated setup script configures a Wine prefix specifically for FL Studio and
 KDE Plasma, heavily customised with multiple themes and preset widgets, plus printing and scanning via CUPS and SANE, and Wacom tablet drivers out of the box.
 
 <p align="center">
-  <img width="3440" height="1440" alt="Khione Desktop screenshot 2" src="./docs/images/Desktop2.png" />
+  <img width="3440" height="1440" alt="Khione Desktop screenshot 2" src="./docs/images/Desktop.png" />
 </p>
 
 ---
@@ -96,7 +96,7 @@ Enough local tooling for hands-on debugging - terminal, file manager, text edito
 <br>
 
 <p align="center">
-  <img width="1920" height="1200" alt="Khione Server screenshot 2" src="./docs/images/Server2.png" />
+  <img width="1920" height="1200" alt="Khione Server screenshot 2" src="./docs/images/Server.png" />
 </p>
 
 ---
@@ -129,7 +129,7 @@ Sleep, suspend, and hibernate are all disabled while plugged in, so it stays rea
 <br>
 
 <p align="center">
-  <img width="1920" height="1200" alt="Khione Node screenshot 2" src="./docs/images/Node2.png" />
+  <img width="1920" height="1200" alt="Khione Node screenshot 2" src="./docs/images/Node.png" />
 </p>
 
 ---
