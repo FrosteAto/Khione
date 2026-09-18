@@ -1,2 +1,4 @@
 [sie][DeepFilterNet#0]
+attenuationLimit=75
+minProcessingThreshold=-15
 postFilterBeta=0.019999999552965164

@@ -33,3 +33,16 @@ Thumbs.db
 iso-*/airootfs/root/installer-src/
 # OBS websocket config holds the remote-control password — never track it
 payload/editions/desktop/dotfiles/config/obs-studio/plugin_config/obs-websocket/
+# OBS session logs churn every recording/stream — not config, don't track
+payload/editions/desktop/dotfiles/config/obs-studio/logs/
+# Same churn as logs/ — a new profiler dump per OBS session, not config
+payload/editions/desktop/dotfiles/config/obs-studio/profiler_data/
+# Compiled third-party plugin binary — not provisioned by any setup script,
+# not source; install it via a scripted step if it's actually wanted
+payload/editions/desktop/dotfiles/config/obs-studio/plugins/
+# konsave's own local snapshot state — the real restore path uses
+# desktopSetup.knsv into ~/.local/share/konsave-profiles, not this
+payload/editions/desktop/dotfiles/config/konsave/profiles/
+# Krita's resource cache — regenerated automatically, grows every session,
+# pure binary bloat (tens of MB per commit)
+payload/editions/desktop/dotfiles/local/share/krita/resourcecache.sqlite*
