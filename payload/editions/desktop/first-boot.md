@@ -5,6 +5,7 @@ Setup has finished successfully.
 ## Updates & Notices
 
 - Plex Desktop has been temporarily removed from the installation due to issues in the AUR
+- Tone3000 plugin has been temporarily removed from the installation due to its AUR build being extremely slow and resource-heavy, which can look like a hung installer
 - Added independent Kara package
 - Added fastfetch
 - Added experimental theme switcher (Possibly defunct with KDE 6.7 theme update)
