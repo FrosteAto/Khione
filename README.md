@@ -18,6 +18,39 @@ There are three editions to choose:
 
 Khione Desktop is a full daily-driver environment with programming, productivity, gaming, and creative tools already installed.
 
+```
+dan@khione-desktop ~ $ fastfetch
+
+OS         Khione Desktop
+Role       Gaming + dev + creative
+DE         KDE Plasma
+Terminal   kitty
+Est. Size  ~5.4 GB
+Packages   90 (pacman)
+```
+
+Where it all began. After one too many rounds of distro-hopping and reinstalling everything from scratch, I scripted my way to a distro with EVERYTHING I need pre-installed - not a 'bloat is the enemy' minimal setup, though it's still light and efficient.
+
+**Gaming**
+
+Steam, Wine, and Proton pre-installed, AMD drivers ready to go. Nowadays, what more do you need?
+
+**Development**
+
+Python, PHP with Composer, Node.js with npm, Docker and Docker Compose, Git, and VS Code - ready from first boot, backed by make and cmake.
+
+**Creative & Media**
+
+Krita, Blender, Kdenlive, OBS Studio, Audacity, and Darktable cover illustration, 3D, video editing, streaming, and photo work.
+
+**Music Production**
+
+A dedicated setup script configures a Wine prefix specifically for FL Studio and Hatsune Miku V4X & Piapro Studio - sidestepping one of the most painful things to get working on Linux.
+
+**Desktop Polish**
+
+KDE Plasma, heavily customised with multiple themes and preset widgets, plus printing and scanning via CUPS and SANE, and Wacom tablet drivers out of the box.
+
 <p align="center">
   <img width="3440" height="1440" alt="Khione Desktop screenshot 2" src="./docs/images/Desktop2.png" />
 </p>
@@ -29,6 +62,39 @@ Khione Desktop is a full daily-driver environment with programming, productivity
 </p>
 
 Khione Server is a lean profile tuned for long-running services, including Plex defaults and enough local tooling to debug directly on the machine.
+
+```
+dan@khione-server ~ $ fastfetch
+
+OS         Khione Server
+Role       Self-hosted services
+DE         KDE Plasma
+Terminal   kitty
+Est. Size  ~1.9 GB
+Packages   48 (pacman)
+```
+
+As the name implies, a server-focused edition. Using Arch Linux as a server is somewhat unconventional, but if you know what you're doing, it works just fine.
+
+**Media**
+
+Plex Media Server is installed and enabled from first boot - point it at a library and it's straight into transcoding and streaming.
+
+**File Sharing**
+
+Samba handles file sharing, with wsdd making the server show up properly in Windows' Network browser. Cockpit adds a web GUI for shares, disks, and RAID arrays, with smartmontools watching disk health.
+
+**Dashboard**
+
+Glance runs on :8080 - weather, news, and server stats, but also a genuinely custom-built finances page with bank sync and budget tracking, plus meal-planning widgets, all driven by small systemd-timer scripts.
+
+**Smart Home**
+
+Home Assistant runs containerised on :8123 for smart-home control, with support for a Zigbee coordinator dongle. Its data lives outside the container, so it survives reinstalls.
+
+**Remote Access**
+
+Enough local tooling for hands-on debugging - terminal, file manager, text editor - plus SSH open for standard remote access, with ufw locked to only the ports each service actually needs.
 
 <br>
 
@@ -43,6 +109,27 @@ Khione Server is a lean profile tuned for long-running services, including Plex 
 </p>
 
 Khione Node is a minimal profile whose only job is to boot, log in, and show a dashboard in Firefox.
+
+```
+dan@khione-node ~ $ fastfetch
+
+OS         Khione Node
+Role       Always-on kiosk
+DE         KDE Plasma
+Terminal   kitty
+Est. Size  ~1.5 GB
+Packages   35 (pacman)
+```
+
+Node is... minimal. Its entire job is to boot straight into a kiosk pointed at the Server's dashboard - and it shares the same ufw firewall baseline as the other editions. It's theme is pretty cute though.
+
+**Boot Sequence**
+
+Boots into a KDE Plasma session and opens Firefox straight to the Glance dashboard hosted by Khione Server - no manual steps.
+
+**Always On**
+
+Sleep, suspend, and hibernate are all disabled while plugged in, so it stays reachable as an always-on appliance.
 
 <br>
 
