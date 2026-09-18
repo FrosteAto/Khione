@@ -8,9 +8,13 @@
   "logo": {
     "type": "file-raw",
     "source": "~/.config/fastfetch/logo.ansi",
+    "padding": {
+      "top": 2,
+      "left": 2
+    },
     "color": {
-      "1": "#55B6EA",
-      "2": "#1B3A5C"
+      "1": "#39C5BB",
+      "2": "#FF6F91"
     }
   },
 
@@ -19,121 +23,121 @@
 
     {
       "type": "os",
-      "key": " DISTRO",
-      "keyColor": "#55B6EA"
+      "key": " DISTRO",
+      "keyColor": "#39C5BB"
     },
     {
       "type": "kernel",
-      "key": "│ ├",
-      "keyColor": "#6B83C2"
+      "key": "│ ├",
+      "keyColor": "#5CD6D6"
     },
     {
       "type": "packages",
       "key": "│ ├󰏖",
-      "keyColor": "#D98A3D"
+      "keyColor": "#82A5FF"
     },
     {
       "type": "shell",
-      "key": "│ └",
-      "keyColor": "#33478A"
+      "key": "│ └",
+      "keyColor": "#FF6F91"
     },
 
     {
       "type": "wm",
-      "key": " DE/WM",
-      "keyColor": "#55B6EA"
+      "key": " DE/WM",
+      "keyColor": "#39C5BB"
     },
     {
       "type": "wmtheme",
       "key": "│ ├󰉼",
-      "keyColor": "#6B83C2"
+      "keyColor": "#5CD6D6"
     },
     {
       "type": "lm",
       "key": "│ ├󰍂",
-      "keyColor": "#D98A3D"
+      "keyColor": "#82A5FF"
     },
     {
       "type": "theme",
       "key": "│ ├󰉼",
-      "keyColor": "#33478A"
+      "keyColor": "#FF6F91"
     },
     {
       "type": "icons",
       "key": "│ ├󰀻",
-      "keyColor": "#55B6EA"
+      "keyColor": "#39C5BB"
     },
     {
       "type": "cursor",
       "key": "│ ├󰇀",
-      "keyColor": "#6B83C2"
+      "keyColor": "#5CD6D6"
     },
     {
       "type": "font",
-      "key": "│ ├",
-      "keyColor": "#D98A3D"
+      "key": "│ ├",
+      "keyColor": "#82A5FF"
     },
     {
-      "key": "│ └",
+      "key": "│ └",
       "type": "command",
-      "keyColor": "#33478A",
+      "keyColor": "#FF6F91",
       "text": "( fastfetch -s terminal --pipe -l none; fastfetch -s terminalfont --pipe -l none ) | sed 's/WM //g; s/Theme/-/g' | tr '\n' ' ' | sed 's/Terminal//g' | sed 's/Font//g' | sed 's/󰑃//g' | cut -c 4- | tr -s ' '| sed 's/ /, /2'"
     },
 
     {
       "type": "host",
       "key": "󰌢 SYSTEM",
-      "keyColor": "#33478A"
+      "keyColor": "#FF6F91"
     },
     {
       "type": "cpu",
-      "key": "│ ├",
-      "keyColor": "#55B6EA"
+      "key": "│ ├",
+      "keyColor": "#39C5BB"
     },
     {
       "type": "gpu",
       "key": "│ ├﬙",
       "format": "{2}",
       "detectionMethod": "vulkan",
-      "keyColor": "#D98A3D"
+      "keyColor": "#82A5FF"
     },
     {
       "type": "display",
       "key": "│ ├󰍹",
       "compactType": "original-with-refresh-rate",
-      "keyColor": "#6B83C2"
+      "keyColor": "#5CD6D6"
     },
     {
       "type": "memory",
       "key": "│ ├󰾆",
-      "keyColor": "#33478A"
+      "keyColor": "#FF6F91"
     },
     {
       "type": "display",
       "key": "│ └󰍹",
-      "keyColor": "#55B6EA"
+      "keyColor": "#39C5BB"
     },
 
     {
       "type": "sound",
-      "key": " AUDIO",
+      "key": " AUDIO",
       "format": "{2}",
-      "keyColor": "#6B83C2"
+      "keyColor": "#5CD6D6"
     },
     {
       "type": "player",
       "key": "│ ├󰥠",
-      "keyColor": "#D98A3D"
+      "keyColor": "#82A5FF"
     },
     {
       "type": "media",
       "key": "│ └󰝚",
-      "keyColor": "#33478A"
+      "keyColor": "#FF6F91"
     },
 
     {
       "type": "custom",
-      "format": "\u001b[38;2;85;182;234m  \u001b[38;2;107;131;194m  \u001b[38;2;217;138;61m  \u001b[38;2;67;90;158m  \u001b[38;2;51;71;138m  \u001b[38;2;67;90;158m  \u001b[38;2;217;138;61m  \u001b[38;2;107;131;194m  \u001b[38;2;85;182;234m"
+      "format": "\u001b[38;2;57;197;187m  \u001b[38;2;92;214;214m  \u001b[38;2;130;165;255m  \u001b[38;2;255;143;163m  \u001b[38;2;255;111;145m  \u001b[38;2;255;143;163m  \u001b[38;2;130;165;255m  \u001b[38;2;92;214;214m  \u001b[38;2;57;197;187m"
     },
 
     "break"
