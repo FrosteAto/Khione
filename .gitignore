@@ -32,7 +32,8 @@ Thumbs.db
 # it never belongs in the source iso-*/ trees themselves
 iso-*/airootfs/root/installer-src/
 # OBS websocket config holds the remote-control password — never track it
-payload/editions/desktop/dotfiles/config/obs-studio/plugin_config/obs-websocket/
+# (generalized: this leaked under payload/themes/... too, not just editions/...)
+**/dotfiles/config/obs-studio/plugin_config/obs-websocket/
 # OBS session logs churn every recording/stream — not config, don't track
 payload/editions/desktop/dotfiles/config/obs-studio/logs/
 # Same churn as logs/ — a new profiler dump per OBS session, not config
