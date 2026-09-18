@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="250" height="243" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2.png" />
+  <img width="400" height="389" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2.png" />
 </p>
 
 Khione is a custom Arch Linux distro built around a practical, opinionated setup for desktop, server, and appliance use.
