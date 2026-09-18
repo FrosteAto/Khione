@@ -25,7 +25,11 @@ AUR_PACKAGES=(
   gamescope unityhub adwsteamgtk proton-vpn-gtk-app
   kwin-effects-forceblur kwin-effect-rounded-corners-git kwin-scripts-krohnkite-git
   lsp-plugins hayase-desktop-bin input-wacom-dkms-git
-  spicetify-cli tone3000-plugin konsave
+  spicetify-cli konsave
+  # tone3000-plugin disabled: its AUR build compiles a JUCE/Eigen-heavy plugin
+  # (NeuralAmpModelerCore) that is extremely slow and RAM-hungry, and can look
+  # like a hung installer on modest hardware. Re-enable once a prebuilt
+  # package or a lighter build path is available.
 )
 
 FLATPAK_PACKAGES=(
