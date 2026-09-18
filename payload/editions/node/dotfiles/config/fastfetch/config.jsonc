@@ -6,6 +6,8 @@
   },
 
   "logo": {
+    "type": "file-raw",
+    "source": "~/.config/fastfetch/logo.ansi",
     "color": {
       "1": "#EAB64E",
       "2": "#5A3A1A"
