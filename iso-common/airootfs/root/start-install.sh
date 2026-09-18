@@ -6,7 +6,7 @@ SNAPSHOT_SRC="/root/installer-src"
 SNAPSHOT_RUN="/run/khione-installer"
 
 echo
-echo "Starting Arch installer with recommended defaults."
+echo "Starting Khione installer with recommended defaults."
 echo "You can change disk layout, users, locale, etc. in the UI."
 echo
 
