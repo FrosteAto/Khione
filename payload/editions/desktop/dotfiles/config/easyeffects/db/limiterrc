@@ -1,2 +1,5 @@
 [sie][Limiter#0]
-bypass=true
+gainBoost=false
+outputGain=-10
+oversampling=20
+threshold=-5

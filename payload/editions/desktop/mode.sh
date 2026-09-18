@@ -16,7 +16,8 @@ OFFICIAL_PACKAGES=(
   wine wine-mono wine-gecko winetricks p7zip
   realtime-privileges
   lib32-pipewire lib32-libpulse lib32-alsa-lib lib32-alsa-plugins
-  vulkan-radeon lib32-vulkan-radeon
+  vulkan-radeon lib32-vulkan-radeon xf86-video-amdgpu
+  gimp inkscape carla ark qbittorrent prismlauncher protontricks
 )
 
 AUR_PACKAGES=(
@@ -24,6 +25,7 @@ AUR_PACKAGES=(
   gamescope unityhub adwsteamgtk proton-vpn-gtk-app
   kwin-effects-forceblur kwin-effect-rounded-corners-git kwin-scripts-krohnkite-git
   lsp-plugins hayase-desktop-bin input-wacom-dkms-git
+  spicetify-cli tone3000-plugin konsave
 )
 
 FLATPAK_PACKAGES=(

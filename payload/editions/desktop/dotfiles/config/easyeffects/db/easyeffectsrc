@@ -4,13 +4,14 @@ spectrumShape=dots
 
 [StreamInputs]
 inputDevice=alsa_input.usb-MOTU_M4_M4MA05CEZ2-00.HiFi__Mic1__source
-plugins=stereo_tools#0,gate#0,compressor#0,exciter#0,rnnoise#0
+plugins=stereo_tools#0,rnnoise#0,deepfilternet#0,expander#0,autogain#0,equalizer#0,compressor#0,reverb#0,exciter#0,limiter#0
 useDefaultInputDevice=false
 visiblePage=pluginsPage
-visiblePlugin=exciter#0
+visiblePlugin=limiter#0
 
 [StreamOutputs]
 outputDevice=alsa_output.usb-MOTU_M4_M4MA05CEZ2-00.HiFi__Line1__sink
+visiblePage=pluginsPage
 
 [Window]
 autostartOnLogin=true
