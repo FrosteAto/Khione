@@ -9,8 +9,8 @@
     "type": "file-raw",
     "source": "~/.config/fastfetch/logo.ansi",
     "color": {
-      "1": "#EAB64E",
-      "2": "#5A3A1A"
+      "1": "#55B6EA",
+      "2": "#1B3A5C"
     }
   },
 
@@ -20,7 +20,7 @@
     {
       "type": "os",
       "key": " DISTRO",
-      "keyColor": "#EAB64E"
+      "keyColor": "#55B6EA"
     },
     {
       "type": "kernel",
@@ -41,7 +41,7 @@
     {
       "type": "wm",
       "key": " DE/WM",
-      "keyColor": "#EAB64E"
+      "keyColor": "#55B6EA"
     },
     {
       "type": "wmtheme",
@@ -61,7 +61,7 @@
     {
       "type": "icons",
       "key": "│ ├󰀻",
-      "keyColor": "#EAB64E"
+      "keyColor": "#55B6EA"
     },
     {
       "type": "cursor",
@@ -88,7 +88,7 @@
     {
       "type": "cpu",
       "key": "│ ├",
-      "keyColor": "#EAB64E"
+      "keyColor": "#55B6EA"
     },
     {
       "type": "gpu",
@@ -111,7 +111,7 @@
     {
       "type": "display",
       "key": "│ └󰍹",
-      "keyColor": "#EAB64E"
+      "keyColor": "#55B6EA"
     },
 
     {
@@ -133,7 +133,7 @@
 
     {
       "type": "custom",
-      "format": "\u001b[38;2;234;182;78m  \u001b[38;2;107;131;194m  \u001b[38;2;217;138;61m  \u001b[38;2;67;90;158m  \u001b[38;2;51;71;138m  \u001b[38;2;67;90;158m  \u001b[38;2;217;138;61m  \u001b[38;2;107;131;194m  \u001b[38;2;234;182;78m"
+      "format": "\u001b[38;2;85;182;234m  \u001b[38;2;107;131;194m  \u001b[38;2;217;138;61m  \u001b[38;2;67;90;158m  \u001b[38;2;51;71;138m  \u001b[38;2;67;90;158m  \u001b[38;2;217;138;61m  \u001b[38;2;107;131;194m  \u001b[38;2;85;182;234m"
     },
 
     "break"
