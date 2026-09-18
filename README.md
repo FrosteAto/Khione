@@ -13,7 +13,7 @@ There are three editions to choose:
 ---
 
 <p align="center">
-  <img width="3478" height="1240" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2Desktop.png" />
+  <img width="420" height="150" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2Desktop.png" />
 </p>
 
 Khione Desktop is a full daily-driver environment with programming, productivity, gaming, and creative tools already installed.
@@ -25,7 +25,7 @@ Khione Desktop is a full daily-driver environment with programming, productivity
 ---
 
 <p align="center">
-  <img width="3100" height="1240" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2Server.png" />
+  <img width="375" height="150" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2Server.png" />
 </p>
 
 Khione Server is a lean profile tuned for long-running services, including Plex defaults and enough local tooling to debug directly on the machine.
@@ -39,7 +39,7 @@ Khione Server is a lean profile tuned for long-running services, including Plex 
 ---
 
 <p align="center">
-  <img width="2807" height="1240" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2Node.png" />
+  <img width="340" height="150" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2Node.png" />
 </p>
 
 Khione Node is a minimal profile whose only job is to boot, log in, and show a dashboard in Firefox.
