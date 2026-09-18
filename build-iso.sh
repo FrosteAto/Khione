@@ -38,7 +38,11 @@ prepare_profile() {
 		--exclude='x86_64' \
 		--exclude='airootfs/root/installer-src' \
 		--exclude='*.tmpl' \
+		--exclude='splash-variants' \
 		-C "$ISO_COMMON" -cf - . | tar -C "$dest_profile" -xf -
+
+	# Per-edition boot splash: same cat icon, edition-specific wordmark.
+	cp "$ISO_COMMON/splash-variants/splash-$edition.png" "$dest_profile/syslinux/splash.png"
 
 	render_template "$ISO_COMMON/profiledef.sh.tmpl" \
 		"$dest_profile/profiledef.sh" "$edition" "$iso_label_suffix" "$hostname" "$kernel"
