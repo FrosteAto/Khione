@@ -1,1 +1,15 @@
-[]
+[
+    {
+        "display_name": "",
+        "enabled": true,
+        "encoders": [],
+        "id": "",
+        "module_name": "libimage-reaction",
+        "outputs": [],
+        "services": [],
+        "sources": [
+            "image_reaction_source"
+        ],
+        "version": ""
+    }
+]

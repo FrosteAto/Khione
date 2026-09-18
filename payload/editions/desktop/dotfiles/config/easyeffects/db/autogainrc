@@ -1,0 +1,5 @@
+[sie][Autogain#0]
+bypass=true
+maximumHistory=30
+reference=2
+target=-35
