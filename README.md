@@ -19,12 +19,6 @@ There are three editions to choose:
 Khione Desktop is a full daily-driver environment with programming, productivity, gaming, and creative tools already installed.
 
 <p align="center">
-  <img width="3440" height="1440" alt="Khione Desktop screenshot 1" src="./docs/images/Desktop1.png" />
-</p>
-
-<br>
-
-<p align="center">
   <img width="3440" height="1440" alt="Khione Desktop screenshot 2" src="./docs/images/Desktop2.png" />
 </p>
 
@@ -35,10 +29,6 @@ Khione Desktop is a full daily-driver environment with programming, productivity
 </p>
 
 Khione Server is a lean profile tuned for long-running services, including Plex defaults and enough local tooling to debug directly on the machine.
-
-<p align="center">
-  <img width="1920" height="1200" alt="Khione Server screenshot 1" src="./docs/images/Server1.png" />
-</p>
 
 <br>
 
@@ -53,10 +43,6 @@ Khione Server is a lean profile tuned for long-running services, including Plex 
 </p>
 
 Khione Node is a minimal profile whose only job is to boot, log in, and show a dashboard in Firefox.
-
-<p align="center">
-  <img width="1920" height="1200" alt="Khione Node screenshot 1" src="./docs/images/Node1.png" />
-</p>
 
 <br>
 
