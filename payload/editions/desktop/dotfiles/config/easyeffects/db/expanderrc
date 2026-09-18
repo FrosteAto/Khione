@@ -1,0 +1,11 @@
+[sie][Expander#0]
+attack=30
+hpfFrequency=200
+hpfMode=1
+knee=-11
+lpfFrequency=3500
+lpfMode=1
+mode=0
+release=600
+releaseThreshold=-45
+threshold=-40

@@ -8,3 +8,10 @@ do
 done
 
 cp -r ~/.local/share/krita ~/arch-dotfiles/local/share/ 2>/dev/null || true
+
+# Strip cache/log/session churn that cp -r sweeps in but shouldn't be tracked
+rm -rf ~/arch-dotfiles/config/obs-studio/logs \
+       ~/arch-dotfiles/config/obs-studio/profiler_data \
+       ~/arch-dotfiles/config/obs-studio/plugins \
+       ~/arch-dotfiles/config/konsave/profiles
+rm -f ~/arch-dotfiles/local/share/krita/resourcecache.sqlite*
