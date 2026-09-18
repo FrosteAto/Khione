@@ -367,10 +367,16 @@ apply_dotfiles() {
 
   sudo -u "$arch_user" mkdir -p "$USER_CONFIG" "$USER_LOCAL"
 
-  for dir in kitty btop nano; do
-    [ -d "$src/config/$dir" ] || continue
-    sudo -u "$arch_user" cp -r "$src/config/$dir" "$USER_CONFIG/"
-  done
+  if [ -d "$src/config" ]; then
+    # Copy every app dir under config/ as-is, so adding a new one to the
+    # dotfiles tree is enough to ship it — no code change needed here.
+    shopt -s nullglob dotglob
+    local -a config_entries=("$src/config/"*)
+    shopt -u nullglob dotglob
+    if [ "${#config_entries[@]}" -gt 0 ]; then
+      sudo -u "$arch_user" cp -r "${config_entries[@]}" "$USER_CONFIG/"
+    fi
+  fi
 
   if [ -d "$src/local" ]; then
     # Avoid failing when local/ exists but is empty.
@@ -923,6 +929,19 @@ if [ -z "$QDBUS" ]; then
 fi
 
 WALLPAPER_URL="file://$WALLPAPER_PATH"
+
+# The lock screen wallpaper isn't covered by desktops() below, and konsave's
+# restored kscreenlockerrc still points at whichever machine captured the
+# theme snapshot. Fix it directly — this is a plain config write, no need to
+# wait for plasmashell.
+if command -v kwriteconfig6 >/dev/null 2>&1; then
+  kwriteconfig6 --file kscreenlockerrc \
+    --group Greeter --group Wallpaper --group org.kde.image --group General \
+    --key Image "$WALLPAPER_URL"
+  kwriteconfig6 --file kscreenlockerrc \
+    --group Greeter --group Wallpaper --group org.kde.image --group General \
+    --key PreviewImage "$WALLPAPER_URL"
+fi
 
 # Use Plasma's JavaScript scripting API to set the wallpaper on every desktop.
 # desktops() returns one Desktop object per screen × activity, so this covers

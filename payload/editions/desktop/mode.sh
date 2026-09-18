@@ -26,10 +26,7 @@ AUR_PACKAGES=(
   kwin-effects-forceblur kwin-effect-rounded-corners-git kwin-scripts-krohnkite-git
   lsp-plugins hayase-desktop-bin input-wacom-dkms-git
   spicetify-cli konsave
-  # tone3000-plugin disabled: its AUR build compiles a JUCE/Eigen-heavy plugin
-  # (NeuralAmpModelerCore) that is extremely slow and RAM-hungry, and can look
-  # like a hung installer on modest hardware. Re-enable once a prebuilt
-  # package or a lighter build path is available.
+  # tone3000-plugin disabled: slow install
 )
 
 FLATPAK_PACKAGES=(
