@@ -16,8 +16,6 @@ There are three editions to choose:
   <img width="420" height="150" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2Desktop.png" />
 </p>
 
-Khione Desktop is a full daily-driver environment with programming, productivity, gaming, and creative tools already installed.
-
 ```
 dan@khione-desktop ~ $ fastfetch
 
@@ -28,6 +26,7 @@ Terminal   kitty
 Est. Size  ~5.4 GB
 Packages   90 (pacman)
 ```
+Khione Desktop is a full daily-driver environment with programming, productivity, gaming, and creative tools already installed.
 
 Where it all began. After one too many rounds of distro-hopping and reinstalling everything from scratch, I scripted my way to a distro with EVERYTHING I need pre-installed - not a 'bloat is the enemy' minimal setup, though it's still light and efficient.
 
@@ -61,8 +60,6 @@ KDE Plasma, heavily customised with multiple themes and preset widgets, plus pri
   <img width="375" height="150" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2Server.png" />
 </p>
 
-Khione Server is a lean profile tuned for long-running services, including Plex defaults and enough local tooling to debug directly on the machine.
-
 ```
 dan@khione-server ~ $ fastfetch
 
@@ -74,7 +71,7 @@ Est. Size  ~1.9 GB
 Packages   48 (pacman)
 ```
 
-As the name implies, a server-focused edition. Using Arch Linux as a server is somewhat unconventional, but if you know what you're doing, it works just fine.
+Khione Server is, as the name implies, a server-focused edition. It is a lean profile tuned for long-running services, including Plex defaults and enough local tooling to debug directly on the machine. Using Arch Linux as a server is somewhat unconventional, but if you know what you're doing, it works just fine.
 
 **Media**
 
@@ -107,8 +104,6 @@ Enough local tooling for hands-on debugging - terminal, file manager, text edito
 <p align="center">
   <img width="340" height="150" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2Node.png" />
 </p>
-
-Khione Node is a minimal profile whose only job is to boot, log in, and show a dashboard in Firefox.
 
 ```
 dan@khione-node ~ $ fastfetch
