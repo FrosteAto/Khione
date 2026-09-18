@@ -17,7 +17,7 @@ There are three editions to choose:
 </p>
 
 ```
-dan@khione-desktop ~ $ fastfetch
+FrosteAto@khione-desktop ~ $ fastfetch
 
 OS         Khione Desktop
 Role       Gaming + dev + creative
@@ -61,7 +61,7 @@ KDE Plasma, heavily customised with multiple themes and preset widgets, plus pri
 </p>
 
 ```
-dan@khione-server ~ $ fastfetch
+FrosteAto@khione-server ~ $ fastfetch
 
 OS         Khione Server
 Role       Self-hosted services
@@ -106,7 +106,7 @@ Enough local tooling for hands-on debugging - terminal, file manager, text edito
 </p>
 
 ```
-dan@khione-node ~ $ fastfetch
+FrosteAto@khione-node ~ $ fastfetch
 
 OS         Khione Node
 Role       Always-on kiosk
