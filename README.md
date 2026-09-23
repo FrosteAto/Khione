@@ -338,4 +338,4 @@ My scripts and changes are stapled onto & around Archinstall. Without their incr
 
 <h2 align="center">AI Usage Disclaimer</h2>
 
-Yeah I used AI to assist in writing the code. Look at this repo, it sucks. But I program from 9-5 without it, so let me enjoy things in my downtime. Also debugging wine prefixes is the most boring thing ever.
+Generative AI may or may not be used for the creation of this project. All releases are still also manually tested.
