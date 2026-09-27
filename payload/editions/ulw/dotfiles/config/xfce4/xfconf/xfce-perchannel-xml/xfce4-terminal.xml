@@ -1,0 +1,15 @@
+<?xml version="1.1" encoding="UTF-8"?>
+
+<channel name="xfce4-terminal" version="1.0">
+  <property name="color-foreground" type="string" value="#d5dac8"/>
+  <property name="color-background" type="string" value="#080a08"/>
+  <property name="color-cursor" type="string" value="#8bb862"/>
+  <property name="color-cursor-foreground" type="string" value="#080a08"/>
+  <property name="color-cursor-use-default" type="bool" value="false"/>
+  <property name="color-selection" type="string" value="#d5dac8"/>
+  <property name="color-selection-background" type="string" value="#2e4b28"/>
+  <property name="color-selection-use-default" type="bool" value="false"/>
+  <property name="color-bold-use-default" type="bool" value="true"/>
+  <property name="tab-activity-color" type="string" value="#a87b4a"/>
+  <property name="color-palette" type="string" value="#242b21;#c65d4f;#8bb862;#a87b4a;#6f95ae;#a584a8;#78a88f;#a2ab96;#6c7564;#df8173;#b0d98a;#cda57a;#93b6cc;#c2a3c4;#a3cfb8;#d5dac8"/>
+</channel>

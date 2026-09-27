@@ -1,0 +1,70 @@
+# Deepwood for btop: black ground, green accents, brown kept rare.
+# Matches the XFCE, kitty and xfce4-terminal palette.
+
+# Main background and text
+theme[main_bg]="#080a08"
+theme[main_fg]="#d5dac8"
+
+# Box titles, hotkey letters, selected process row
+theme[title]="#d5dac8"
+theme[hi_fg]="#8bb862"
+theme[selected_bg]="#2e4b28"
+theme[selected_fg]="#d5dac8"
+
+# Dimmed text, graph labels, meter background, misc process details
+theme[inactive_fg]="#6c7564"
+theme[graph_text]="#a2ab96"
+theme[meter_bg]="#242b21"
+theme[proc_misc]="#78a88f"
+
+# Box outlines and dividers
+theme[cpu_box]="#39432f"
+theme[mem_box]="#39432f"
+theme[net_box]="#39432f"
+theme[proc_box]="#39432f"
+theme[div_line]="#242b21"
+
+# Temperature: sage when cool, brown when warm, rust when hot
+theme[temp_start]="#78a88f"
+theme[temp_mid]="#a87b4a"
+theme[temp_end]="#c65d4f"
+
+# CPU usage
+theme[cpu_start]="#4a7a3c"
+theme[cpu_mid]="#8bb862"
+theme[cpu_end]="#b0d98a"
+
+# Memory: free green, cached sage, available lichen, used brown
+theme[free_start]="#2e4b28"
+theme[free_mid]="#5e8a45"
+theme[free_end]="#8bb862"
+theme[cached_start]="#3b5a4c"
+theme[cached_mid]="#78a88f"
+theme[cached_end]="#a3cfb8"
+theme[available_start]="#3d4637"
+theme[available_mid]="#7d8872"
+theme[available_end]="#a2ab96"
+theme[used_start]="#4f3624"
+theme[used_mid]="#a87b4a"
+theme[used_end]="#cda57a"
+
+# Network: download green, upload brown
+theme[download_start]="#2e4b28"
+theme[download_mid]="#6f9a4e"
+theme[download_end]="#b0d98a"
+theme[upload_start]="#4f3624"
+theme[upload_mid]="#a87b4a"
+theme[upload_end]="#cda57a"
+
+# Per-process CPU mini graphs
+theme[process_start]="#4a7a3c"
+theme[process_mid]="#8bb862"
+theme[process_end]="#b0d98a"
+
+# Process box banners (paused, following a process)
+theme[proc_pause_bg]="#a87b4a"
+theme[proc_follow_bg]="#2e4b28"
+theme[proc_banner_bg]="#8bb862"
+theme[proc_banner_fg]="#080a08"
+theme[followed_bg]="#2e4b28"
+theme[followed_fg]="#d5dac8"
