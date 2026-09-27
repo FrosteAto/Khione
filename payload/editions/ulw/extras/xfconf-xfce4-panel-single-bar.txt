@@ -1,0 +1,97 @@
+/configver                                     2
+/panels                                        [1]
+/panels/dark-mode                              true
+/panels/panel-1/enable-struts                  true
+/panels/panel-1/icon-size                      16
+/panels/panel-1/length                         100.000000
+/panels/panel-1/length-adjust                  true
+/panels/panel-1/mode                           0
+/panels/panel-1/plugin-ids                     [19,27,28,29,20,21,3,4,22,8,23,25,26,24,6]
+/panels/panel-1/position                       p=6;x=0;y=0
+/panels/panel-1/position-locked                true
+/panels/panel-1/size                           26
+/plugins/plugin-19                             genmon
+/plugins/plugin-19/command                     /home/frosteato/.config/xfce4/genmon/nowplaying.sh
+/plugins/plugin-19/enable-single-row           true
+/plugins/plugin-19/font                        JetBrains Mono 10
+/plugins/plugin-19/text                        (genmon)
+/plugins/plugin-19/update-period               1000
+/plugins/plugin-19/use-label                   false
+/plugins/plugin-20                             separator
+/plugins/plugin-20/expand                      false
+/plugins/plugin-20/style                       0
+/plugins/plugin-21                             docklike
+/plugins/plugin-22                             separator
+/plugins/plugin-22/expand                      true
+/plugins/plugin-22/style                       0
+/plugins/plugin-23                             separator
+/plugins/plugin-23/expand                      false
+/plugins/plugin-23/style                       0
+/plugins/plugin-24                             launcher
+/plugins/plugin-24/items                       [settings.desktop]
+/plugins/plugin-25                             pulseaudio
+/plugins/plugin-25/enable-keyboard-shortcuts   true
+/plugins/plugin-25/known-players               Fake Player;firefox
+/plugins/plugin-26                             weather
+/plugins/plugin-26/cache-max-age               172800
+/plugins/plugin-26/forecast/days               5
+/plugins/plugin-26/forecast/layout             1
+/plugins/plugin-26/labels/label0               3
+/plugins/plugin-26/location/latitude           52.7225
+/plugins/plugin-26/location/longitude          -1.3702
+/plugins/plugin-26/location/name               Coalville, Leicestershire
+/plugins/plugin-26/msl                         0
+/plugins/plugin-26/offset                      +01:00
+/plugins/plugin-26/power-saving                true
+/plugins/plugin-26/round                       true
+/plugins/plugin-26/scrollbox/animate           true
+/plugins/plugin-26/scrollbox/color             rgba(0,0,0,0)
+/plugins/plugin-26/scrollbox/lines             1
+/plugins/plugin-26/scrollbox/show              false
+/plugins/plugin-26/scrollbox/use-color         false
+/plugins/plugin-26/single-row                  true
+/plugins/plugin-26/theme-dir                   /usr/share/xfce4/weather/icons/liquid
+/plugins/plugin-26/timezone                    
+/plugins/plugin-26/tooltip-style               1
+/plugins/plugin-26/units/altitude              0
+/plugins/plugin-26/units/apparent-temperature  2
+/plugins/plugin-26/units/precipitation         0
+/plugins/plugin-26/units/pressure              0
+/plugins/plugin-26/units/temperature           0
+/plugins/plugin-26/units/windspeed             0
+/plugins/plugin-27                             genmon
+/plugins/plugin-27/command                     /home/frosteato/.config/xfce4/genmon/nowplaying.sh prev
+/plugins/plugin-27/enable-single-row           true
+/plugins/plugin-27/font                        JetBrains Mono 10
+/plugins/plugin-27/text                        (genmon)
+/plugins/plugin-27/update-period               1000
+/plugins/plugin-27/use-label                   false
+/plugins/plugin-28                             genmon
+/plugins/plugin-28/command                     /home/frosteato/.config/xfce4/genmon/nowplaying.sh toggle
+/plugins/plugin-28/enable-single-row           true
+/plugins/plugin-28/font                        JetBrains Mono 10
+/plugins/plugin-28/text                        (genmon)
+/plugins/plugin-28/update-period               1000
+/plugins/plugin-28/use-label                   false
+/plugins/plugin-29                             genmon
+/plugins/plugin-29/command                     /home/frosteato/.config/xfce4/genmon/nowplaying.sh next
+/plugins/plugin-29/enable-single-row           true
+/plugins/plugin-29/font                        JetBrains Mono 10
+/plugins/plugin-29/text                        (genmon)
+/plugins/plugin-29/update-period               1000
+/plugins/plugin-29/use-label                   false
+/plugins/plugin-3                              separator
+/plugins/plugin-3/expand                       true
+/plugins/plugin-3/style                        0
+/plugins/plugin-4                              pager
+/plugins/plugin-4/miniature-view               false
+/plugins/plugin-4/rows                         1
+/plugins/plugin-6                              systray
+/plugins/plugin-6/known-legacy-items           [ethernet network connection “wired connection 1” active,networkmanager applet,traytest.py]
+/plugins/plugin-6/square-icons                 true
+/plugins/plugin-8                              clock
+/plugins/plugin-8/digital-layout               3
+/plugins/plugin-8/digital-time-font            JetBrains Mono 10
+/plugins/plugin-8/digital-time-format          %a %d-%m-%Y %H:%M:%S
+/plugins/plugin-8/mode                         2
+/plugins/plugin-8/tooltip-format               %A %d %B %Y
