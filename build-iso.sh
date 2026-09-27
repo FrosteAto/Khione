@@ -60,16 +60,18 @@ prepare_profile() {
 	chmod -R a+rX "$installer_dir"
 }
 
-sudo rm -rf /tmp/work-desktop /tmp/work-server /tmp/work-node "$OUT_DIR"
+sudo rm -rf /tmp/work-desktop /tmp/work-server /tmp/work-node /tmp/work-ulw "$OUT_DIR"
 mkdir -p "$OUT_DIR"
 
 prepare_profile desktop DSK  Khione-PC   linux
 prepare_profile server  SRV  Khione-SVR  linux-lts
 prepare_profile node    NODE Khione-NODE linux-lts
+prepare_profile ulw     ULW  Khione-ULW  linux
 
 sudo mkarchiso -v -w /tmp/work-desktop -o "$OUT_DIR" "$TMP_PROFILE_ROOT/iso-desktop"
 sudo mkarchiso -v -w /tmp/work-server  -o "$OUT_DIR" "$TMP_PROFILE_ROOT/iso-server"
 sudo mkarchiso -v -w /tmp/work-node    -o "$OUT_DIR" "$TMP_PROFILE_ROOT/iso-node"
+sudo mkarchiso -v -w /tmp/work-ulw     -o "$OUT_DIR" "$TMP_PROFILE_ROOT/iso-ulw"
 
 rename_iso() {
 	local pattern="$1"
@@ -89,5 +91,6 @@ rename_iso() {
 rename_iso "Khione-desktop-*.iso" "Khione_Desktop.iso"
 rename_iso "Khione-server-*.iso" "Khione_Server.iso"
 rename_iso "Khione-node-*.iso" "Khione_Node.iso"
+rename_iso "Khione-ulw-*.iso" "Khione_ULW.iso"
 
 ls -lah "$OUT_DIR"

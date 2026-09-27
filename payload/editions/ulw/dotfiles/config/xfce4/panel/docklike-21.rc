@@ -1,0 +1,5 @@
+[user]
+pinned=thunar;firefox;
+indicatorColorFromTheme=false
+indicatorColor=rgb(139,184,98)
+inactiveColor=rgb(108,117,100)

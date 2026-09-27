@@ -152,9 +152,17 @@ THEME_DEFAULT_ID="${THEME_DEFAULT_ID:-$MODE_NAME}"
 GLANCE_CONFIG_REL="${GLANCE_CONFIG_REL:-}"
 GLANCE_HELPERS_REL="${GLANCE_HELPERS_REL:-}"
 HOME_ASSISTANT_UNIT_REL="${HOME_ASSISTANT_UNIT_REL:-}"
+ROOTFS_OVERLAY_REL="${ROOTFS_OVERLAY_REL:-}"
+ICON_THEME_REL="${ICON_THEME_REL:-}"
 KARA_GIT_URL="${KARA_GIT_URL:-https://github.com/dhruv8sh/kara.git}"
 KARA_GIT_REF="${KARA_GIT_REF:-v1.0.0}"
 SETUP_AUDIO_PRODUCTION="${SETUP_AUDIO_PRODUCTION:-false}"
+# "plasma" (default) runs the full KWallet/Kara-pager/konsave-theme-switcher
+# pipeline every existing edition relies on. Non-KDE editions (e.g. Xfce-based
+# ulw) set this to "xfce" in their mode.sh to skip all of that, since none of
+# it has a non-Plasma equivalent.
+DESKTOP_ENVIRONMENT="${DESKTOP_ENVIRONMENT:-plasma}"
+GREETD_SESSION_CMD="${GREETD_SESSION_CMD:-/usr/bin/startplasma-wayland}"
 
 log "Theme profiles source: $THEME_PROFILES_DIR"
 log "Theme wallpapers source: $THEME_WALLPAPERS_DIR"
@@ -187,8 +195,16 @@ configure_firewall FIREWALL_RULES
 configure_samba
 
 section "Configuring greetd and PAM"
-configure_greetd
-configure_pam_kwallet
+configure_greetd "$GREETD_SESSION_CMD"
+if [[ "$DESKTOP_ENVIRONMENT" == "plasma" ]]; then
+  configure_pam_kwallet
+else
+  configure_pam
+fi
+
+section "Installing rootfs overlay and icon theme"
+install_rootfs_files "${ROOTFS_OVERLAY_REL:+$REPO_ROOT/$ROOTFS_OVERLAY_REL}"
+install_icon_theme "${ICON_THEME_REL:+$REPO_ROOT/$ICON_THEME_REL}"
 
 section "Applying dotfiles"
 apply_dotfiles "$ARCH_USER" "$DOTFILES_DIR"
@@ -198,21 +214,25 @@ if [[ "${SETUP_AUDIO_PRODUCTION:-false}" == "true" ]]; then
   install_audio_base "$ARCH_USER" "$REPO_ROOT"
 fi
 
-section "Installing Kara pager"
-install_kara_pager_from_source "$ARCH_USER" "$KARA_GIT_URL" "$KARA_GIT_REF"
+if [[ "$DESKTOP_ENVIRONMENT" == "plasma" ]]; then
+  section "Installing Kara pager"
+  install_kara_pager_from_source "$ARCH_USER" "$KARA_GIT_URL" "$KARA_GIT_REF"
 
-section "Installing theme switcher"
-install_theme_switcher_required "$ARCH_USER" "$THEME_PROFILES_DIR" "$THEME_METADATA_FILE" "$THEME_SWITCHER_FILE" "$THEME_WALLPAPERS_DIR" "$THEME_METADATA_HELPER_FILE"
+  section "Installing theme switcher"
+  install_theme_switcher_required "$ARCH_USER" "$THEME_PROFILES_DIR" "$THEME_METADATA_FILE" "$THEME_SWITCHER_FILE" "$THEME_WALLPAPERS_DIR" "$THEME_METADATA_HELPER_FILE"
 
-section "Applying default theme"
-apply_theme_via_switcher_required "$ARCH_USER" "$THEME_DEFAULT_ID"
+  section "Applying default theme"
+  apply_theme_via_switcher_required "$ARCH_USER" "$THEME_DEFAULT_ID"
 
-# KWallet must be enabled after konsave has restored kdeglobals so it is
-# not clobbered when the profile overwrites that file.
-set_wallet_enabled "$ARCH_USER"
+  # KWallet must be enabled after konsave has restored kdeglobals so it is
+  # not clobbered when the profile overwrites that file.
+  set_wallet_enabled "$ARCH_USER"
+fi
 
 section "Configuring first-login experience"
-disable_kde_welcome_popup "$ARCH_USER"
+if [[ "$DESKTOP_ENVIRONMENT" == "plasma" ]]; then
+  disable_kde_welcome_popup "$ARCH_USER"
+fi
 install_first_boot_dialog_autostart_required \
   "$ARCH_USER" "$FIRST_BOOT_DIALOG_MARKDOWN_FILE" "$FIRST_BOOT_DIALOG_TITLE" "$FIRST_BOOT_DIALOG_RENDERER_FILE"
 
