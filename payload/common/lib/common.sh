@@ -299,13 +299,14 @@ configure_home_assistant() {
 }
 
 configure_greetd() {
+  local session_cmd="${1:-/usr/bin/startplasma-wayland}"
   echo "Configuring greetd..."
   sudo tee /etc/greetd/config.toml >/dev/null <<EOF
 [terminal]
 vt = 1
 
 [default_session]
-command = "tuigreet --remember --remember-session --time --time-format '%Y-%m-%d %H:%M:%S' --width 80 --container-padding 2 --greeting 'Please enter your password.' --cmd /usr/bin/startplasma-wayland"
+command = "tuigreet --remember --remember-session --time --time-format '%Y-%m-%d %H:%M:%S' --width 80 --container-padding 2 --greeting 'Please enter your password.' --cmd $session_cmd"
 EOF
 }
 
@@ -325,6 +326,18 @@ EOF
   sudo tee /etc/pam.d/login >/dev/null <<'EOF'
 auth            optional        pam_kwallet5.so
 session         optional        pam_kwallet5.so auto_start force_run
+EOF
+}
+
+configure_pam() {
+  echo "Configuring PAM..."
+  sudo tee /etc/pam.d/greetd >/dev/null <<'EOF'
+#%PAM-1.0
+auth       required     pam_securetty.so
+auth       requisite    pam_nologin.so
+auth       include      system-local-login
+account    include      system-local-login
+session    include      system-local-login
 EOF
 }
 
@@ -387,6 +400,49 @@ apply_dotfiles() {
       sudo -u "$arch_user" cp -r "${local_entries[@]}" "$USER_LOCAL/"
     fi
   fi
+
+  if [ -d "$src/themes" ]; then
+    # ~/.themes: GTK/window-manager themes (e.g. xfwm4 borders) that don't
+    # live under .config or .local.
+    shopt -s nullglob dotglob
+    local -a theme_entries=("$src/themes/"*)
+    shopt -u nullglob dotglob
+    if [ "${#theme_entries[@]}" -gt 0 ]; then
+      sudo -u "$arch_user" mkdir -p "$USER_HOME/.themes"
+      sudo -u "$arch_user" cp -r "${theme_entries[@]}" "$USER_HOME/.themes/"
+    fi
+  fi
+}
+
+install_rootfs_files() {
+  local src_dir="$1"
+  if [[ -z "$src_dir" ]]; then
+    echo "No rootfs overlay for this mode, skipping."
+    return 0
+  fi
+  if [[ ! -d "$src_dir" ]]; then
+    echo "ERROR: rootfs overlay dir not found: $src_dir"
+    return 1
+  fi
+  echo "Installing system files from rootfs overlay..."
+  # cp without -a, so the files end up owned by root regardless of how
+  # they're checked out of git.
+  sudo cp -r "$src_dir/." /
+}
+
+install_icon_theme() {
+  local archive="$1"
+  if [[ -z "$archive" ]]; then
+    echo "No icon theme for this mode, skipping."
+    return 0
+  fi
+  if [[ ! -f "$archive" ]]; then
+    echo "ERROR: icon theme archive not found: $archive"
+    return 1
+  fi
+  echo "Installing icon theme..."
+  sudo mkdir -p /usr/share/icons
+  sudo tar -xzf "$archive" -C /usr/share/icons/
 }
 
 install_kara_pager_from_source() {
@@ -578,7 +634,7 @@ Type=Application
 Name=Khione First Boot Message
 Exec=$user_script
 X-KDE-autostart-after=plasma-desktop
-OnlyShowIn=KDE;
+OnlyShowIn=KDE;XFCE;
 EOF
 }
 

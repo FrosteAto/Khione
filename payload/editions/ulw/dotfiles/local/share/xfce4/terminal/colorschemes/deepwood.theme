@@ -1,0 +1,13 @@
+[Scheme]
+Name=Deepwood
+ColorForeground=#d5dac8
+ColorBackground=#080a08
+ColorCursor=#8bb862
+ColorCursorForeground=#080a08
+ColorCursorUseDefault=FALSE
+ColorSelection=#d5dac8
+ColorSelectionBackground=#2e4b28
+ColorSelectionUseDefault=FALSE
+ColorBoldUseDefault=TRUE
+TabActivityColor=#a87b4a
+ColorPalette=#242b21;#c65d4f;#8bb862;#a87b4a;#6f95ae;#a584a8;#78a88f;#a2ab96;#6c7564;#df8173;#b0d98a;#cda57a;#93b6cc;#c2a3c4;#a3cfb8;#d5dac8

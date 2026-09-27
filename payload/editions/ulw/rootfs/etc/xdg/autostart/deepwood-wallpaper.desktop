@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Deepwood wallpaper
+Comment=Sets the Deepwood wallpaper on screens that don't have one yet
+Exec=/usr/local/bin/deepwood-wallpaper
+OnlyShowIn=XFCE;
