@@ -60,18 +60,42 @@ prepare_profile() {
 	chmod -R a+rX "$installer_dir"
 }
 
-sudo rm -rf /tmp/work-desktop /tmp/work-server /tmp/work-node /tmp/work-ulw "$OUT_DIR"
+# edition -> "iso_label_suffix hostname kernel"
+edition_meta() {
+	case "$1" in
+		desktop) echo "DSK  Khione-PC   linux" ;;
+		server)  echo "SRV  Khione-SVR  linux-lts" ;;
+		node)    echo "NODE Khione-NODE linux-lts" ;;
+		ulw)     echo "ULW  Khione-ULW  linux" ;;
+		*) return 1 ;;
+	esac
+}
+ALL_EDITIONS=(desktop server node ulw)
+
+# ./build-iso.sh [edition] builds just that one; no argument builds all of them.
+if [[ $# -gt 0 ]]; then
+	if ! edition_meta "$1" >/dev/null; then
+		echo "ERROR: Unknown edition '$1'. Valid editions: ${ALL_EDITIONS[*]}" >&2
+		exit 1
+	fi
+	EDITIONS=("$1")
+else
+	EDITIONS=("${ALL_EDITIONS[@]}")
+fi
+
+for edition in "${EDITIONS[@]}"; do
+	sudo rm -rf "/tmp/work-$edition"
+done
 mkdir -p "$OUT_DIR"
 
-prepare_profile desktop DSK  Khione-PC   linux
-prepare_profile server  SRV  Khione-SVR  linux-lts
-prepare_profile node    NODE Khione-NODE linux-lts
-prepare_profile ulw     ULW  Khione-ULW  linux
+for edition in "${EDITIONS[@]}"; do
+	read -r suffix hostname kernel <<<"$(edition_meta "$edition")"
+	prepare_profile "$edition" "$suffix" "$hostname" "$kernel"
+done
 
-sudo mkarchiso -v -w /tmp/work-desktop -o "$OUT_DIR" "$TMP_PROFILE_ROOT/iso-desktop"
-sudo mkarchiso -v -w /tmp/work-server  -o "$OUT_DIR" "$TMP_PROFILE_ROOT/iso-server"
-sudo mkarchiso -v -w /tmp/work-node    -o "$OUT_DIR" "$TMP_PROFILE_ROOT/iso-node"
-sudo mkarchiso -v -w /tmp/work-ulw     -o "$OUT_DIR" "$TMP_PROFILE_ROOT/iso-ulw"
+for edition in "${EDITIONS[@]}"; do
+	sudo mkarchiso -v -w "/tmp/work-$edition" -o "$OUT_DIR" "$TMP_PROFILE_ROOT/iso-$edition"
+done
 
 rename_iso() {
 	local pattern="$1"
@@ -88,9 +112,14 @@ rename_iso() {
 	mv "$source_iso" "$OUT_DIR/$target_name"
 }
 
-rename_iso "Khione-desktop-*.iso" "Khione_Desktop.iso"
-rename_iso "Khione-server-*.iso" "Khione_Server.iso"
-rename_iso "Khione-node-*.iso" "Khione_Node.iso"
-rename_iso "Khione-ulw-*.iso" "Khione_ULW.iso"
+declare -A ISO_NAME=(
+	[desktop]="Khione_Desktop.iso"
+	[server]="Khione_Server.iso"
+	[node]="Khione_Node.iso"
+	[ulw]="Khione_ULW.iso"
+)
+for edition in "${EDITIONS[@]}"; do
+	rename_iso "Khione-$edition-*.iso" "${ISO_NAME[$edition]}"
+done
 
 ls -lah "$OUT_DIR"
