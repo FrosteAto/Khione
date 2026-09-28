@@ -152,7 +152,17 @@ Packages   47 (pacman)
 
 ULW means Ultra LightWeight. It swaps uses Xfce instead of KDE Plasma, and otherwise comes as a pretty much blank slate.  Just the bare essentials like a file manager and browser.
 
+**Featherweight**
 
+Xfce, picom, and a bare 47-package base add up to a system that idles at under 1GB of RAM - plenty of headroom, or great for older systems.
+
+**Still the Khione Treatment**
+
+ULW still has a colour coded theme made to look as close to the KDE - based flavours as can be, keeping it both distinct and familiar.
+
+<p align="center">
+  <img width="1920" height="1080" alt="Khione ULW screenshot 2" src="./docs/images/ulw.png" />
+</p>
 
 ---
 
