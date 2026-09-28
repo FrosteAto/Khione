@@ -12,7 +12,7 @@ GAP='     '                     # between the end of a scrolling title and its r
 IDLE_TEXT='Nothing Playing'
 BOX_FONT='JetBrains Mono'       # the box is drawn in BOX_FONT 10; classify() assumes it
 NF='JetBrainsMono Nerd Font'
-NOTE_COLOR='#8bb862' PIPE_COLOR='#39432f' BUTTON_COLOR='#a2ab96'   # Deepwood moss, overlay, subtext
+NOTE_COLOR='#8bb862' PIPE_COLOR='#39432f' BUTTON_COLOR='#a2ab96'   # Rei moss, overlay, subtext
 ICON_NOTE=$'\U000F075A' ICON_PREV=$'\U000F04AE' ICON_NEXT=$'\U000F04AD'
 ICON_PLAY=$'\U000F040A' ICON_PAUSE=$'\U000F03E4'
 SEP=$'\x1f'

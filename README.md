@@ -4,11 +4,12 @@
 
 Khione is a custom Arch Linux distro built around a practical, opinionated setup for desktop, server, and appliance use.
 
-There are three editions to choose:
+There are four editions to choose:
 
 - Desktop Edition
 - Server Edition
 - Node Edition
+- ULW Edition
 
 ---
 
@@ -131,6 +132,27 @@ Sleep, suspend, and hibernate are all disabled while plugged in, so it stays rea
 <p align="center">
   <img width="1920" height="1200" alt="Khione Node screenshot 2" src="./docs/images/Node.png" />
 </p>
+
+---
+
+<p align="center">
+  <img width="332" height="150" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2ULW.png" />
+</p>
+
+```
+frosteato@khione-ulw ~ $ fastfetch
+
+OS         Khione ULW
+Role       Ultra lightweight, build-it-yourself
+DE         Xfce
+Terminal   kitty
+Est. Size  ~TBD
+Packages   47 (pacman)
+```
+
+ULW means Ultra LightWeight. It swaps uses Xfce instead of KDE Plasma, and otherwise comes as a pretty much blank slate.  Just the bare essentials like a file manager and browser.
+
+
 
 ---
 
