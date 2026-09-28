@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Draws the Deepwood xfwm4 theme (flat title bar, plain-symbol buttons) into ./xfwm4.
+"""Draws the Rei xfwm4 theme (flat title bar, plain-symbol buttons) into ./xfwm4.
 Change the colours below and re-run, then reselect the theme in Window Manager settings."""
 import os, subprocess, tempfile
 
@@ -57,7 +57,7 @@ for name, glyph in GLYPHS.items():
         png(f'{name}-{state}', BTN_W, TITLE_H, bg + glyph(colour))
 
 with open(os.path.join(OUT, 'themerc'), 'w') as f:
-    f.write(f"""# Deepwood: flat title bar, plain-symbol buttons
+    f.write(f"""# Rei: flat title bar, plain-symbol buttons
 active_text_color={C['glyph_hover']}
 inactive_text_color={C['glyph_inactive']}
 title_shadow_active=false

@@ -1,11 +1,11 @@
 #!/bin/sh
-# Puts the Deepwood wallpaper on every connected screen and workspace that has no
+# Puts the Rei wallpaper on every connected screen and workspace that has no
 # wallpaper yet, or still has a stock XFCE one. xfdesktop stores wallpapers per output
 # name (VGA-1, eDP-1, HDMI-1, ...), which differ per machine, so the skel config
 # can't cover them all. Runs at login from /etc/xdg/autostart; a wallpaper the user
 # picked is never touched.
 
-IMG=/usr/share/backgrounds/deepwood/deepwood-wallpaper.jpg
+IMG=/usr/share/backgrounds/rei/rei-wallpaper.jpg
 STYLE=5    # zoomed
 
 [ -r "$IMG" ] || exit 0

@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Rei wallpaper
+Comment=Sets the Rei wallpaper on screens that don't have one yet
+Exec=/usr/local/bin/rei-wallpaper
+OnlyShowIn=XFCE;
