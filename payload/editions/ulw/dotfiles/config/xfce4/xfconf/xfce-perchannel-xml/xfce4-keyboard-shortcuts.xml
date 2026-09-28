@@ -1,22 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!--
-  Adds Alt+space as a second Application Finder shortcut, alongside the
-  stock Alt+F2/Alt+F3/Super+r ones.
-
-  xfwm4 and xfsettingsd each build their ENTIRE live keybinding table from
-  only /xfwm4/custom/* and /commands/custom/* (never /default/*), and only
-  once <group>/custom/override is true (verified against
-  xfce-shortcuts-provider.c and xfwm4/src/keyboard.c upstream). A key with
-  no entry under custom, or an empty-string value, is filtered out and left
-  unbound — it does NOT fall back to the matching /default/* entry. So this
-  can't just add one new key: every existing default has to be cloned into
-  custom too, or everything else (Alt+Tab, Alt+F4, workspace switching...)
-  goes dead the moment this file exists. Defaults below are copied verbatim
-  from libxfce4ui's xfce4-keyboard-shortcuts.xml (current upstream), with
-  two changes: xfwm4/custom omits <Alt>space (freeing it from
-  popup_menu_key), and commands/custom adds <Alt>space -> xfce4-appfinder.
--->
 <channel name="xfce4-keyboard-shortcuts" version="1.0">
   <property name="commands" type="empty">
     <property name="custom" type="empty">
@@ -32,13 +15,13 @@
       </property>
       <property name="&lt;Primary&gt;&lt;Alt&gt;Delete" type="string" value="xfce4-session-logout"/>
       <property name="&lt;Super&gt;l" type="string" value="xflock4"/>
-      <property name="&lt;Primary&gt;&lt;Alt&gt;t" type="string" value="xfce-open --launch TerminalEmulator"/>
+      <property name="&lt;Primary&gt;&lt;Alt&gt;t" type="string" value="exo-open --launch TerminalEmulator"/>
       <property name="XF86Display" type="string" value="xfce4-display-settings --minimal"/>
       <property name="&lt;Super&gt;p" type="string" value="xfce4-display-settings --minimal"/>
       <property name="&lt;Primary&gt;Escape" type="string" value="xfdesktop --menu"/>
-      <property name="XF86WWW" type="string" value="xfce-open --launch WebBrowser"/>
-      <property name="HomePage" type="string" value="xfce-open --launch WebBrowser"/>
-      <property name="XF86Mail" type="string" value="xfce-open --launch MailReader"/>
+      <property name="XF86WWW" type="string" value="exo-open --launch WebBrowser"/>
+      <property name="HomePage" type="string" value="exo-open --launch WebBrowser"/>
+      <property name="XF86Mail" type="string" value="exo-open --launch MailReader"/>
       <property name="Print" type="string" value="xfce4-screenshooter"/>
       <property name="&lt;Alt&gt;Print" type="string" value="xfce4-screenshooter -w"/>
       <property name="&lt;Shift&gt;Print" type="string" value="xfce4-screenshooter -r"/>
@@ -89,8 +72,6 @@
       <property name="&lt;Primary&gt;&lt;Alt&gt;KP_7" type="string" value="move_window_workspace_7_key"/>
       <property name="&lt;Primary&gt;&lt;Alt&gt;KP_8" type="string" value="move_window_workspace_8_key"/>
       <property name="&lt;Primary&gt;&lt;Alt&gt;KP_9" type="string" value="move_window_workspace_9_key"/>
-      <!-- <Alt>space deliberately omitted: freed from popup_menu_key so
-           commands/custom above can bind it to the Application Finder. -->
       <property name="&lt;Shift&gt;&lt;Alt&gt;Page_Up" type="string" value="raise_window_key"/>
       <property name="&lt;Primary&gt;&lt;Alt&gt;Right" type="string" value="right_workspace_key"/>
       <property name="&lt;Super&gt;d" type="string" value="show_desktop_key"/>
