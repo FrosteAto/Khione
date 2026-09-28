@@ -452,6 +452,76 @@ install_icon_theme() {
   sudo tar -xzf "$archive" -C /usr/share/icons/
 }
 
+install_kitty_translucency_fix() {
+  local arch_user="$1"
+  local src_dir="$2"
+  if [[ -z "$src_dir" ]]; then
+    echo "No kitty translucency fix for this mode, skipping."
+    return 0
+  fi
+  if [[ ! -d "$src_dir" ]]; then
+    echo "ERROR: kitty translucency fix dir not found: $src_dir"
+    return 1
+  fi
+
+  local f
+  for f in /usr/bin/kitty \
+           /usr/share/applications/kitty.desktop \
+           /usr/share/applications/kitty-open.desktop \
+           /usr/share/xfce4/helpers/kitty.desktop; do
+    if [[ ! -e "$f" ]]; then
+      echo "Kitty translucency fix skipped: missing $f"
+      return 0
+    fi
+  done
+
+  # kitty asks GLX for a framebuffer config that is transparent AND
+  # sRGB-capable. On GPUs/VMs whose GLX advertises the sRGB extensions but
+  # has zero sRGB-capable configs (e.g. software-rendered llvmpipe, no
+  # glamor — the VBoxVGA adapter this rice was captured on), nothing
+  # matches and kitty silently falls back to a 24-bit, alpha-less visual,
+  # so background_opacity has nothing for picom to blend. This LD_PRELOAD
+  # shim hides those two extension names from kitty only, so it picks a
+  # 32-bit ARGB config instead. See kitty-alpha.c for the full story.
+  echo "Installing kitty translucency fix..."
+
+  local user_home="/home/$arch_user"
+  local lib="$user_home/.local/lib/kitty-alpha"
+  local apps="$user_home/.local/share/applications"
+  local helpers="$user_home/.local/share/xfce4/helpers"
+
+  sudo -u "$arch_user" mkdir -p "$lib" "$apps" "$helpers"
+  sudo -u "$arch_user" cp "$src_dir/kitty-alpha.c" "$lib/kitty-alpha.c"
+  sudo -u "$arch_user" cp "$src_dir/kitty" "$lib/kitty"
+  sudo -u "$arch_user" chmod 644 "$lib/kitty-alpha.c"
+  sudo -u "$arch_user" chmod 755 "$lib/kitty"
+
+  if command -v gcc >/dev/null 2>&1; then
+    # Prints one harmless -Wnonnull-compare warning.
+    sudo -u "$arch_user" gcc -shared -fPIC -O2 -Wall \
+      -o "$lib/kitty-alpha.so" "$lib/kitty-alpha.c" -ldl
+  else
+    echo "gcc not found, using the prebuilt kitty-alpha.so (x86_64, glibc >= 2.34)"
+    sudo -u "$arch_user" cp "$src_dir/kitty-alpha.so" "$lib/kitty-alpha.so"
+    sudo -u "$arch_user" chmod 755 "$lib/kitty-alpha.so"
+  fi
+
+  # .desktop files can't expand ~ or $HOME, so the absolute path to the
+  # wrapper has to be baked in here rather than shipped as a static file.
+  sed "s|^Exec=kitty|Exec=$lib/kitty|; s|^TryExec=kitty|TryExec=$lib/kitty|" \
+    /usr/share/applications/kitty.desktop | sudo -u "$arch_user" tee "$apps/kitty.desktop" >/dev/null
+  sed "s|^Exec=kitty|Exec=$lib/kitty|; s|^TryExec=kitty|TryExec=$lib/kitty|" \
+    /usr/share/applications/kitty-open.desktop | sudo -u "$arch_user" tee "$apps/kitty-open.desktop" >/dev/null
+  sed "s|^X-XFCE-Binaries=kitty;|X-XFCE-Binaries=$lib/kitty;|" \
+    /usr/share/xfce4/helpers/kitty.desktop | sudo -u "$arch_user" tee "$helpers/kitty.desktop" >/dev/null
+
+  sudo -u "$arch_user" update-desktop-database "$apps" 2>/dev/null || true
+
+  for f in "$apps/kitty.desktop" "$apps/kitty-open.desktop" "$helpers/kitty.desktop"; do
+    grep -q "$lib/kitty" "$f" || echo "WARNING: $f does not point at $lib/kitty; check its Exec/X-XFCE-Binaries lines"
+  done
+}
+
 install_kara_pager_from_source() {
   local arch_user="$1"
   local kara_git_url="${2:-https://github.com/dhruv8sh/kara.git}"

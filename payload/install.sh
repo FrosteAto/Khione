@@ -154,6 +154,7 @@ GLANCE_HELPERS_REL="${GLANCE_HELPERS_REL:-}"
 HOME_ASSISTANT_UNIT_REL="${HOME_ASSISTANT_UNIT_REL:-}"
 ROOTFS_OVERLAY_REL="${ROOTFS_OVERLAY_REL:-}"
 ICON_THEME_REL="${ICON_THEME_REL:-}"
+KITTY_TRANSLUCENCY_FIX_REL="${KITTY_TRANSLUCENCY_FIX_REL:-}"
 KARA_GIT_URL="${KARA_GIT_URL:-https://github.com/dhruv8sh/kara.git}"
 KARA_GIT_REF="${KARA_GIT_REF:-v1.0.0}"
 SETUP_AUDIO_PRODUCTION="${SETUP_AUDIO_PRODUCTION:-false}"
@@ -208,6 +209,9 @@ install_icon_theme "${ICON_THEME_REL:+$REPO_ROOT/$ICON_THEME_REL}"
 
 section "Applying dotfiles"
 apply_dotfiles "$ARCH_USER" "$DOTFILES_DIR"
+
+section "Installing kitty translucency fix"
+install_kitty_translucency_fix "$ARCH_USER" "${KITTY_TRANSLUCENCY_FIX_REL:+$REPO_ROOT/$KITTY_TRANSLUCENCY_FIX_REL}"
 
 if [[ "${SETUP_AUDIO_PRODUCTION:-false}" == "true" ]]; then
   section "Setting up audio production environment"
