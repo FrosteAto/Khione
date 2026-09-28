@@ -1,0 +1,3 @@
+#!/bin/sh
+# Launch kitty with the GLX sRGB shim so background_opacity works (see kitty-alpha.c).
+exec env LD_PRELOAD="$HOME/.local/lib/kitty-alpha/kitty-alpha.so${LD_PRELOAD:+:$LD_PRELOAD}" /usr/bin/kitty "$@"
