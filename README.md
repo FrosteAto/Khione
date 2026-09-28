@@ -150,7 +150,7 @@ Est. Size  ~TBD
 Packages   47 (pacman)
 ```
 
-ULW means Ultra LightWeight. It swaps uses Xfce instead of KDE Plasma, and otherwise comes as a pretty much blank slate.  Just the bare essentials like a file manager and browser.
+ULW means Ultra LightWeight. It uses Xfce instead of KDE Plasma, and otherwise comes as a pretty much blank slate.  Just the bare essentials like a file manager and browser.
 
 **Featherweight**
 
