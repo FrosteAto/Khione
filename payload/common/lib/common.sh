@@ -452,6 +452,35 @@ install_icon_theme() {
   sudo tar -xzf "$archive" -C /usr/share/icons/
 }
 
+configure_cursor_theme() {
+  local theme_name="$1"
+  local size="$2"
+  if [[ -z "$theme_name" ]]; then
+    echo "No cursor theme for this mode, skipping."
+    return 0
+  fi
+
+  echo "Configuring system-wide cursor theme..."
+
+  # The "default" icon theme is what libXcursor falls back to for any app
+  # with no per-user override -- GTK, Qt, and plain Xlib clients (kitty
+  # included) alike. Setting Gtk/CursorThemeName in xsettings only reaches
+  # GTK apps that subscribe to XSETTINGS; kitty doesn't.
+  sudo mkdir -p /usr/share/icons/default
+  sudo tee /usr/share/icons/default/index.theme >/dev/null <<EOF
+[Icon Theme]
+Inherits=$theme_name
+EOF
+
+  # /etc/environment is read by pam_env for every login session (greetd
+  # included), so XCURSOR_THEME/XCURSOR_SIZE reach every app via libXcursor
+  # itself, system-wide for every user, without relying on the desktop
+  # environment or a per-user .Xresources to set them.
+  sudo touch /etc/environment
+  sudo sed -i '/^XCURSOR_THEME=/d; /^XCURSOR_SIZE=/d' /etc/environment
+  printf 'XCURSOR_THEME=%s\nXCURSOR_SIZE=%s\n' "$theme_name" "$size" | sudo tee -a /etc/environment >/dev/null
+}
+
 install_kitty_translucency_fix() {
   local arch_user="$1"
   local src_dir="$2"
