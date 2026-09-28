@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<channel name="xfce4-keyboard-shortcuts" version="1.0">
+  <property name="commands" type="empty">
+    <property name="custom" type="empty">
+      <property name="&lt;Alt&gt;space" type="string" value="xfce4-appfinder"/>
+    </property>
+  </property>
+  <property name="xfwm4" type="empty">
+    <property name="custom" type="empty">
+      <!-- Alt+space defaults to the window-operations popup menu, and xfwm4
+           holds an X keyboard grab on it before xfsettingsd ever gets a
+           chance to bind the Application Finder shortcut above. An empty
+           string value is xfconf's "no action bound" — that's what actually
+           releases the grab (a valueless/type="empty" entry does not; that
+           type is for property groups, not leaf values, so it was a no-op). -->
+      <property name="&lt;Alt&gt;space" type="string" value=""/>
+    </property>
+  </property>
+</channel>
