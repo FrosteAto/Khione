@@ -30,6 +30,10 @@ GREETD_SESSION_CMD="/usr/bin/startxfce4"
 ROOTFS_OVERLAY_REL="editions/ulw/rootfs"
 ICON_THEME_REL="YAMIS.tar.gz"
 
+CURSOR_THEME_REL="editions/ulw/cursor/Rei-Moss-Regular.tar.gz"
+CURSOR_THEME_NAME="Rei-Moss-Regular"
+CURSOR_THEME_SIZE="32"
+
 KITTY_TRANSLUCENCY_FIX_REL="editions/ulw/kitty-translucency-fix"
 
 FIRST_BOOT_DIALOG_TITLE="Welcome to Khione ULW"
