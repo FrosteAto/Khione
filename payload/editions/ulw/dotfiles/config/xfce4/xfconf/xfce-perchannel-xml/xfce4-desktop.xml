@@ -13,45 +13,45 @@
     <property name="screen0" type="empty">
       <property name="monitorVGA-1" type="empty">
         <property name="workspace0" type="empty">
-          <property name="last-image" type="string" value="/usr/share/backgrounds/deepwood/deepwood-pines.png"/>
+          <property name="last-image" type="string" value="/usr/share/backgrounds/deepwood/deepwood-wallpaper.jpg"/>
           <property name="image-style" type="int" value="5"/>
         </property>
         <property name="workspace1" type="empty">
-          <property name="last-image" type="string" value="/usr/share/backgrounds/deepwood/deepwood-pines.png"/>
+          <property name="last-image" type="string" value="/usr/share/backgrounds/deepwood/deepwood-wallpaper.jpg"/>
           <property name="image-style" type="int" value="5"/>
         </property>
         <property name="workspace2" type="empty">
-          <property name="last-image" type="string" value="/usr/share/backgrounds/deepwood/deepwood-pines.png"/>
+          <property name="last-image" type="string" value="/usr/share/backgrounds/deepwood/deepwood-wallpaper.jpg"/>
           <property name="image-style" type="int" value="5"/>
         </property>
         <property name="workspace3" type="empty">
-          <property name="last-image" type="string" value="/usr/share/backgrounds/deepwood/deepwood-pines.png"/>
+          <property name="last-image" type="string" value="/usr/share/backgrounds/deepwood/deepwood-wallpaper.jpg"/>
           <property name="image-style" type="int" value="5"/>
         </property>
         <property name="workspace4" type="empty">
-          <property name="last-image" type="string" value="/usr/share/backgrounds/deepwood/deepwood-pines.png"/>
+          <property name="last-image" type="string" value="/usr/share/backgrounds/deepwood/deepwood-wallpaper.jpg"/>
           <property name="image-style" type="int" value="5"/>
         </property>
       </property>
       <property name="monitorVirtual-1" type="empty">
         <property name="workspace0" type="empty">
-          <property name="last-image" type="string" value="/usr/share/backgrounds/deepwood/deepwood-pines.png"/>
+          <property name="last-image" type="string" value="/usr/share/backgrounds/deepwood/deepwood-wallpaper.jpg"/>
           <property name="image-style" type="int" value="5"/>
         </property>
         <property name="workspace1" type="empty">
-          <property name="last-image" type="string" value="/usr/share/backgrounds/deepwood/deepwood-pines.png"/>
+          <property name="last-image" type="string" value="/usr/share/backgrounds/deepwood/deepwood-wallpaper.jpg"/>
           <property name="image-style" type="int" value="5"/>
         </property>
         <property name="workspace2" type="empty">
-          <property name="last-image" type="string" value="/usr/share/backgrounds/deepwood/deepwood-pines.png"/>
+          <property name="last-image" type="string" value="/usr/share/backgrounds/deepwood/deepwood-wallpaper.jpg"/>
           <property name="image-style" type="int" value="5"/>
         </property>
         <property name="workspace3" type="empty">
-          <property name="last-image" type="string" value="/usr/share/backgrounds/deepwood/deepwood-pines.png"/>
+          <property name="last-image" type="string" value="/usr/share/backgrounds/deepwood/deepwood-wallpaper.jpg"/>
           <property name="image-style" type="int" value="5"/>
         </property>
         <property name="workspace4" type="empty">
-          <property name="last-image" type="string" value="/usr/share/backgrounds/deepwood/deepwood-pines.png"/>
+          <property name="last-image" type="string" value="/usr/share/backgrounds/deepwood/deepwood-wallpaper.jpg"/>
           <property name="image-style" type="int" value="5"/>
         </property>
       </property>

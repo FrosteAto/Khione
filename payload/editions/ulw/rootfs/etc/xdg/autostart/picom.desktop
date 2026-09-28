@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=picom
+Comment=Compositor — gives Kitty's background_opacity a visual to draw into
+Exec=/usr/bin/picom
+OnlyShowIn=XFCE;

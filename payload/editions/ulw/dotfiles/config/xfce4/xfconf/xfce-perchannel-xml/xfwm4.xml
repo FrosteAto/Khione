@@ -72,7 +72,11 @@
     <property name="toggle_workspaces" type="bool" value="false"/>
     <property name="unredirect_overlays" type="bool" value="true"/>
     <property name="urgent_blink" type="bool" value="false"/>
-    <property name="use_compositing" type="bool" value="true"/>
+    <!-- picom is the compositor now (see ~/.config/picom/picom.conf): its
+         xrender backend gives Kitty's background_opacity an alpha visual
+         even on GPUs/VMs where xfwm4's own compositor doesn't. Running
+         both at once fights over the same X compositing manager selection. -->
+    <property name="use_compositing" type="bool" value="false"/>
     <property name="workspace_count" type="int" value="5"/>
     <property name="wrap_cycle" type="bool" value="true"/>
     <property name="wrap_layout" type="bool" value="true"/>

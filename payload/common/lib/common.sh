@@ -336,8 +336,15 @@ configure_pam() {
 auth       required     pam_securetty.so
 auth       requisite    pam_nologin.so
 auth       include      system-local-login
+auth       optional     pam_gnome_keyring.so
 account    include      system-local-login
 session    include      system-local-login
+session    optional     pam_gnome_keyring.so auto_start
+EOF
+
+  sudo tee /etc/pam.d/login >/dev/null <<'EOF'
+auth            optional        pam_gnome_keyring.so
+session         optional        pam_gnome_keyring.so auto_start
 EOF
 }
 
