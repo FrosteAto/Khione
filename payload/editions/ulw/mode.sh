@@ -6,13 +6,13 @@ MODE_NAME="ulw"
 OFFICIAL_PACKAGES=(
   xorg xfce4 greetd greetd-tuigreet gnome-keyring libsecret
   zenity
-  ufw nano btop flatpak kitty thunar thunar-archive-plugin file-roller fastfetch firefox sof-firmware git gparted p7zip
+  ufw nano btop flatpak kitty thunar thunar-archive-plugin file-roller gvfs-smb smbclient fastfetch firefox sof-firmware git gparted p7zip
   python python-markdown python-pip python-pipx
   avahi nss-mdns
   noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu ttf-jetbrains-mono ttf-jetbrains-mono-nerd
   # Deepwood rice
   xfce4-docklike-plugin xfce4-weather-plugin xfce4-genmon-plugin xfce4-pulseaudio-plugin
-  playerctl pipewire-pulse wireplumber network-manager-applet adw-gtk-theme
+  playerctl pipewire-pulse wireplumber network-manager-applet adw-gtk-theme picom
 )
 
 AUR_PACKAGES=()

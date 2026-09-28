@@ -5,7 +5,7 @@
 # can't cover them all. Runs at login from /etc/xdg/autostart; a wallpaper the user
 # picked is never touched.
 
-IMG=/usr/share/backgrounds/deepwood/deepwood-pines.png
+IMG=/usr/share/backgrounds/deepwood/deepwood-wallpaper.jpg
 STYLE=5    # zoomed
 
 [ -r "$IMG" ] || exit 0
