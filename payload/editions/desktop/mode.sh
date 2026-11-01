@@ -21,7 +21,7 @@ OFFICIAL_PACKAGES=(
 )
 
 AUR_PACKAGES=(
-  discord spotify visual-studio-code-bin
+  discord betterdiscord-installer-bin spotify visual-studio-code-bin
   gamescope unityhub adwsteamgtk proton-vpn-gtk-app
   kwin-effects-forceblur kwin-effect-rounded-corners-git kwin-scripts-krohnkite-git
   lsp-plugins hayase-desktop-bin input-wacom-dkms-git
