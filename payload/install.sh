@@ -161,6 +161,8 @@ KITTY_TRANSLUCENCY_FIX_REL="${KITTY_TRANSLUCENCY_FIX_REL:-}"
 KARA_GIT_URL="${KARA_GIT_URL:-https://github.com/dhruv8sh/kara.git}"
 KARA_GIT_REF="${KARA_GIT_REF:-v1.0.0}"
 SETUP_AUDIO_PRODUCTION="${SETUP_AUDIO_PRODUCTION:-false}"
+SETUP_THEMING_GUARDS="${SETUP_THEMING_GUARDS:-false}"
+THEMING_GUARDS_DIR="${THEMING_GUARDS_DIR:-$REPO_ROOT/common/theming-guards}"
 # "plasma" (default) runs the full KWallet/Kara-pager/konsave-theme-switcher
 # pipeline every existing edition relies on. Non-KDE editions (e.g. Xfce-based
 # ulw) set this to "xfce" in their mode.sh to skip all of that, since none of
@@ -221,6 +223,13 @@ install_kitty_translucency_fix "$ARCH_USER" "${KITTY_TRANSLUCENCY_FIX_REL:+$REPO
 if [[ "${SETUP_AUDIO_PRODUCTION:-false}" == "true" ]]; then
   section "Setting up audio production environment"
   install_audio_base "$ARCH_USER" "$REPO_ROOT"
+fi
+
+if [[ "${SETUP_THEMING_GUARDS:-false}" == "true" ]]; then
+  section "Configuring self-healing theming guards"
+  configure_spicetify "$ARCH_USER" "$THEMING_GUARDS_DIR"
+  configure_betterdiscord_guard "$ARCH_USER" "$THEMING_GUARDS_DIR"
+  configure_adwsteamgtk_guard "$ARCH_USER" "$THEMING_GUARDS_DIR"
 fi
 
 if [[ "$DESKTOP_ENVIRONMENT" == "plasma" ]]; then
