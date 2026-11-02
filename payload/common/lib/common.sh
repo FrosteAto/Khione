@@ -1234,6 +1234,12 @@ configure_spicetify() {
   sudo chown root:root /usr/local/bin/spicetify-reapply.sh
   sudo install -Dm644 "$guard_dir/spicetify-reapply.hook" /etc/pacman.d/hooks/spicetify-reapply.hook
 
+  # /opt/spotify ships root-owned, mode 755, from the spotify AUR package --
+  # Spicetify needs to write into it to patch the UI. This is Spicetify's
+  # own documented fix for this exact Arch packaging situation.
+  sudo chmod a+rw /opt/spotify
+  sudo chmod -R a+rw /opt/spotify/Apps
+
   # Marketplace (custom app) + startup-page (extension): best-effort, network
   # dependent. A GitHub hiccup here must not abort the whole install.
   sudo -u "$arch_user" mkdir -p "$marketplace_dir" "$extensions_dir"
@@ -1245,10 +1251,13 @@ configure_spicetify() {
   if [ -n "$marketplace_tag" ]; then
     if sudo -u "$arch_user" curl -fsSL -o "$tmp_zip" \
         "https://github.com/spicetify/marketplace/releases/download/$marketplace_tag/marketplace.zip"; then
-      sudo -u "$arch_user" unzip -q -o "$tmp_zip" -d "$marketplace_dir"
-      if [ -d "$marketplace_dir/marketplace-dist" ]; then
-        sudo -u "$arch_user" find "$marketplace_dir/marketplace-dist" -maxdepth 1 -mindepth 1 -exec mv -t "$marketplace_dir" {} +
-        sudo -u "$arch_user" rmdir "$marketplace_dir/marketplace-dist"
+      if sudo -u "$arch_user" unzip -q -o "$tmp_zip" -d "$marketplace_dir"; then
+        if [ -d "$marketplace_dir/marketplace-dist" ]; then
+          sudo -u "$arch_user" find "$marketplace_dir/marketplace-dist" -maxdepth 1 -mindepth 1 -exec mv -t "$marketplace_dir" {} + || true
+          sudo -u "$arch_user" rmdir "$marketplace_dir/marketplace-dist" 2>/dev/null || true
+        fi
+      else
+        echo "Warning: Spicetify Marketplace zip failed to extract, skipping."
       fi
     else
       echo "Warning: Spicetify Marketplace download failed, skipping (network issue?)."

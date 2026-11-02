@@ -37,8 +37,8 @@ UI, not a config file):
   to pick your preferred color theme. After this one run, the skin
   automatically reapplies itself even after Steam updates.
 
-BetterDiscord needs no manual step — it installs itself automatically the
-first time you open Discord.
+BetterDiscord needs no manual step — it installs itself automatically after
+Discord's first launch (if it isn't active yet, just restart Discord once).
 
 ### Update your packages
 
