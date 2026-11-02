@@ -12,6 +12,7 @@ Setup has finished successfully.
 - Added KDE partition manager
 - Added 7zip
 - Added musical workflow installation script
+- Spotify (Spicetify Marketplace + startup-page), Discord (BetterDiscord), and Steam (AdwSteamGtk) now get automatic theming that reapplies itself after each app's own updates
 
 ## Music Workflow
 
@@ -22,6 +23,22 @@ Messing around has never been easier.
 ## Quick start
 
 You may want to complete the following steps:
+
+### Finish theming setup
+
+Two one-time manual steps (can't be scripted — they live in each app's own
+UI, not a config file):
+
+- **Spotify:** open Spotify, click your profile picture, and choose **"Set
+  startup page"** to pick which view it opens to (e.g. Library). Spicetify
+  Marketplace is already installed — open it from Spotify's menu to browse
+  and install themes.
+- **Steam:** press `Alt + Space`, search for **AdwSteamGtk**, and run it once
+  to pick your preferred color theme. After this one run, the skin
+  automatically reapplies itself even after Steam updates.
+
+BetterDiscord needs no manual step — it installs itself automatically the
+first time you open Discord.
 
 ### Update your packages
 
