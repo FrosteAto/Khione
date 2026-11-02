@@ -184,10 +184,6 @@ The Khione install flow is mostly automated, while keeping the key Archinstall c
   - Server Edition: lightweight setup with server defaults.
   - Node Edition: minimal setup with just the base system and Firefox.
  
-## Known issues
-
-- VS Code shortcut broken on Desktop flavour
-
 ## Step 1: Download the ISO
 
 Download the Desktop, Server, or Node ISO from the Releases page.
