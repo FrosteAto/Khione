@@ -21,3 +21,5 @@ SERVICES_MASK=( sleep.target suspend.target hibernate.target hybrid-sleep.target
 FIREWALL_RULES=()
 
 FIRST_BOOT_DIALOG_TITLE="Welcome to Khione Node"
+
+ICON_THEME_REL="YAMIS.tar.gz"

@@ -68,3 +68,5 @@ GLANCE_HELPERS_REL="editions/server/glance-helpers"
 HOME_ASSISTANT_UNIT_REL="editions/server/home-assistant.service"
 
 FIRST_BOOT_DIALOG_TITLE="Welcome to Khione Server"
+
+ICON_THEME_REL="YAMIS.tar.gz"
