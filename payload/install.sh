@@ -234,6 +234,7 @@ fi
 if [[ "${SETUP_THEMING_GUARDS:-false}" == "true" ]]; then
   section "Configuring self-healing theming guards"
   configure_spicetify "$ARCH_USER" "$THEMING_GUARDS_DIR"
+  configure_spicetify_guard "$ARCH_USER" "$THEMING_GUARDS_DIR"
   configure_betterdiscord_guard "$ARCH_USER" "$THEMING_GUARDS_DIR"
   configure_adwsteamgtk_guard "$ARCH_USER" "$THEMING_GUARDS_DIR"
 fi

@@ -1210,6 +1210,22 @@ configure_adwsteamgtk_guard() {
     "$guard_dir/adwsteamgtk-guard.service"
 }
 
+configure_spicetify_guard() {
+  local arch_user="$1"
+  local guard_dir="$2"
+
+  if [[ -z "$guard_dir" ]]; then
+    echo "No Spicetify guard source for this mode, skipping."
+    return 0
+  fi
+
+  echo "Installing Spicetify first-apply guard..."
+  install_user_systemd_guard "$arch_user" \
+    "$guard_dir/spicetify-guard.sh" \
+    "$guard_dir/spicetify-guard.path" \
+    "$guard_dir/spicetify-guard.service"
+}
+
 configure_spicetify() {
   local arch_user="$1"
   local guard_dir="$2"
@@ -1280,6 +1296,10 @@ configure_spicetify() {
   if [ -s "$extensions_dir/startup-page.js" ]; then
     sudo -u "$arch_user" env HOME="$user_home" spicetify config extensions startup-page.js || true
   fi
+  # This apply is expected to fail on a fresh install: Spotify has never been
+  # launched yet at this point, so ~/.config/spotify/prefs doesn't exist, and
+  # spicetify can't patch without it. configure_spicetify_guard's path unit
+  # picks this up and applies for real once that file appears.
   sudo -u "$arch_user" env HOME="$user_home" spicetify backup apply || true
 }
 

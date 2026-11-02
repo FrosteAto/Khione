@@ -1,0 +1,11 @@
+[Unit]
+Description=Apply Spicetify once Spotify's prefs file exists
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStartPre=/bin/sleep 2
+ExecStart=%h/.local/bin/spicetify-guard.sh
+
+[Install]
+WantedBy=default.target

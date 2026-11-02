@@ -1,0 +1,8 @@
+[Unit]
+Description=Watch for Spotify's prefs file appearing (created on its first launch) to apply Spicetify
+
+[Path]
+PathChanged=%h/.config/spotify/prefs
+
+[Install]
+WantedBy=default.target
