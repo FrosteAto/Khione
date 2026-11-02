@@ -47,3 +47,5 @@ payload/editions/desktop/dotfiles/config/konsave/profiles/
 # Krita's resource cache — regenerated automatically, grows every session,
 # pure binary bloat (tens of MB per commit)
 payload/editions/desktop/dotfiles/local/share/krita/resourcecache.sqlite*
+# Subagent-driven-development scratch state (progress ledger, review packages)
+.superpowers/
