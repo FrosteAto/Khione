@@ -11,10 +11,10 @@ OFFICIAL_PACKAGES=(
   firefox steam krita godot obs-studio audacity elisa blender kdenlive libreoffice gwenview mpv easyeffects calf darktable anki
   python python-markdown python-pip python-pipx python-virtualenv php composer nodejs npm docker docker-compose make cmake git archiso partitionmanager
   cups cups-pdf print-manager sane skanlite hplip avahi nss-mdns
-  libinput libwacom wacomtablet xf86-input-wacom
+  libinput libwacom xf86-input-wacom
   noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu ttf-jetbrains-mono
   sof-firmware
-  wine wine-mono wine-gecko winetricks p7zip
+  wine wine-mono wine-gecko winetricks 7zip
   realtime-privileges
   lib32-pipewire lib32-libpulse lib32-alsa-lib lib32-alsa-plugins
   vulkan-radeon lib32-vulkan-radeon xf86-video-amdgpu
