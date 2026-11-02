@@ -2,6 +2,11 @@
 set -euo pipefail
 log() { echo "[betterdiscord-guard] $*"; }
 
+if ! command -v betterdiscordctl >/dev/null 2>&1; then
+    log "betterdiscordctl not installed -- nothing to do"
+    exit 0
+fi
+
 ACTIVE_APP="$(readlink -f "$HOME/.config/discord/Discord" 2>/dev/null || true)"
 
 if [ -z "$ACTIVE_APP" ]; then
