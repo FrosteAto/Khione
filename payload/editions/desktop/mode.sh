@@ -6,6 +6,7 @@ MODE_NAME="desktop"
 OFFICIAL_PACKAGES=(
   xorg plasma plasma-workspace greetd greetd-tuigreet kwallet kwallet-pam libsecret
   kdialog
+  curl unzip
   ufw nano btop fastfetch flatpak kitty dolphin
   firefox steam krita godot obs-studio audacity elisa blender kdenlive libreoffice gwenview mpv easyeffects calf darktable anki
   python python-markdown python-pip python-pipx python-virtualenv php composer nodejs npm docker docker-compose make cmake git archiso partitionmanager
@@ -21,7 +22,7 @@ OFFICIAL_PACKAGES=(
 )
 
 AUR_PACKAGES=(
-  discord betterdiscord-installer-bin spotify visual-studio-code-bin
+  discord betterdiscord-installer-bin betterdiscordctl spotify visual-studio-code-bin
   gamescope unityhub adwsteamgtk proton-vpn-gtk-app
   kwin-effects-forceblur kwin-effect-rounded-corners-git kwin-scripts-krohnkite-git
   lsp-plugins hayase-desktop-bin input-wacom-dkms-git
@@ -41,3 +42,5 @@ FIREWALL_RULES=()
 FIRST_BOOT_DIALOG_TITLE="Welcome to Khione Desktop"
 
 SETUP_AUDIO_PRODUCTION=true
+SETUP_THEMING_GUARDS=true
+ICON_THEME_REL="YAMIS.tar.gz"

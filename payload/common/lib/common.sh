@@ -1148,3 +1148,129 @@ OnlyShowIn=KDE;
 EOF
 }
 
+install_user_systemd_guard() {
+  local arch_user="$1"
+  local script_source="$2"
+  local path_unit_source="$3"
+  local service_unit_source="$4"
+
+  local user_home="/home/$arch_user"
+  local user_bin="$user_home/.local/bin"
+  local user_systemd_dir="$user_home/.config/systemd/user"
+  local wants_dir="$user_systemd_dir/default.target.wants"
+  local script_name path_name service_name
+
+  script_name="$(basename "$script_source")"
+  path_name="$(basename "$path_unit_source")"
+  service_name="$(basename "$service_unit_source")"
+
+  sudo -u "$arch_user" mkdir -p "$user_bin" "$wants_dir"
+  sudo -u "$arch_user" cp "$script_source" "$user_bin/$script_name"
+  sudo -u "$arch_user" chmod +x "$user_bin/$script_name"
+  sudo -u "$arch_user" cp "$path_unit_source" "$user_systemd_dir/$path_name"
+  sudo -u "$arch_user" cp "$service_unit_source" "$user_systemd_dir/$service_name"
+
+  # No systemd --user instance is running yet to "systemctl --user enable"
+  # against at install time -- this is the same .wants symlink that command
+  # would create. The user's real --user manager picks it up normally at
+  # first login.
+  sudo -u "$arch_user" ln -sf "../$path_name" "$wants_dir/$path_name"
+  sudo -u "$arch_user" ln -sf "../$service_name" "$wants_dir/$service_name"
+}
+
+configure_betterdiscord_guard() {
+  local arch_user="$1"
+  local guard_dir="$2"
+
+  if [[ -z "$guard_dir" ]]; then
+    echo "No BetterDiscord guard source for this mode, skipping."
+    return 0
+  fi
+
+  echo "Installing BetterDiscord self-healing guard..."
+  install_user_systemd_guard "$arch_user" \
+    "$guard_dir/betterdiscord-guard.sh" \
+    "$guard_dir/betterdiscord-guard.path" \
+    "$guard_dir/betterdiscord-guard.service"
+}
+
+configure_adwsteamgtk_guard() {
+  local arch_user="$1"
+  local guard_dir="$2"
+
+  if [[ -z "$guard_dir" ]]; then
+    echo "No AdwSteamGtk guard source for this mode, skipping."
+    return 0
+  fi
+
+  echo "Installing AdwSteamGtk self-healing guard..."
+  install_user_systemd_guard "$arch_user" \
+    "$guard_dir/adwsteamgtk-guard.sh" \
+    "$guard_dir/adwsteamgtk-guard.path" \
+    "$guard_dir/adwsteamgtk-guard.service"
+}
+
+configure_spicetify() {
+  local arch_user="$1"
+  local guard_dir="$2"
+
+  if [[ -z "$guard_dir" ]]; then
+    echo "No Spicetify config for this mode, skipping."
+    return 0
+  fi
+
+  echo "Configuring Spicetify..."
+
+  local user_home="/home/$arch_user"
+  local marketplace_dir="$user_home/.config/spicetify/CustomApps/marketplace"
+  local extensions_dir="$user_home/.config/spicetify/Extensions"
+  local tmp_zip="/tmp/khione-spicetify-marketplace.zip"
+
+  # Pacman hook: always installed, no network needed. Templates the username
+  # (never hardcoded) into the reapply script before it goes to /usr/local/bin.
+  sed "s/@@ARCH_USER@@/$arch_user/g" "$guard_dir/spicetify-reapply.sh" \
+    | sudo tee /usr/local/bin/spicetify-reapply.sh >/dev/null
+  sudo chmod 755 /usr/local/bin/spicetify-reapply.sh
+  sudo chown root:root /usr/local/bin/spicetify-reapply.sh
+  sudo install -Dm644 "$guard_dir/spicetify-reapply.hook" /etc/pacman.d/hooks/spicetify-reapply.hook
+
+  # Marketplace (custom app) + startup-page (extension): best-effort, network
+  # dependent. A GitHub hiccup here must not abort the whole install.
+  sudo -u "$arch_user" mkdir -p "$marketplace_dir" "$extensions_dir"
+
+  local marketplace_tag
+  marketplace_tag="$(curl -fsSL https://api.github.com/repos/spicetify/marketplace/releases/latest \
+    | grep -oP '"tag_name":\s*"\K[^"]+' | head -n1 || true)"
+
+  if [ -n "$marketplace_tag" ]; then
+    if sudo -u "$arch_user" curl -fsSL -o "$tmp_zip" \
+        "https://github.com/spicetify/marketplace/releases/download/$marketplace_tag/marketplace.zip"; then
+      sudo -u "$arch_user" unzip -q -o "$tmp_zip" -d "$marketplace_dir"
+      if [ -d "$marketplace_dir/marketplace-dist" ]; then
+        sudo -u "$arch_user" find "$marketplace_dir/marketplace-dist" -maxdepth 1 -mindepth 1 -exec mv -t "$marketplace_dir" {} +
+        sudo -u "$arch_user" rmdir "$marketplace_dir/marketplace-dist"
+      fi
+    else
+      echo "Warning: Spicetify Marketplace download failed, skipping (network issue?)."
+    fi
+    rm -f "$tmp_zip"
+  else
+    echo "Warning: could not determine latest Spicetify Marketplace release tag, skipping Marketplace install."
+  fi
+
+  if ! sudo -u "$arch_user" curl -fsSL -o "$extensions_dir/startup-page.js" \
+      "https://raw.githubusercontent.com/Resxt/startup-page/main/startup-page/dist/startup-page.js"; then
+    echo "Warning: startup-page extension download failed, skipping (network issue?)."
+  fi
+
+  # NOT setting current_theme here -- that's a personal pick, not a distro
+  # default. Marketplace is itself the UI for choosing a theme afterward.
+  if [ -f "$marketplace_dir/manifest.json" ]; then
+    sudo -u "$arch_user" env HOME="$user_home" spicetify config custom_apps marketplace || true
+  fi
+  if [ -s "$extensions_dir/startup-page.js" ]; then
+    sudo -u "$arch_user" env HOME="$user_home" spicetify config extensions startup-page.js || true
+  fi
+  sudo -u "$arch_user" env HOME="$user_home" spicetify backup apply || true
+}
+
