@@ -159,7 +159,13 @@ CURSOR_THEME_NAME="${CURSOR_THEME_NAME:-}"
 CURSOR_THEME_SIZE="${CURSOR_THEME_SIZE:-24}"
 KITTY_TRANSLUCENCY_FIX_REL="${KITTY_TRANSLUCENCY_FIX_REL:-}"
 KARA_GIT_URL="${KARA_GIT_URL:-https://github.com/dhruv8sh/kara.git}"
-KARA_GIT_REF="${KARA_GIT_REF:-v1.0.0}"
+# v1.0.0 still includes an #include <taskmanager/xwindowtasksmodel.h> that
+# upstream Plasma has since removed, breaking the build against current
+# plasma-workspace. Kara's own main branch dropped it in PR #72 ("Remove
+# X11-only task handling") but hasn't been tagged as a new release yet, so
+# pin the exact commit instead of a tag -- same commit this repo's live dev
+# machine's own ~/kara checkout is already built and running from.
+KARA_GIT_REF="${KARA_GIT_REF:-64a843c82cfca7e278727aede3801a04dd95556c}"
 SETUP_AUDIO_PRODUCTION="${SETUP_AUDIO_PRODUCTION:-false}"
 SETUP_THEMING_GUARDS="${SETUP_THEMING_GUARDS:-false}"
 THEMING_GUARDS_DIR="${THEMING_GUARDS_DIR:-$REPO_ROOT/common/theming-guards}"
