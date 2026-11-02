@@ -1,0 +1,11 @@
+[Unit]
+Description=Reinstall BetterDiscord if a Discord self-update dropped it
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStartPre=/bin/sleep 2
+ExecStart=%h/.local/bin/betterdiscord-guard.sh
+
+[Install]
+WantedBy=default.target

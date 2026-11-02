@@ -1,0 +1,8 @@
+[Unit]
+Description=Watch Discord's active-app symlink for self-updates dropping BetterDiscord
+
+[Path]
+PathChanged=%h/.config/discord/Discord
+
+[Install]
+WantedBy=default.target
