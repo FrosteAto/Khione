@@ -1,0 +1,10 @@
+[Trigger]
+Operation = Upgrade
+Operation = Install
+Type = Package
+Target = spotify
+
+[Action]
+Description = Reapplying Spicetify patches after Spotify update...
+When = PostTransaction
+Exec = /usr/local/bin/spicetify-reapply.sh
