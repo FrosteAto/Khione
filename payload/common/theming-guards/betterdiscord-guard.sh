@@ -19,7 +19,15 @@ ASAR="$APP_DIR/resources/betterdiscord.app.asar"
 
 if [ ! -f "$ASAR" ]; then
     log "BetterDiscord missing from $APP_DIR (likely a Discord self-update) -- reinstalling"
-    betterdiscordctl install
+    # betterdiscordctl tracks "installed" via a patch marker inside Discord's
+    # own app.asar, not by this sibling file's existence. If Discord's update
+    # stripped the payload but left the marker, "install" refuses with
+    # "Already installed" while the payload stays missing -- "reinstall"
+    # forces both the uninstall and reinstall, clearing that mismatch.
+    if ! betterdiscordctl install; then
+        log "betterdiscordctl install refused -- forcing reinstall"
+        betterdiscordctl reinstall
+    fi
     log "BetterDiscord reinstalled"
 else
     log "BetterDiscord still present in $APP_DIR, nothing to do"

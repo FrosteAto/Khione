@@ -695,7 +695,7 @@ calc_dialog_size() {
   DIALOG_HEIGHT=680
 
   if command -v xrandr >/dev/null 2>&1; then
-    size="$(xrandr 2>/dev/null | awk '/\*/{print $1; exit}')"
+    size="$(xrandr 2>/dev/null | awk '/\*/{print $1; exit}')" || true
     if [[ "$size" =~ ^([0-9]+)x([0-9]+)$ ]]; then
       sw="${BASH_REMATCH[1]}"
       sh="${BASH_REMATCH[2]}"
@@ -703,10 +703,18 @@ calc_dialog_size() {
       DIALOG_WIDTH=$((sw * 72 / 100))
       DIALOG_HEIGHT=$((sh * 76 / 100))
 
-      (( DIALOG_WIDTH < 760 )) && DIALOG_WIDTH=760
-      (( DIALOG_WIDTH > 1320 )) && DIALOG_WIDTH=1320
-      (( DIALOG_HEIGHT < 520 )) && DIALOG_HEIGHT=520
-      (( DIALOG_HEIGHT > 920 )) && DIALOG_HEIGHT=920
+      # Each of these is a bare `(( cond )) && assign` used as a statement,
+      # not a condition. Under set -e, whichever of these runs LAST becomes
+      # calc_dialog_size()'s own exit status; if its cond is false (common --
+      # e.g. 1080p scales to height 820, under the 920 cap, so no clamping
+      # needed), that status is non-zero, and since the function is called
+      # unguarded below, set -e aborts the whole script right there. This is
+      # exactly why the dialog never showed on a real screen. `|| true` on
+      # all four makes this robust even if they get reordered later.
+      (( DIALOG_WIDTH < 760 )) && DIALOG_WIDTH=760 || true
+      (( DIALOG_WIDTH > 1320 )) && DIALOG_WIDTH=1320 || true
+      (( DIALOG_HEIGHT < 520 )) && DIALOG_HEIGHT=520 || true
+      (( DIALOG_HEIGHT > 920 )) && DIALOG_HEIGHT=920 || true
     fi
   fi
 }
