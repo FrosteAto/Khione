@@ -1199,15 +1199,45 @@ configure_betterdiscord() {
 
   local user_home="/home/$arch_user"
   local themes_dir="$user_home/.config/BetterDiscord/themes"
+  # BD's data path for the stable channel -- matches this distro's discord
+  # package always being pinned to CHANNEL=stable (see betterdiscordctl's
+  # own table entry above).
+  local channel_dir="$user_home/.config/BetterDiscord/data/stable"
+  local theme_url="https://raw.githubusercontent.com/catppuccin/discord/main/themes/mocha.theme.css"
 
   # Catppuccin Mocha theme (the distro default): best-effort, network
-  # dependent, same as Spicetify's downloads. Just drops the file in --
-  # BetterDiscord lists it by its @name header and the user enables it
-  # themselves in BD's settings, same one-time manual step AdwSteamGtk's
-  # color choice already needed before this fix.
-  sudo -u "$arch_user" mkdir -p "$themes_dir"
-  if ! sudo -u "$arch_user" curl -fsSL -o "$themes_dir/mocha.theme.css" \
-      "https://raw.githubusercontent.com/catppuccin/discord/main/themes/mocha.theme.css"; then
+  # dependent, same as Spicetify's downloads. Drops the file into BD's
+  # Themes folder so it's visible/toggleable in BD's Themes list (BD lists
+  # it by its @name header), AND separately into BD's Custom CSS slot with
+  # that builtin force-enabled in settings.json, so it actually applies
+  # without the user needing to find and flip it on themselves.
+  #
+  # The Custom CSS path reaches into BD's internal settings.json schema
+  # (verified against BD's current `development` branch source --
+  # stores/json.ts for the file path/format, builtins/customcss.ts for the
+  # ("settings", "customcss", "customcss") key BD checks to auto-enable it
+  # on startup) rather than its documented UI. BD's own loader merges
+  # unknown/missing keys from its real defaults, so a partial file here is
+  # safe; if a future BD version changes this schema, this just silently
+  # stops auto-enabling rather than breaking anything.
+  sudo -u "$arch_user" mkdir -p "$themes_dir" "$channel_dir"
+  if sudo -u "$arch_user" curl -fsSL -o "$themes_dir/mocha.theme.css" "$theme_url"; then
+    sudo -u "$arch_user" cp "$themes_dir/mocha.theme.css" "$channel_dir/custom.css"
+    if ! sudo -u "$arch_user" python3 -I -c "
+import json
+path = '$channel_dir/settings.json'
+try:
+    with open(path) as f:
+        data = json.load(f)
+except (FileNotFoundError, json.JSONDecodeError):
+    data = {}
+data.setdefault('customcss', {})['customcss'] = True
+with open(path, 'w') as f:
+    json.dump(data, f, indent=4)
+"; then
+      echo "Warning: could not enable BetterDiscord's Custom CSS setting, skipping."
+    fi
+  else
     echo "Warning: Catppuccin Mocha BetterDiscord theme download failed, skipping (network issue?)."
   fi
 }
