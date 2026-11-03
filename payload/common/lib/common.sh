@@ -1186,6 +1186,32 @@ install_user_systemd_guard() {
   sudo -u "$arch_user" ln -sf "../$service_name" "$wants_dir/$service_name"
 }
 
+configure_betterdiscord() {
+  local arch_user="$1"
+  local guard_dir="$2"
+
+  if [[ -z "$guard_dir" ]]; then
+    echo "No BetterDiscord config for this mode, skipping."
+    return 0
+  fi
+
+  echo "Configuring BetterDiscord..."
+
+  local user_home="/home/$arch_user"
+  local themes_dir="$user_home/.config/BetterDiscord/themes"
+
+  # Catppuccin Mocha theme (the distro default): best-effort, network
+  # dependent, same as Spicetify's downloads. Just drops the file in --
+  # BetterDiscord lists it by its @name header and the user enables it
+  # themselves in BD's settings, same one-time manual step AdwSteamGtk's
+  # color choice already needed before this fix.
+  sudo -u "$arch_user" mkdir -p "$themes_dir"
+  if ! sudo -u "$arch_user" curl -fsSL -o "$themes_dir/mocha.theme.css" \
+      "https://raw.githubusercontent.com/catppuccin/discord/main/themes/mocha.theme.css"; then
+    echo "Warning: Catppuccin Mocha BetterDiscord theme download failed, skipping (network issue?)."
+  fi
+}
+
 configure_betterdiscord_guard() {
   local arch_user="$1"
   local guard_dir="$2"
