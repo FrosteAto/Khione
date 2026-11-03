@@ -1248,7 +1248,11 @@ configure_spicetify() {
   local user_home="/home/$arch_user"
   local marketplace_dir="$user_home/.config/spicetify/CustomApps/marketplace"
   local extensions_dir="$user_home/.config/spicetify/Extensions"
+  local themes_dir="$user_home/.config/spicetify/Themes"
+  local catppuccin_dir="$themes_dir/catppuccin"
   local tmp_zip="/tmp/khione-spicetify-marketplace.zip"
+  local tmp_catppuccin_tar="/tmp/khione-spicetify-catppuccin.tar.gz"
+  local tmp_catppuccin_extract="/tmp/khione-spicetify-catppuccin-extract"
 
   # Pacman hook: always installed, no network needed. Templates the username
   # (never hardcoded) into the reapply script before it goes to /usr/local/bin.
@@ -1296,13 +1300,46 @@ configure_spicetify() {
     echo "Warning: startup-page extension download failed, skipping (network issue?)."
   fi
 
-  # NOT setting current_theme here -- that's a personal pick, not a distro
-  # default. Marketplace is itself the UI for choosing a theme afterward.
+  # Catppuccin Mocha theme (the distro default): best-effort, network
+  # dependent, same as Marketplace/startup-page above. Official theme repo
+  # has no release assets, so grab the main branch tarball directly.
+  sudo -u "$arch_user" mkdir -p "$themes_dir"
+  rm -rf "$tmp_catppuccin_extract"
+  if sudo -u "$arch_user" curl -fsSL -o "$tmp_catppuccin_tar" \
+      "https://github.com/catppuccin/spicetify/archive/refs/heads/main.tar.gz"; then
+    sudo -u "$arch_user" mkdir -p "$tmp_catppuccin_extract"
+    if sudo -u "$arch_user" tar -xzf "$tmp_catppuccin_tar" -C "$tmp_catppuccin_extract"; then
+      local extracted_theme_dir
+      extracted_theme_dir="$(find "$tmp_catppuccin_extract" -maxdepth 2 -type d -name catppuccin | head -n1)"
+      if [ -n "$extracted_theme_dir" ]; then
+        rm -rf "$catppuccin_dir"
+        sudo -u "$arch_user" cp -r "$extracted_theme_dir" "$catppuccin_dir"
+      else
+        echo "Warning: Catppuccin theme tarball didn't contain a catppuccin/ folder, skipping."
+      fi
+    else
+      echo "Warning: Catppuccin theme tarball failed to extract, skipping."
+    fi
+  else
+    echo "Warning: Catppuccin theme download failed, skipping (network issue?)."
+  fi
+  rm -rf "$tmp_catppuccin_tar" "$tmp_catppuccin_extract"
+
   if [ -f "$marketplace_dir/manifest.json" ]; then
     sudo -u "$arch_user" env HOME="$user_home" spicetify config custom_apps marketplace || true
   fi
   if [ -s "$extensions_dir/startup-page.js" ]; then
     sudo -u "$arch_user" env HOME="$user_home" spicetify config extensions startup-page.js || true
+  fi
+  # Catppuccin Mocha is the distro default theme (matches color.ini's
+  # supported schemes: frappe, latte, macchiato, mocha). Only set it if the
+  # theme folder actually landed -- pointing current_theme at a theme that
+  # isn't on disk would just make apply fail the same way the prefs_path
+  # issue above did.
+  if [ -f "$catppuccin_dir/color.ini" ]; then
+    sudo -u "$arch_user" env HOME="$user_home" spicetify config current_theme catppuccin || true
+    sudo -u "$arch_user" env HOME="$user_home" spicetify config color_scheme mocha || true
+    sudo -u "$arch_user" env HOME="$user_home" spicetify config overwrite_assets 1 || true
   fi
   # This apply is expected to fail on a fresh install: Spotify has never been
   # launched yet at this point, so ~/.config/spotify/prefs doesn't exist, and
