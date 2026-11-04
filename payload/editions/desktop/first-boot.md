@@ -1,18 +1,12 @@
-# Welcome to Khione Desktop 2.2
+# Welcome to Khione Desktop
 
 Setup has finished successfully.
 
 ## Updates & Notices
 
-- Plex Desktop has been temporarily removed from the installation due to issues in the AUR
-- Tone3000 plugin has been temporarily removed from the installation due to its AUR build being extremely slow and resource-heavy, which can look like a hung installer
-- Added independent Kara package
-- Added fastfetch
-- Added experimental theme switcher (Possibly defunct with KDE 6.7 theme update)
-- Added KDE partition manager
-- Added 7zip
-- Added musical workflow installation script
-- Spotify (Spicetify Marketplace + startup-page), Discord (BetterDiscord), and Steam (AdwSteamGtk) now get automatic theming that reapplies itself after each app's own updates
+- Spotify (Spicetify Marketplace + startup-page), Discord (BetterDiscord), and Steam (AdwSteamGtk) now auto-apply the Catppuccin Mocha theme by default, and reapply themselves after each app's own updates
+- Spotify and Discord now restart themselves automatically the first time a theme applies, so it shows up without you needing to reopen either app
+- Fixed a build failure in the Kara pager and several stale package names that could block installation
 
 ## Music Workflow
 
@@ -26,19 +20,21 @@ You may want to complete the following steps:
 
 ### Finish theming setup
 
-Two one-time manual steps (can't be scripted — they live in each app's own
-UI, not a config file):
+Spotify and Discord are fully automatic — Catppuccin Mocha applies itself
+and both apps restart on their own the first time. One small manual step
+remains for Steam (can't be scripted — it lives in the app's own UI, not a
+config file):
 
-- **Spotify:** open Spotify, click your profile picture, and choose **"Set
-  startup page"** to pick which view it opens to (e.g. Library). Spicetify
-  Marketplace is already installed — open it from Spotify's menu to browse
-  and install themes.
-- **Steam:** press `Alt + Space`, search for **AdwSteamGtk**, and run it once
-  to pick your preferred color theme. After this one run, the skin
-  automatically reapplies itself even after Steam updates.
+- **Steam:** press `Alt + Space`, search for **AdwSteamGtk**, and run it
+  once. Catppuccin Mocha is already set as the color, so this just applies
+  it — no picking required. After this one run, the skin automatically
+  reapplies itself even after Steam updates.
 
-BetterDiscord needs no manual step — it installs itself automatically after
-Discord's first launch (if it isn't active yet, just restart Discord once).
+Spicetify Marketplace is already installed too — open it from Spotify's
+menu any time to browse more themes/extensions if Catppuccin Mocha isn't
+your thing. If you'd also like Spotify to open to a specific view (e.g.
+Library) on launch, click your profile picture in Spotify and choose
+**"Set startup page"**.
 
 ### Update your packages
 
