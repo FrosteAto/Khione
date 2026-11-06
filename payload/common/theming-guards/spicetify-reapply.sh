@@ -5,4 +5,4 @@ set -e
 # before reapplying, same fix as the initial install-time setup.
 chmod a+rw /opt/spotify
 chmod -R a+rw /opt/spotify/Apps
-runuser -u @@ARCH_USER@@ -- spicetify restore backup apply
+runuser -u @@ARCH_USER@@ -- spicetify backup apply
