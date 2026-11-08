@@ -15,14 +15,20 @@ if [ -z "$ACTIVE_APP" ]; then
 fi
 
 APP_DIR="$(dirname "$ACTIVE_APP")"
-ASAR="$APP_DIR/resources/betterdiscord.app.asar"
 
-if [ ! -f "$ASAR" ]; then
-    log "BetterDiscord missing from $APP_DIR (likely a Discord self-update) -- reinstalling"
+# Check betterdiscordctl's own injection marker in Discord's index.js, not
+# just the sibling betterdiscord.app.asar file's existence: a self-update can
+# revert the index.js injection while leaving a stale shim file behind (seen
+# live -- shim present, "index.js" injected: no), which a file-existence
+# check alone would read as "still installed" and skip reinstalling.
+if betterdiscordctl status 2>/dev/null | grep -q '^Discord "index.js" injected: yes$'; then
+    log "BetterDiscord still injected into $APP_DIR, nothing to do"
+else
+    log "BetterDiscord not injected into $APP_DIR (likely a Discord self-update) -- reinstalling"
     # betterdiscordctl tracks "installed" via a patch marker inside Discord's
-    # own app.asar, not by this sibling file's existence. If Discord's update
-    # stripped the payload but left the marker, "install" refuses with
-    # "Already installed" while the payload stays missing -- "reinstall"
+    # own app.asar, not by the shim file's existence. If Discord's update
+    # stripped the marker but left the shim file, "install" refuses with
+    # "Already installed" while the injection stays missing -- "reinstall"
     # forces both the uninstall and reinstall, clearing that mismatch.
     if ! betterdiscordctl install; then
         log "betterdiscordctl install refused -- forcing reinstall"
@@ -56,6 +62,4 @@ if [ ! -f "$ASAR" ]; then
         disown
         log "Discord relaunched"
     fi
-else
-    log "BetterDiscord still present in $APP_DIR, nothing to do"
 fi

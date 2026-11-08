@@ -1,0 +1,9 @@
+[Unit]
+Description=Watch Discord's launcher files for changes (e.g. a self-update rewriting them) and reassert the x11 flag
+
+[Path]
+PathChanged=%h/.local/share/applications/discord.desktop
+PathChanged=%h/.local/bin/discord
+
+[Install]
+WantedBy=default.target

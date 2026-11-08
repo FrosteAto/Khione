@@ -1258,6 +1258,22 @@ configure_betterdiscord_guard() {
     "$guard_dir/betterdiscord-guard.service"
 }
 
+configure_discord_launcher_guard() {
+  local arch_user="$1"
+  local guard_dir="$2"
+
+  if [[ -z "$guard_dir" ]]; then
+    echo "No Discord launcher guard source for this mode, skipping."
+    return 0
+  fi
+
+  echo "Installing Discord launcher self-healing guard..."
+  install_user_systemd_guard "$arch_user" \
+    "$guard_dir/discord-launcher-guard.sh" \
+    "$guard_dir/discord-launcher-guard.path" \
+    "$guard_dir/discord-launcher-guard.service"
+}
+
 configure_adwsteamgtk_guard() {
   local arch_user="$1"
   local guard_dir="$2"

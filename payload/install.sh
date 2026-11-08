@@ -237,6 +237,7 @@ if [[ "${SETUP_THEMING_GUARDS:-false}" == "true" ]]; then
   configure_spicetify_guard "$ARCH_USER" "$THEMING_GUARDS_DIR"
   configure_betterdiscord "$ARCH_USER" "$THEMING_GUARDS_DIR"
   configure_betterdiscord_guard "$ARCH_USER" "$THEMING_GUARDS_DIR"
+  configure_discord_launcher_guard "$ARCH_USER" "$THEMING_GUARDS_DIR"
   configure_adwsteamgtk_guard "$ARCH_USER" "$THEMING_GUARDS_DIR"
 fi
 
