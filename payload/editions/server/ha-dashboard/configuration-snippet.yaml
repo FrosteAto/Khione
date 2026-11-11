@@ -1,0 +1,110 @@
+frontend:
+  themes: !include_dir_merge_named themes
+
+command_line:
+  - sensor:
+      name: Khione System
+      unique_id: khione_system
+      command: "cat /config/snapshots/system.json"
+      value_template: "{{ value_json.updates }}"
+      unit_of_measurement: updates
+      json_attributes:
+        - updates
+        - uptime
+        - kernel
+      scan_interval: 60
+  - sensor:
+      name: Khione Disks
+      unique_id: khione_disks
+      command: "cat /config/snapshots/disks.json"
+      value_template: "{{ value_json.disks | length }}"
+      unit_of_measurement: disks
+      json_attributes:
+        - disks
+      scan_interval: 300
+  - sensor:
+      name: Khione Temps
+      unique_id: khione_temps
+      command: "cat /config/snapshots/temps.json"
+      value_template: "{{ value_json.temps | length }}"
+      unit_of_measurement: sensors
+      json_attributes:
+        - temps
+      scan_interval: 60
+  - binary_sensor:
+      name: Khione Plex
+      unique_id: khione_plex
+      command: "curl -fsS -o /dev/null http://localhost:32400/identity"
+      payload_on: "0"
+      payload_off: "1"
+      command_timeout: 5
+      scan_interval: 60
+  - binary_sensor:
+      name: Khione Cockpit
+      unique_id: khione_cockpit
+      command: "curl -fsSk -o /dev/null https://localhost:9090"
+      payload_on: "0"
+      payload_off: "1"
+      command_timeout: 5
+      scan_interval: 60
+
+template:
+  - sensor:
+      - name: Khione Clothing Recommendation
+        unique_id: khione_clothing_recommendation
+        icon: >-
+          {% set cond = states('weather.home') %}
+          {% set temp = state_attr('weather.home', 'temperature') | float(10) %}
+          {% if cond in ['rainy', 'pouring', 'snowy', 'snowy-rainy'] %}
+            mdi:umbrella
+          {% elif temp < 5 %}
+            mdi:coat-rack
+          {% elif temp < 12 %}
+            mdi:jacket
+          {% else %}
+            mdi:tshirt-crew
+          {% endif %}
+        state: >-
+          {% set cond = states('weather.home') %}
+          {% set temp = state_attr('weather.home', 'temperature') | float(10) %}
+          {% set wind = state_attr('weather.home', 'wind_speed') | float(0) %}
+          {% if cond in ['rainy', 'pouring'] %}
+            Coat + umbrella — rain expected
+          {% elif cond in ['snowy', 'snowy-rainy'] %}
+            Coat, scarf, boots — snow expected
+          {% elif temp < 2 %}
+            Heavy coat, scarf, gloves ({{ temp | round }}°C)
+          {% elif temp < 8 %}
+            Coat or heavy jacket ({{ temp | round }}°C)
+          {% elif temp < 14 %}
+            Light jacket or jumper ({{ temp | round }}°C)
+          {% elif temp < 20 %}
+            Long sleeves, no jacket needed ({{ temp | round }}°C)
+          {% else %}
+            T-shirt weather ({{ temp | round }}°C)
+          {% endif %}
+          {%- if wind > 30 %} — windy, add a layer{% endif %}
+
+feedreader:
+  urls:
+    - https://feeds.bbci.co.uk/news/uk/rss.xml
+    - https://www.derbytelegraph.co.uk/news/?service=rss
+    - https://archlinux.org/feeds/news/
+  max_entries: 8
+  scan_interval: 3600
+
+lovelace:
+  resources:
+    - url: /local/community/card-mod/card-mod.js
+      type: module
+    - url: /local/community/mushroom/mushroom.js
+      type: module
+    - url: /local/community/rss-news-card/rss-news-card.js
+      type: module
+  dashboards:
+    khione-home:
+      mode: yaml
+      filename: dashboards/home-view.yaml
+      title: Home
+      icon: mdi:home
+      show_in_sidebar: true
