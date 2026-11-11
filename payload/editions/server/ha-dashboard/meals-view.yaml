@@ -1,0 +1,181 @@
+views:
+  - title: Meals
+    path: meals
+    icon: mdi:food
+    theme: khione
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: markdown
+            title: Today
+            content: >-
+              **{{ states('sensor.khione_meals_today') }}** — week
+              {{ state_attr('sensor.khione_meals_today', 'week') }} of
+              {{ state_attr('sensor.khione_meals_today', 'total_weeks') }}
+
+              **Breakfast:** {{ state_attr('sensor.khione_meals_today', 'breakfast') }}
+
+              **Lunch:** {{ state_attr('sensor.khione_meals_today', 'lunch') }}
+
+              **Snacks:** {{ state_attr('sensor.khione_meals_today', 'snacks') }}
+
+              **Dinner:** {{ state_attr('sensor.khione_meals_today', 'dinner') }}
+          - type: markdown
+            title: Today's Macros
+            content: >-
+              {{ state_attr('sensor.khione_meals_today', 'kcal') }} kcal
+              ({{ state_attr('sensor.khione_meals_today', 'kcal_percent') }}%)
+
+              {{ state_attr('sensor.khione_meals_today', 'protein') }}g protein
+              ({{ state_attr('sensor.khione_meals_today', 'protein_percent') }}%)
+          - type: markdown
+            title: Targets
+            content: |
+              3×/week RUNNING
+
+              90→75kg WEIGHT GOAL
+          - type: markdown
+            title: Weight
+            content: >-
+              {% if state_attr('sensor.khione_weight', 'configured') %}
+              **{{ state_attr('sensor.khione_weight', 'current') }}kg** on
+              {{ state_attr('sensor.khione_weight', 'current_date') }}
+
+              Lost {{ state_attr('sensor.khione_weight', 'lost') }}kg ·
+              {{ state_attr('sensor.khione_weight', 'to_go') }}kg to go
+              ({{ state_attr('sensor.khione_weight', 'percent') }}%)
+
+              Maintenance: ~{{ state_attr('sensor.khione_weight', 'maint') }} kcal/day
+              {% else %}
+              No weigh-ins logged yet.
+              {% endif %}
+          - type: entities
+            title: Log Weight
+            entities:
+              - input_number.khione_weight_kg
+          - type: button
+            name: Log Weight
+            icon: mdi:scale-bathroom
+            tap_action:
+              action: perform-action
+              perform_action: pyscript.khione_meals_log_weight
+              target: {}
+              data:
+                kg: "{{ states('input_number.khione_weight_kg') }}"
+          - type: entities
+            title: Weight Profile
+            entities:
+              - input_number.khione_profile_age
+              - input_number.khione_profile_height
+              - input_select.khione_profile_sex
+              - input_select.khione_profile_activity
+          - type: button
+            name: Save Profile
+            icon: mdi:account-cog
+            tap_action:
+              action: perform-action
+              perform_action: pyscript.khione_meals_save_profile
+              target: {}
+              data:
+                age: "{{ states('input_number.khione_profile_age') }}"
+                height_cm: "{{ states('input_number.khione_profile_height') }}"
+                sex: "{{ states('input_select.khione_profile_sex') }}"
+                activity: "{{ states('input_select.khione_profile_activity') }}"
+
+      - type: grid
+        cards:
+          - type: markdown
+            title: Tonight
+            content: >-
+              **{{ states('sensor.khione_meals_tonight') }}**
+
+              {{ state_attr('sensor.khione_meals_tonight', 'status') }}
+
+              {{ state_attr('sensor.khione_meals_tonight', 'detail') }}
+
+              **Ingredients:** {{ state_attr('sensor.khione_meals_tonight', 'ingredients') }}
+
+              **Instructions:** {{ state_attr('sensor.khione_meals_tonight', 'instructions') }}
+
+              Tomorrow: {{ state_attr('sensor.khione_meals_tonight', 'tomorrow') }}
+          - type: horizontal-stack
+            cards:
+              - type: button
+                name: Prev
+                icon: mdi:chevron-left
+                tap_action:
+                  action: perform-action
+                  perform_action: pyscript.khione_meals_preview_prev
+                  target: {}
+              - type: button
+                name: Today
+                icon: mdi:calendar-today
+                tap_action:
+                  action: perform-action
+                  perform_action: pyscript.khione_meals_preview_today
+                  target: {}
+              - type: button
+                name: Next
+                icon: mdi:chevron-right
+                tap_action:
+                  action: perform-action
+                  perform_action: pyscript.khione_meals_preview_next
+                  target: {}
+          - type: markdown
+            title: This Week
+            content: >-
+              Week {{ states('sensor.khione_meals_preview') }} of
+              {{ state_attr('sensor.khione_meals_preview', 'total_weeks') }}
+
+              {% for d in state_attr('sensor.khione_meals_preview', 'days') or [] %}
+              **{{ d.name }}{% if d.is_today %} (today){% endif %}** —
+              B: {{ d.breakfast }} · L: {{ d.lunch }} ·
+              S: {{ d.snacks }} · D: {{ d.dinner }}
+
+              {% endfor %}
+          - type: markdown
+            title: Shopping List
+            content: >-
+              {% for section in ['breakfast', 'lunch', 'snacks', 'dinner'] %}
+              **{{ section | title }}:** {{ state_attr('sensor.khione_meals_preview', 'shopping_' + section) | join(', ') }}
+
+              {% endfor %}
+
+      - type: grid
+        cards:
+          - type: markdown
+            title: Breakfast Recipes
+            content: >-
+              {% for r in state_attr('sensor.khione_meals_recipes_breakfast', 'recipes') or [] %}
+              **{{ r.name }}** ({{ r.detail }})
+
+              {{ r.ingredients }}
+
+              {% endfor %}
+          - type: markdown
+            title: Lunch Recipes
+            content: >-
+              {% for r in state_attr('sensor.khione_meals_recipes_lunch', 'recipes') or [] %}
+              **{{ r.name }}** ({{ r.detail }})
+
+              {{ r.ingredients }}
+
+              {% endfor %}
+          - type: markdown
+            title: Snack Recipes
+            content: >-
+              {% for r in state_attr('sensor.khione_meals_recipes_snacks', 'recipes') or [] %}
+              **{{ r.name }}** ({{ r.detail }})
+
+              {% endfor %}
+          - type: markdown
+            title: Dinner Recipes
+            content: >-
+              {% for r in state_attr('sensor.khione_meals_recipes_dinner', 'recipes') or [] %}
+              **{{ r.name }}** ({{ r.detail }}){% if r.fresh %} — COOK FRESH{% else %} — batch {{ r.batch }}{% endif %}
+
+              {{ r.ingredients }}
+
+              {% endfor %}
