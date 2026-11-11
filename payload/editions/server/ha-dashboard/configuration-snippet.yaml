@@ -70,7 +70,14 @@ command_line:
         - articles
       scan_interval: 300
   - sensor:
-      name: Khione RSS Arch Linux
+      # "ArchLinux" (one word) deliberately, not "Arch Linux" -- HA
+      # auto-slugs the entity_id from this display name, and a two-word
+      # name produces sensor.khione_rss_arch_linux (extra underscore),
+      # not sensor.khione_rss_archlinux, which is what home-view.yaml and
+      # unique_id both already assume. Confirmed live: BBC/Derbyshire's
+      # single-word tails happened to slug correctly by coincidence; this
+      # one didn't.
+      name: Khione RSS ArchLinux
       unique_id: khione_rss_archlinux
       command: "cat /config/snapshots/rss_archlinux.json"
       value_template: "{{ value_json.articles | length }}"
