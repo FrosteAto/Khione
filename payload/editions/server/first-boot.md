@@ -47,8 +47,12 @@ human click each, same as HA's own account setup above:
    `weather.home`** (Settings → Entities → find it → the gear icon → rename
    the Entity ID) — the dashboard and the clothing-recommendation sensor
    both expect that exact ID.
-2. **System Monitor** — Add Integration → "System Monitor" → when asked
-   which resources to track, make sure CPU use and Memory use are enabled.
+2. **System Monitor** — Add Integration → "System Monitor" (it doesn't ask
+   which resources to track — it creates everything, mostly **disabled by
+   default**). Go to Settings → Entities, search "processor" and "memory",
+   and enable `sensor.system_monitor_processor_use` and
+   `sensor.system_monitor_memory_usage` (gear icon → toggle "Enabled") —
+   those exact entity IDs are what the dashboard expects.
 3. **Speedtest.net** — Add Integration → "Speedtest.net" → accept the
    defaults.
 4. **HACS** — if its files were fetched successfully at install time,

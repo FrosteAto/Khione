@@ -4,7 +4,13 @@ views:
     icon: mdi:home
     theme: khione
     cards:
-      - type: horizontal-stack
+      # grid, not horizontal-stack: horizontal-stack doesn't stretch its
+      # children to fill the view (confirmed live — columns ended up tiny,
+      # with their content as the only thing sizing them); grid with
+      # square: false forces N even-width columns.
+      - type: grid
+        columns: 3
+        square: false
         cards:
           - type: vertical-stack
             cards:
@@ -56,8 +62,8 @@ views:
               - type: entities
                 title: CPU / Memory
                 entities:
-                  - sensor.processor_use
-                  - sensor.memory_use
+                  - sensor.system_monitor_processor_use
+                  - sensor.system_monitor_memory_usage
               - type: markdown
                 title: Disks
                 content: >-
