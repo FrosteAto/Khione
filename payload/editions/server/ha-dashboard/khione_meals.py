@@ -536,3 +536,210 @@ def weight_view(entries, profile):
         "profile_age": profile["age"], "profile_height": profile["height_cm"],
         "profile_sex": profile["sex"], "profile_activity": str(profile["activity"]),
     }
+
+
+# ---------------------------------------------------------------------------
+# pyscript glue -- only runs inside the real pyscript/HA runtime. Everything
+# above this line is plain Python, independently tested in Task 1.
+# ---------------------------------------------------------------------------
+
+ensure_seed_data()
+
+
+def _recompute_today():
+    recipes = load_recipes()
+    recipes_by_id = {r["id"]: r for r in recipes}
+    plan = load_plan()
+    today = date.today()
+    actual_week = week_for(today, plan)
+    today_span, _ = span_for(today, plan)
+    kcal = sum(slot_macros(today_span[slot], recipes_by_id)[0] for slot in SLOTS)
+    protein = sum(slot_macros(today_span[slot], recipes_by_id)[1] for slot in SLOTS)
+    dinner_recipe = recipes_by_id[today_span["dinner"][0]]
+    kind, status = dinner_status(today, plan, recipes_by_id)
+    tomorrow = today + __import__("datetime").timedelta(days=1)
+    tomorrow_span, _ = span_for(tomorrow, plan)
+    tomorrow_kind, _ = dinner_status(tomorrow, plan, recipes_by_id)
+    tomorrow_recipe = recipes_by_id[tomorrow_span["dinner"][0]]
+    tomorrow_label = f"{tomorrow_recipe['name']} ({'cooking' if tomorrow_kind == 'cook' else 'leftovers'})"
+
+    state.set("sensor.khione_meals_today", today.strftime("%A"), new_attributes={
+        "week": actual_week, "total_weeks": len(plan["weeks"]),
+        "breakfast": slot_names(today_span["breakfast"], recipes_by_id),
+        "lunch": slot_names(today_span["lunch"], recipes_by_id),
+        "snacks": slot_names(today_span["snacks"], recipes_by_id),
+        "dinner": slot_names(today_span["dinner"], recipes_by_id),
+        "kcal": kcal, "kcal_percent": min(100, round(kcal / 1800 * 100)),
+        "protein": protein, "protein_percent": min(100, round(protein / 120 * 100)),
+    })
+    state.set("sensor.khione_meals_tonight", dinner_recipe["name"], new_attributes={
+        "kind": kind, "status": status, "detail": macro_detail(dinner_recipe),
+        "ingredients": dinner_recipe["ingredients"], "instructions": dinner_recipe["instructions"],
+        "tomorrow": tomorrow_label,
+    })
+    today_day_idx = today.weekday()
+    week_data = week_view(actual_week, actual_week, today_day_idx, plan, recipes_by_id)
+    state.set("sensor.khione_meals_week", actual_week, new_attributes=week_data)
+
+    for key, meal_type in (("breakfast", "breakfast"), ("lunch", "lunch"),
+                           ("snacks", "snack"), ("dinner", "dinner")):
+        matching = [r for r in recipes if r["meal_type"] == meal_type]
+        state.set(f"sensor.khione_meals_recipes_{key}", len(matching), new_attributes={
+            "recipes": [{
+                "id": r["id"], "name": r["name"],
+                "detail": macro_detail(r), "ingredients": r["ingredients"],
+                "instructions": r["instructions"], "batch": r["batch"], "fresh": r["fresh"],
+            } for r in matching]
+        })
+
+    # Periodic/triggered refreshes reset the browsable preview back to the
+    # real current week -- same behavior the old glance-meals timer had.
+    _recompute_preview(actual_week)
+    state.set("input_number.khione_meals_preview_week", actual_week)
+
+
+def _recompute_preview(preview_week):
+    recipes = load_recipes()
+    recipes_by_id = {r["id"]: r for r in recipes}
+    plan = load_plan()
+    today = date.today()
+    actual_week = week_for(today, plan)
+    today_day_idx = today.weekday()
+    data = week_view(preview_week, actual_week, today_day_idx, plan, recipes_by_id)
+    state.set("sensor.khione_meals_preview", preview_week, new_attributes=data)
+
+
+def _recompute_weight():
+    entries = load_json(WEIGHT_LOG_PATH, [])
+    profile = load_profile()
+    state.set("sensor.khione_weight", "ok", new_attributes=weight_view(entries, profile))
+
+
+@time_trigger("cron(0 0 * * *)")
+def khione_meals_midnight_refresh():
+    _recompute_today()
+
+
+@service
+def khione_meals_log_weight(kg=None):
+    try:
+        kg = round(float(kg), 1)
+        if not 30 <= kg <= 300:
+            raise ValueError
+    except (TypeError, ValueError):
+        log.error(f"khione_meals_log_weight: bad kg value {kg!r}")
+        return
+    today_iso = date.today().isoformat()
+    entries = [e for e in load_json(WEIGHT_LOG_PATH, []) if e["date"] != today_iso]
+    entries.append({"date": today_iso, "kg": kg})
+    write_json(WEIGHT_LOG_PATH, sorted(entries, key=lambda e: e["date"]))
+    _recompute_weight()
+
+
+@service
+def khione_meals_save_profile(age=None, height_cm=None, sex=None, activity=None):
+    try:
+        profile = {"age": int(age), "height_cm": int(height_cm), "sex": sex, "activity": float(activity)}
+        if not (10 <= profile["age"] <= 120 and 100 <= profile["height_cm"] <= 250
+                and profile["sex"] in ("male", "female")
+                and str(activity) in ACTIVITY_FACTORS):
+            raise ValueError
+    except (TypeError, ValueError):
+        log.error("khione_meals_save_profile: bad profile values")
+        return
+    write_json(WEIGHT_PROFILE_PATH, profile)
+    _recompute_weight()
+
+
+@service
+def khione_meals_save_recipe(id=None, name=None, meal_type=None, kcal_min=None, kcal_max=None,
+                              protein_min=None, protein_max=None, ingredients=None,
+                              instructions=None, batch=None, fresh=None):
+    try:
+        name = (name or "").strip()[:200]
+        kcal_min, kcal_max = int(kcal_min), int(kcal_max)
+        protein_min, protein_max = int(protein_min), int(protein_max)
+        batch = int(batch) if batch not in (None, "") else 0
+        fresh = bool(fresh)
+        ingredients = (ingredients or "").strip()[:2000]
+        instructions = (instructions or "").strip()[:2000]
+        if not (name and meal_type in MEAL_TYPES
+                and 0 <= kcal_min <= kcal_max <= 3000
+                and 0 <= protein_min <= protein_max <= 300
+                and 0 <= batch <= 20):
+            raise ValueError
+    except (TypeError, ValueError):
+        log.error("khione_meals_save_recipe: bad recipe values")
+        return
+    recipes = load_recipes()
+    ids = {r["id"] for r in recipes}
+    rid = (id or "").strip()
+    if rid and rid in ids:
+        recipe = next(r for r in recipes if r["id"] == rid)
+    else:
+        rid = unique_id(slugify(name), ids)
+        recipe = {"id": rid}
+        recipes.append(recipe)
+    recipe.update({
+        "name": name, "meal_type": meal_type,
+        "kcal_min": kcal_min, "kcal_max": kcal_max,
+        "protein_min": protein_min, "protein_max": protein_max,
+        "ingredients": ingredients, "instructions": instructions,
+        "batch": batch, "fresh": fresh,
+    })
+    write_json(RECIPES_PATH, {"recipes": recipes})
+    _recompute_today()
+
+
+@service
+def khione_meals_delete_recipe(id=None):
+    rid = (id or "").strip()
+    if not rid:
+        log.error("khione_meals_delete_recipe: missing id")
+        return
+    plan = load_plan()
+    if recipe_in_use(rid, plan):
+        log.error(f"khione_meals_delete_recipe: {rid} is still used in the plan")
+        return
+    recipes = [r for r in load_recipes() if r["id"] != rid]
+    write_json(RECIPES_PATH, {"recipes": recipes})
+    _recompute_today()
+
+
+@service
+def khione_meals_set_preview_week(week=None):
+    try:
+        total_weeks = len(load_plan()["weeks"])
+        week = ((int(week) - 1) % total_weeks) + 1
+    except (TypeError, ValueError):
+        log.error(f"khione_meals_set_preview_week: bad week value {week!r}")
+        return
+    state.set("input_number.khione_meals_preview_week", week)
+    _recompute_preview(week)
+
+
+@service
+def khione_meals_preview_next():
+    plan = load_plan()
+    total_weeks = len(plan["weeks"])
+    current = int(float(state.get("input_number.khione_meals_preview_week") or week_for(date.today(), plan)))
+    khione_meals_set_preview_week(week=current % total_weeks + 1)
+
+
+@service
+def khione_meals_preview_prev():
+    plan = load_plan()
+    total_weeks = len(plan["weeks"])
+    current = int(float(state.get("input_number.khione_meals_preview_week") or week_for(date.today(), plan)))
+    khione_meals_set_preview_week(week=(current - 2) % total_weeks + 1)
+
+
+@service
+def khione_meals_preview_today():
+    khione_meals_set_preview_week(week=week_for(date.today(), load_plan()))
+
+
+# Run once at (re)load so the sensors exist immediately, not just after the
+# next midnight cron tick.
+_recompute_today()
+_recompute_weight()
