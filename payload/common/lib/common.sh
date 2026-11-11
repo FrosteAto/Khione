@@ -354,14 +354,34 @@ configure_home_assistant_dashboard() {
   sudo install -d -m755 /var/lib/hass/www/community
 
   if ! sudo test -d /var/lib/hass/custom_components/hacs; then
-    curl -fsSL https://get.hacs.xyz 2>/dev/null | sudo HACS_container=True bash - || \
+    # get.hacs.xyz auto-detects the HA config dir by looking for marker
+    # files (e.g. .HA_VERSION) in its OWN cwd — it must be run FROM
+    # /var/lib/hass, not wherever this installer script happens to be
+    # running from (confirmed live: running it with the wrong cwd fails
+    # with "Could not find the directory for Home Assistant").
+    if curl -fsSL https://get.hacs.xyz -o /tmp/hacs-install.sh 2>/dev/null; then
+      sudo bash -c 'cd /var/lib/hass && HACS_container=True bash /tmp/hacs-install.sh' || \
+        echo "WARNING: HACS bootstrap failed — install it manually later via its own install script."
+      rm -f /tmp/hacs-install.sh
+    else
       echo "WARNING: HACS bootstrap failed (network?) — install it manually later via its own install script."
+    fi
   fi
 
   _fetch_ha_frontend_asset() {
-    local name="$1" url="$2" dest="/var/lib/hass/www/community/$1"
+    # These single-file Lovelace plugins ship their built JS two different
+    # ways depending on the project: attached as a GitHub release asset
+    # (card-mod, rss-news-card do NOT do this; mushroom does), or committed
+    # directly at the repo root (card-mod, rss-news-card do this; mushroom
+    # does not) — confirmed live for all three. Try the release-asset URL
+    # first, fall back to the raw repo file at the resolved latest tag.
+    local name="$1" repo="$2" file="$3" dest="/var/lib/hass/www/community/$1"
     sudo install -d -m755 "$dest"
-    if ! curl -fsSL "$url" -o "/tmp/$name.js"; then
+    local tag
+    tag="$(curl -fsSL "https://api.github.com/repos/$repo/releases/latest" 2>/dev/null \
+      | grep -m1 '"tag_name"' | sed -E 's/.*"tag_name": *"([^"]+)".*/\1/')"
+    if ! curl -fsSL "https://github.com/$repo/releases/latest/download/$file" -o "/tmp/$name.js" 2>/dev/null &&
+       ! curl -fsSL "https://raw.githubusercontent.com/$repo/${tag:-master}/$file" -o "/tmp/$name.js"; then
       echo "WARNING: failed to download $name — card won't load until it's fetched manually."
       return 0
     fi
@@ -369,12 +389,9 @@ configure_home_assistant_dashboard() {
     rm -f "/tmp/$name.js"
   }
 
-  _fetch_ha_frontend_asset card-mod \
-    "https://github.com/thomasloven/lovelace-card-mod/releases/latest/download/card-mod.js"
-  _fetch_ha_frontend_asset mushroom \
-    "https://github.com/piitaya/lovelace-mushroom/releases/latest/download/mushroom.js"
-  _fetch_ha_frontend_asset rss-news-card \
-    "https://github.com/suxlala/rss-news-card/releases/latest/download/rss-news-card.js"
+  _fetch_ha_frontend_asset card-mod thomasloven/lovelace-card-mod card-mod.js
+  _fetch_ha_frontend_asset mushroom piitaya/lovelace-mushroom mushroom.js
+  _fetch_ha_frontend_asset rss-news-card suxlala/rss-news-card rss-news-card.js
 }
 
 configure_greetd() {
