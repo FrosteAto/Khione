@@ -660,7 +660,7 @@ def khione_meals_save_recipe(id=None, name=None, meal_type=None, kcal_min=None, 
         kcal_min, kcal_max = int(kcal_min), int(kcal_max)
         protein_min, protein_max = int(protein_min), int(protein_max)
         batch = int(batch) if batch not in (None, "") else 0
-        fresh = bool(fresh)
+        fresh = str(fresh).strip().lower() in ("1", "true", "yes", "on")
         ingredients = (ingredients or "").strip()[:2000]
         instructions = (instructions or "").strip()[:2000]
         if not (name and meal_type in MEAL_TYPES
