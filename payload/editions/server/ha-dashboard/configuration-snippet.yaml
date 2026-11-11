@@ -117,6 +117,12 @@ template:
           {%- if wind > 30 %} — windy, add a layer{% endif %}
 
 lovelace:
+  # resource_mode: yaml is required alongside resources: below, or the
+  # list is silently ignored (confirmed against HA's own dashboards docs
+  # after all three custom cards failed identically live -- this was
+  # missing, which is why none of card-mod/mushroom/rss-news-card ever
+  # actually registered as a usable resource).
+  resource_mode: yaml
   resources:
     - url: /local/community/card-mod/card-mod.js
       type: module
