@@ -344,6 +344,33 @@ configure_home_assistant_dashboard() {
   sudo install -Dm644 "$dashboard_dir/home-view.yaml" /var/lib/hass/dashboards/home-view.yaml
 
   merge_ha_configuration_snippet "$dashboard_dir/configuration-snippet.yaml" /var/lib/hass/configuration.yaml
+
+  echo "Fetching HACS + card-mod + Mushroom + rss-news-card (best-effort)..."
+  sudo install -d -m755 /var/lib/hass/custom_components
+  sudo install -d -m755 /var/lib/hass/www/community
+
+  if ! sudo test -d /var/lib/hass/custom_components/hacs; then
+    curl -fsSL https://get.hacs.xyz 2>/dev/null | sudo HACS_container=True bash - || \
+      echo "WARNING: HACS bootstrap failed (network?) — install it manually later via its own install script."
+  fi
+
+  _fetch_ha_frontend_asset() {
+    local name="$1" url="$2" dest="/var/lib/hass/www/community/$1"
+    sudo install -d -m755 "$dest"
+    if ! curl -fsSL "$url" -o "/tmp/$name.js"; then
+      echo "WARNING: failed to download $name — card won't load until it's fetched manually."
+      return 0
+    fi
+    sudo install -Dm644 "/tmp/$name.js" "$dest/$name.js"
+    rm -f "/tmp/$name.js"
+  }
+
+  _fetch_ha_frontend_asset card-mod \
+    "https://github.com/thomasloven/lovelace-card-mod/releases/latest/download/card-mod.js"
+  _fetch_ha_frontend_asset mushroom \
+    "https://github.com/piitaya/lovelace-mushroom/releases/latest/download/mushroom.js"
+  _fetch_ha_frontend_asset rss-news-card \
+    "https://github.com/suxlala/rss-news-card/releases/latest/download/rss-news-card.js"
 }
 
 configure_greetd() {
