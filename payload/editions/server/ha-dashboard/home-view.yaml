@@ -44,7 +44,11 @@ views:
           - type: custom:rss-news-card
             title: Arch Linux News
             sources:
-              - entity: sensor.khione_rss_archlinux
+              # Stuck as khione_rss_arch_linux (not _archlinux): HA assigns
+              # entity_id once per unique_id at first registration and
+              # keeps it stable even after the config's name: changes --
+              # confirmed live via the API rather than guessed again.
+              - entity: sensor.khione_rss_arch_linux
                 name: Arch Linux News
                 color: "#1793d1"
             max_articles: 5
