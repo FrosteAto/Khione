@@ -20,3 +20,8 @@ mins=$(((uptime_s % 3600) / 60))
 printf '{"updates": %d, "uptime": "%dd %dh %dm", "kernel": "%s"}\n' \
   "$updates" "$days" "$hours" "$mins" "$(uname -r)" > "$out.tmp"
 mv "$out.tmp" "$out"
+
+# Best-effort second copy for the HA dashboard's command_line sensor. Must
+# never fail the script — this collector's primary job (the Glance widget
+# above) has already succeeded by this point.
+cp "$out" /var/lib/hass/snapshots/system.json 2>/dev/null || true

@@ -51,3 +51,11 @@ tmp = OUT + ".tmp"
 with open(tmp, "w") as f:
     json.dump({"temps": temps}, f)
 os.replace(tmp, OUT)
+
+# Best-effort second copy for the HA dashboard's command_line sensor. Must
+# never fail the script — Glance's own widget data above already landed.
+import shutil as _shutil
+try:
+    _shutil.copyfile(OUT, "/var/lib/hass/snapshots/temps.json")
+except OSError:
+    pass
