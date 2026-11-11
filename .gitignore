@@ -49,3 +49,8 @@ payload/editions/desktop/dotfiles/config/konsave/profiles/
 payload/editions/desktop/dotfiles/local/share/krita/resourcecache.sqlite*
 # Subagent-driven-development scratch state (progress ledger, review packages)
 .superpowers/
+# AI-assisted planning artifacts (specs/plans) stay local on this public repo,
+# going forward — see memory planning-docs-stay-local. Pre-existing committed
+# ones (e.g. the 2026-11-02 theming-automation docs) are left as-is.
+docs/superpowers/specs/
+docs/superpowers/plans/
