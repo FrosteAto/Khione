@@ -34,7 +34,7 @@ command_line:
   - binary_sensor:
       name: Khione Plex
       unique_id: khione_plex
-      command: "curl -fsS -o /dev/null http://localhost:32400/identity"
+      command: "curl -fsS -o /dev/null http://localhost:32400/identity && echo 0 || echo 1"
       payload_on: "0"
       payload_off: "1"
       command_timeout: 5
@@ -42,7 +42,7 @@ command_line:
   - binary_sensor:
       name: Khione Cockpit
       unique_id: khione_cockpit
-      command: "curl -fsSk -o /dev/null https://localhost:9090"
+      command: "curl -fsSk -o /dev/null https://localhost:9090 && echo 0 || echo 1"
       payload_on: "0"
       payload_off: "1"
       command_timeout: 5
