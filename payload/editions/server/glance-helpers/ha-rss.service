@@ -1,0 +1,13 @@
+[Unit]
+Description=Fetch RSS feeds for the HA dashboard's rss-news-card
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=glance
+Group=glance
+ExecStart=/usr/local/bin/ha-rss
+
+[Install]
+WantedBy=multi-user.target

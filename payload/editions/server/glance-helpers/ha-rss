@@ -1,0 +1,52 @@
+#!/usr/bin/env python3
+"""Fetch RSS feeds into the JSON shape the HA dashboard's rss-news-card
+expects on a backing command_line sensor: {"articles": [{"title", "link",
+"pubDate"}, ...]} as the sensor's "articles" json_attribute. Confirmed live
+against the card's own source (rss-news-card.js's _getArticles/setConfig) --
+it reads per-feed sensors, not RSS URLs directly."""
+import json
+import os
+import urllib.request
+import xml.etree.ElementTree as ET
+
+OUT_DIR = "/var/lib/hass/snapshots"
+MAX_ITEMS = 10
+
+FEEDS = {
+    "rss_bbc": "https://feeds.bbci.co.uk/news/uk/rss.xml",
+    "rss_derbyshire": "https://www.derbytelegraph.co.uk/news/?service=rss",
+    "rss_archlinux": "https://archlinux.org/feeds/news/",
+}
+
+
+def fetch_articles(url):
+    req = urllib.request.Request(url, headers={"User-Agent": "Khione-HA-RSS/1.0"})
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        data = resp.read()
+    root = ET.fromstring(data)
+    articles = []
+    for item in root.iter("item"):
+        title = (item.findtext("title") or "").strip()
+        link = (item.findtext("link") or "").strip()
+        pub_date = (item.findtext("pubDate") or "").strip()
+        if not title or not link:
+            continue
+        articles.append({"title": title, "link": link, "pubDate": pub_date})
+        if len(articles) >= MAX_ITEMS:
+            break
+    return articles
+
+
+os.makedirs(OUT_DIR, exist_ok=True)
+for name, url in FEEDS.items():
+    out = os.path.join(OUT_DIR, f"{name}.json")
+    try:
+        articles = fetch_articles(url)
+    except Exception:
+        # Best-effort per feed: on failure, leave any existing cached file
+        # in place rather than overwriting good data with nothing.
+        continue
+    tmp = out + ".tmp"
+    with open(tmp, "w") as f:
+        json.dump({"articles": articles}, f)
+    os.replace(tmp, out)
