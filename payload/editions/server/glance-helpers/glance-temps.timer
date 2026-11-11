@@ -1,9 +1,0 @@
-[Unit]
-Description=Collect hardware temperatures for Glance every 5 minutes
-
-[Timer]
-OnBootSec=30s
-OnUnitActiveSec=5min
-
-[Install]
-WantedBy=timers.target

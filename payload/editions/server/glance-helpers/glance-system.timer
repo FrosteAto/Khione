@@ -1,9 +1,0 @@
-[Unit]
-Description=Collect system info for Glance every hour
-
-[Timer]
-OnBootSec=3min
-OnUnitActiveSec=1h
-
-[Install]
-WantedBy=timers.target
