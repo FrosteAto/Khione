@@ -1,86 +1,87 @@
-title: Home
-path: home
-icon: mdi:home
-theme: khione
-cards:
-  - type: horizontal-stack
+views:
+  - title: Home
+    path: home
+    icon: mdi:home
+    theme: khione
     cards:
-      - type: vertical-stack
+      - type: horizontal-stack
         cards:
-          - type: clock
-            clock_size: medium
-            time_format: "24"
-          - type: calendar
-            entities: []
-          - type: weather-forecast
-            entity: weather.home
-            show_forecast: false
-          - type: custom:mushroom-template-card
-            primary: Clothing
-            secondary: "{{ states('sensor.khione_clothing_recommendation') }}"
-            icon: "{{ state_attr('sensor.khione_clothing_recommendation', 'icon') }}"
+          - type: vertical-stack
+            cards:
+              - type: clock
+                clock_size: medium
+                time_format: "24"
+              - type: calendar
+                entities: []
+              - type: weather-forecast
+                entity: weather.home
+                show_forecast: false
+              - type: custom:mushroom-template-card
+                primary: Clothing
+                secondary: "{{ states('sensor.khione_clothing_recommendation') }}"
+                icon: "{{ state_attr('sensor.khione_clothing_recommendation', 'icon') }}"
 
-      - type: vertical-stack
-        cards:
-          - type: custom:rss-news-card
-            title: BBC UK / Derbyshire Live
-            sources:
-              - name: BBC UK News
-                url: https://feeds.bbci.co.uk/news/uk/rss.xml
-              - name: Derbyshire Live
-                url: https://www.derbytelegraph.co.uk/news/?service=rss
-            max_items: 8
-          - type: custom:rss-news-card
-            title: Arch Linux News
-            sources:
-              - name: Arch Linux News
-                url: https://archlinux.org/feeds/news/
-            max_items: 5
+          - type: vertical-stack
+            cards:
+              - type: custom:rss-news-card
+                title: BBC UK / Derbyshire Live
+                sources:
+                  - name: BBC UK News
+                    url: https://feeds.bbci.co.uk/news/uk/rss.xml
+                  - name: Derbyshire Live
+                    url: https://www.derbytelegraph.co.uk/news/?service=rss
+                max_items: 8
+              - type: custom:rss-news-card
+                title: Arch Linux News
+                sources:
+                  - name: Arch Linux News
+                    url: https://archlinux.org/feeds/news/
+                max_items: 5
 
-      - type: vertical-stack
-        cards:
-          - type: entities
-            title: Services
-            entities:
-              - entity: binary_sensor.khione_plex
-                name: Plex
-              - entity: binary_sensor.khione_cockpit
-                name: Cockpit
-          - type: entities
-            title: CPU / Memory
-            entities:
-              - sensor.processor_use
-              - sensor.memory_use
-          - type: markdown
-            title: Disks
-            content: >-
-              {% for d in state_attr('sensor.khione_disks', 'disks') or [] %}
-              **{{ d.path }}** — {{ d.used_gb | round }} / {{ d.total_gb | round }} GB ({{ d.percent }}%)
+          - type: vertical-stack
+            cards:
+              - type: entities
+                title: Services
+                entities:
+                  - entity: binary_sensor.khione_plex
+                    name: Plex
+                  - entity: binary_sensor.khione_cockpit
+                    name: Cockpit
+              - type: entities
+                title: CPU / Memory
+                entities:
+                  - sensor.processor_use
+                  - sensor.memory_use
+              - type: markdown
+                title: Disks
+                content: >-
+                  {% for d in state_attr('sensor.khione_disks', 'disks') or [] %}
+                  **{{ d.path }}** — {{ d.used_gb | round }} / {{ d.total_gb | round }} GB ({{ d.percent }}%)
 
-              {% endfor %}
-          - type: entities
-            title: Internet Speed
-            entities:
-              - sensor.speedtest_download
-              - sensor.speedtest_upload
-              - sensor.speedtest_ping
-          - type: markdown
-            title: Temperatures
-            content: >-
-              {% for t in state_attr('sensor.khione_temps', 'temps') or [] %}
-              **{{ t.name }}**: {{ t.c }}°C{% if t.hot %} ⚠️{% endif %}
+                  {% endfor %}
+              - type: entities
+                title: Internet Speed
+                entities:
+                  - sensor.speedtest_download
+                  - sensor.speedtest_upload
+                  - sensor.speedtest_ping
+              - type: markdown
+                title: Temperatures
+                content: >-
+                  {% for t in state_attr('sensor.khione_temps', 'temps') or [] %}
+                  **{{ t.name }}**: {{ t.c }}°C{% if t.hot %} ⚠️{% endif %}
 
-              {% endfor %}
-          - type: entities
-            title: System
-            entities:
-              - entity: sensor.khione_system
-                name: Updates pending
-              - type: attribute
-                entity: sensor.khione_system
-                attribute: uptime
-                name: Uptime
-              - type: attribute
-                entity: sensor.khione_system
-                attribute: kernel
-                name: Kernel
+                  {% endfor %}
+              - type: entities
+                title: System
+                entities:
+                  - entity: sensor.khione_system
+                    name: Updates pending
+                  - type: attribute
+                    entity: sensor.khione_system
+                    attribute: uptime
+                    name: Uptime
+                  - type: attribute
+                    entity: sensor.khione_system
+                    attribute: kernel
+                    name: Kernel
