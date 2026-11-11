@@ -332,6 +332,10 @@ configure_home_assistant_dashboard() {
     echo "ERROR: HA dashboard assets dir not found: $dashboard_dir"
     return 1
   fi
+  if [[ ! -f "$dashboard_dir/configuration-snippet.yaml" ]]; then
+    echo "ERROR: HA dashboard configuration snippet not found: $dashboard_dir/configuration-snippet.yaml"
+    return 1
+  fi
   echo "Installing Home Assistant dashboard assets..."
 
   # Collector scripts (glance-system/-disks/-temps) run as the glance user
