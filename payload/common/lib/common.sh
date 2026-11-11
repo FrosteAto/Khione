@@ -355,7 +355,18 @@ configure_home_assistant_dashboard() {
   sudo install -d -m755 /var/lib/hass/dashboards
 
   sudo install -Dm644 "$dashboard_dir/khione-theme.yaml" /var/lib/hass/themes/khione.yaml
-  sudo install -Dm644 "$dashboard_dir/home-view.yaml" /var/lib/hass/dashboards/home-view.yaml
+
+  local view_file view_name
+  for view_file in "$dashboard_dir"/*-view.yaml; do
+    [[ -f "$view_file" ]] || continue
+    view_name="$(basename "$view_file")"
+    sudo install -Dm644 "$view_file" "/var/lib/hass/dashboards/$view_name"
+  done
+
+  sudo install -d -m755 /var/lib/hass/pyscript
+  if [[ -f "$dashboard_dir/khione_meals.py" ]]; then
+    sudo install -Dm644 "$dashboard_dir/khione_meals.py" /var/lib/hass/pyscript/khione_meals.py
+  fi
 
   merge_ha_configuration_snippet "$dashboard_dir/configuration-snippet.yaml" /var/lib/hass/configuration.yaml
 
