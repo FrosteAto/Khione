@@ -11,8 +11,11 @@ views:
               - type: clock
                 clock_size: medium
                 time_format: "24"
-              - type: calendar
-                entities: []
+              # Calendar card dropped: HA's built-in calendar card requires
+              # at least one real entity (confirmed live — an empty
+              # entities: [] list throws a config error), and there's no
+              # real calendar integration wired up yet. Add one back here
+              # once a local_calendar (or real) calendar entity exists.
               - type: weather-forecast
                 entity: weather.home
                 show_forecast: false
@@ -26,17 +29,20 @@ views:
               - type: custom:rss-news-card
                 title: BBC UK / Derbyshire Live
                 sources:
-                  - name: BBC UK News
-                    url: https://feeds.bbci.co.uk/news/uk/rss.xml
-                  - name: Derbyshire Live
-                    url: https://www.derbytelegraph.co.uk/news/?service=rss
-                max_items: 8
+                  - entity: sensor.khione_rss_bbc
+                    name: BBC UK News
+                    color: "#1a73e8"
+                  - entity: sensor.khione_rss_derbyshire
+                    name: Derbyshire Live
+                    color: "#e8731a"
+                max_articles: 8
               - type: custom:rss-news-card
                 title: Arch Linux News
                 sources:
-                  - name: Arch Linux News
-                    url: https://archlinux.org/feeds/news/
-                max_items: 5
+                  - entity: sensor.khione_rss_archlinux
+                    name: Arch Linux News
+                    color: "#1793d1"
+                max_articles: 5
 
           - type: vertical-stack
             cards:

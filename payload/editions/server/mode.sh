@@ -47,6 +47,7 @@ SERVICES_ENABLE=(
   glance-meals.timer glance-meals.service
   glance-weight.service
   glance-temps.timer glance-temps.service
+  ha-rss.timer ha-rss.service
   docker.service
   home-assistant.service
 )

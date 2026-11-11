@@ -47,6 +47,37 @@ command_line:
       payload_off: "1"
       command_timeout: 5
       scan_interval: 60
+  # Backs the rss-news-card on the dashboard. Confirmed live against the
+  # card's own source: it reads a per-feed sensor's "articles" json
+  # attribute (title/link/pubDate per item) rather than fetching RSS
+  # itself — data comes from the ha-rss systemd timer.
+  - sensor:
+      name: Khione RSS BBC
+      unique_id: khione_rss_bbc
+      command: "cat /config/snapshots/rss_bbc.json"
+      value_template: "{{ value_json.articles | length }}"
+      unit_of_measurement: articles
+      json_attributes:
+        - articles
+      scan_interval: 300
+  - sensor:
+      name: Khione RSS Derbyshire
+      unique_id: khione_rss_derbyshire
+      command: "cat /config/snapshots/rss_derbyshire.json"
+      value_template: "{{ value_json.articles | length }}"
+      unit_of_measurement: articles
+      json_attributes:
+        - articles
+      scan_interval: 300
+  - sensor:
+      name: Khione RSS Arch Linux
+      unique_id: khione_rss_archlinux
+      command: "cat /config/snapshots/rss_archlinux.json"
+      value_template: "{{ value_json.articles | length }}"
+      unit_of_measurement: articles
+      json_attributes:
+        - articles
+      scan_interval: 300
 
 template:
   - sensor:
@@ -84,14 +115,6 @@ template:
             T-shirt weather ({{ temp | round }}°C)
           {% endif %}
           {%- if wind > 30 %} — windy, add a layer{% endif %}
-
-feedreader:
-  urls:
-    - https://feeds.bbci.co.uk/news/uk/rss.xml
-    - https://www.derbytelegraph.co.uk/news/?service=rss
-    - https://archlinux.org/feeds/news/
-  max_entries: 8
-  scan_interval: 3600
 
 lovelace:
   resources:
