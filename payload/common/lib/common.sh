@@ -298,6 +298,54 @@ configure_home_assistant() {
   sudo systemctl daemon-reload
 }
 
+merge_ha_configuration_snippet() {
+  local snippet_file="$1"
+  local target_file="$2"
+  local marker_begin="# --- khione-ha-dashboard:begin (managed by the Khione installer, do not edit between markers) ---"
+  local marker_end="# --- khione-ha-dashboard:end ---"
+
+  if [[ -f "$target_file" ]] && sudo grep -qF "$marker_begin" "$target_file"; then
+    echo "HA configuration.yaml already has the Khione dashboard block, skipping."
+    return 0
+  fi
+
+  if [[ ! -f "$target_file" ]]; then
+    echo "No existing HA configuration.yaml — seeding a fresh one."
+    printf 'default_config:\n' | sudo tee "$target_file" >/dev/null
+  fi
+
+  {
+    echo ""
+    echo "$marker_begin"
+    cat "$snippet_file"
+    echo "$marker_end"
+  } | sudo tee -a "$target_file" >/dev/null
+}
+
+configure_home_assistant_dashboard() {
+  local dashboard_dir="$1"
+  if [[ -z "$dashboard_dir" ]]; then
+    echo "No HA dashboard assets for this mode, skipping."
+    return 0
+  fi
+  if [[ ! -d "$dashboard_dir" ]]; then
+    echo "ERROR: HA dashboard assets dir not found: $dashboard_dir"
+    return 1
+  fi
+  echo "Installing Home Assistant dashboard assets..."
+
+  # Collector scripts (glance-system/-disks/-temps) run as the glance user
+  # and dual-write here; the HA container only ever reads this directory.
+  sudo install -d -o glance -g glance -m755 /var/lib/hass/snapshots
+  sudo install -d -m755 /var/lib/hass/themes
+  sudo install -d -m755 /var/lib/hass/dashboards
+
+  sudo install -Dm644 "$dashboard_dir/khione-theme.yaml" /var/lib/hass/themes/khione.yaml
+  sudo install -Dm644 "$dashboard_dir/home-view.yaml" /var/lib/hass/dashboards/home-view.yaml
+
+  merge_ha_configuration_snippet "$dashboard_dir/configuration-snippet.yaml" /var/lib/hass/configuration.yaml
+}
+
 configure_greetd() {
   local session_cmd="${1:-/usr/bin/startplasma-wayland}"
   echo "Configuring greetd..."
