@@ -61,9 +61,13 @@ human click each, same as HA's own account setup above:
    install-time fetch failed (check for a `WARNING: HACS bootstrap failed`
    line in the install log) — rerun its install script from
    https://get.hacs.xyz by hand.
+5. **pyscript** (powers the Meals page) — once HACS is authorized (step 4),
+   go to HACS → Integrations → search "pyscript" → Download, then restart
+   Home Assistant once more. The Meals and Recipes pages will show
+   "Entity not found" everywhere until this step is done.
 
 If the dashboard looks broken (missing cards, a grey box instead of a
-tile) after all four steps: open the dashboard in a browser, check
+tile) after all five steps: open the dashboard in a browser, check
 DevTools → Console for a 404 on `/local/community/...` — that means one of
 card-mod/Mushroom/rss-news-card didn't download at install time; re-run the
 corresponding `curl` line from `configure_home_assistant_dashboard()` in
