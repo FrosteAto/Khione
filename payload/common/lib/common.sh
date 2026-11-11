@@ -304,22 +304,32 @@ merge_ha_configuration_snippet() {
   local marker_begin="# --- khione-ha-dashboard:begin (managed by the Khione installer, do not edit between markers) ---"
   local marker_end="# --- khione-ha-dashboard:end ---"
 
-  if [[ -f "$target_file" ]] && sudo grep -qF "$marker_begin" "$target_file"; then
-    echo "HA configuration.yaml already has the Khione dashboard block, skipping."
-    return 0
-  fi
-
   if [[ ! -f "$target_file" ]]; then
     echo "No existing HA configuration.yaml — seeding a fresh one."
     printf 'default_config:\n' | sudo tee "$target_file" >/dev/null
   fi
 
+  # Always strip-then-reapply rather than skip-if-present: this function
+  # gets called again whenever configuration-snippet.yaml's content
+  # changes (not just on first install), so it must be safe to re-run
+  # with different content, not just idempotent against identical
+  # content. Handles stripping MULTIPLE existing blocks defensively, in
+  # case an earlier version of this function (or a manual patch) ever
+  # left more than one behind.
+  local stripped
+  stripped="$(sudo awk -v b="$marker_begin" -v e="$marker_end" '
+    $0 == b { skip=1; next }
+    $0 == e { skip=0; next }
+    !skip { print }
+  ' "$target_file")"
+
   {
+    printf '%s\n' "$stripped"
     echo ""
     echo "$marker_begin"
     cat "$snippet_file"
     echo "$marker_end"
-  } | sudo tee -a "$target_file" >/dev/null
+  } | sudo tee "$target_file" >/dev/null
 }
 
 configure_home_assistant_dashboard() {
