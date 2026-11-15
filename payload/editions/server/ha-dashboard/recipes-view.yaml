@@ -9,7 +9,7 @@ views:
       - type: grid
         cards:
           - type: markdown
-            title: Add or Edit a Recipe
+            title: ✏️ Add or Edit a Recipe
             content: >-
               Leave Recipe ID blank to create a new recipe, or paste an
               existing one's ID to edit it. Batch size and "Cooked Fresh"
@@ -27,9 +27,10 @@ views:
               - input_boolean.khione_recipe_fresh
               - input_text.khione_recipe_ingredients
               - input_text.khione_recipe_instructions
-          - type: button
-            name: Save Recipe
+          - type: custom:mushroom-template-card
+            primary: Save Recipe
             icon: mdi:content-save
+            icon_color: green
             tap_action:
               action: perform-action
               perform_action: pyscript.khione_meals_save_recipe
@@ -38,9 +39,10 @@ views:
               # Jinja-rendered, so a templated value here would just send
               # the literal template text. The service reads every one of
               # the 11 recipe-form helpers itself.
-          - type: button
-            name: Delete Recipe
+          - type: custom:mushroom-template-card
+            primary: Delete Recipe
             icon: mdi:delete
+            icon_color: red
             tap_action:
               action: perform-action
               perform_action: pyscript.khione_meals_delete_recipe
@@ -51,7 +53,7 @@ views:
       - type: grid
         cards:
           - type: markdown
-            title: Recipe IDs (for editing)
+            title: 📖 Recipe IDs (for editing)
             content: >-
               {% for key in ['breakfast', 'lunch', 'snacks', 'dinner'] %}
               **{{ key | title }}:**
