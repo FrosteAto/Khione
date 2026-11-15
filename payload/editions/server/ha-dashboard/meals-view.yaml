@@ -138,7 +138,7 @@ views:
             title: Shopping List
             content: >-
               {% for section in ['breakfast', 'lunch', 'snacks', 'dinner'] %}
-              **{{ section | title }}:** {{ state_attr('sensor.khione_meals_preview', 'shopping_' + section) | join(', ') }}
+              **{{ section | title }}:** {{ (state_attr('sensor.khione_meals_preview', 'shopping_' + section) or []) | join(', ') }}
 
               {% endfor %}
 
