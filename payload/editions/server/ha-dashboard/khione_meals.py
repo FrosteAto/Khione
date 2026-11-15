@@ -450,12 +450,12 @@ def span_for(day, plan):
 
 
 def slot_names(ids, recipes_by_id):
-    return " + ".join(recipes_by_id[i]["name"] for i in ids)
+    return " + ".join([recipes_by_id[i]["name"] for i in ids])
 
 
 def slot_macros(ids, recipes_by_id):
-    kcal = sum(midpoint(recipes_by_id[i]["kcal_min"], recipes_by_id[i]["kcal_max"]) for i in ids)
-    protein = sum(midpoint(recipes_by_id[i]["protein_min"], recipes_by_id[i]["protein_max"]) for i in ids)
+    kcal = sum([midpoint(recipes_by_id[i]["kcal_min"], recipes_by_id[i]["kcal_max"]) for i in ids])
+    protein = sum([midpoint(recipes_by_id[i]["protein_min"], recipes_by_id[i]["protein_max"]) for i in ids])
     return kcal, protein
 
 
@@ -505,10 +505,10 @@ def unique_id(base, existing_ids):
 
 
 def recipe_in_use(recipe_id, plan):
-    return any(recipe_id in span.get(slot, [])
-               for spans in plan.get("weeks", {}).values()
-               for span in spans
-               for slot in MEAL_SLOTS)
+    return any([recipe_id in span.get(slot, [])
+                for spans in plan.get("weeks", {}).values()
+                for span in spans
+                for slot in MEAL_SLOTS])
 
 
 def maintenance_kcal(kg, profile):
@@ -565,8 +565,8 @@ def _recompute_today():
     today = date.today()
     actual_week = week_for(today, plan)
     today_span, _ = span_for(today, plan)
-    kcal = sum(slot_macros(today_span[slot], recipes_by_id)[0] for slot in SLOTS)
-    protein = sum(slot_macros(today_span[slot], recipes_by_id)[1] for slot in SLOTS)
+    kcal = sum([slot_macros(today_span[slot], recipes_by_id)[0] for slot in SLOTS])
+    protein = sum([slot_macros(today_span[slot], recipes_by_id)[1] for slot in SLOTS])
     dinner_recipe = recipes_by_id[today_span["dinner"][0]]
     kind, status = dinner_status(today, plan, recipes_by_id)
     tomorrow = today + __import__("datetime").timedelta(days=1)
@@ -697,7 +697,8 @@ def khione_meals_save_recipe():
         return
     recipes = load_recipes()
     ids = {r["id"] for r in recipes}
-    existing = next((r for r in recipes if r["id"] == rid), None) if rid and rid in ids else None
+    recipes_by_id = {r["id"]: r for r in recipes}
+    existing = recipes_by_id.get(rid) if rid and rid in ids else None
     if existing is not None:
         recipe = existing
         # Editing: the form is never pre-filled from the existing recipe,
