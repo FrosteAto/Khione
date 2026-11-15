@@ -1,6 +1,15 @@
 frontend:
   themes: !include_dir_merge_named themes
 
+panel_custom:
+  - name: khione-weather-panel
+    sidebar_title: Weather
+    sidebar_icon: mdi:weather-partly-cloudy
+    url_path: khione-weather
+    module_url: /local/panels/weather.js
+    embed_iframe: false
+    trust_external_script: true
+
 command_line:
   - sensor:
       name: Khione System

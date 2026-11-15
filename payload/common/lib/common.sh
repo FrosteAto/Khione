@@ -321,6 +321,14 @@ configure_home_assistant_dashboard() {
     sudo install -Dm644 "$view_file" "/var/lib/hass/dashboards/$view_name"
   done
 
+  sudo install -d -m755 /var/lib/hass/www/panels
+  local panel_file panel_name
+  for panel_file in "$dashboard_dir"/panels/*.js; do
+    [[ -f "$panel_file" ]] || continue
+    panel_name="$(basename "$panel_file")"
+    sudo install -Dm644 "$panel_file" "/var/lib/hass/www/panels/$panel_name"
+  done
+
   sudo install -d -m755 /var/lib/hass/pyscript
   if [[ -f "$dashboard_dir/khione_meals.py" ]]; then
     sudo install -Dm644 "$dashboard_dir/khione_meals.py" /var/lib/hass/pyscript/khione_meals.py
