@@ -15,7 +15,7 @@ inside the HA/pyscript runtime.
 import json
 import os
 import re
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 # pyscript requires blocking I/O (like plain open()) inside service/trigger
 # functions to go through its executor so it doesn't stall the async event
@@ -569,7 +569,7 @@ def _recompute_today():
     protein = sum([slot_macros(today_span[slot], recipes_by_id)[1] for slot in SLOTS])
     dinner_recipe = recipes_by_id[today_span["dinner"][0]]
     kind, status = dinner_status(today, plan, recipes_by_id)
-    tomorrow = today + __import__("datetime").timedelta(days=1)
+    tomorrow = today + timedelta(days=1)
     tomorrow_span, _ = span_for(tomorrow, plan)
     tomorrow_kind, _ = dinner_status(tomorrow, plan, recipes_by_id)
     tomorrow_recipe = recipes_by_id[tomorrow_span["dinner"][0]]
