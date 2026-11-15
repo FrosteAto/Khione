@@ -17,6 +17,16 @@ import os
 import re
 from datetime import date, datetime
 
+# pyscript requires blocking I/O (like plain open()) inside service/trigger
+# functions to go through its executor so it doesn't stall the async event
+# loop; outside pyscript (e.g. this file's own plain-Python test harness)
+# that name doesn't exist, so fall back to a no-op decorator.
+try:
+    pyscript_executor
+except NameError:
+    def pyscript_executor(f):
+        return f
+
 DATA_DIR = "/config/meals"
 RECIPES_PATH = f"{DATA_DIR}/recipes.json"
 PLAN_PATH = f"{DATA_DIR}/meal-plan.json"
@@ -378,6 +388,7 @@ SEED_PLAN = {
 }
 
 
+@pyscript_executor
 def write_json(path, data, indent=2):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     tmp = path + ".tmp"
@@ -386,6 +397,7 @@ def write_json(path, data, indent=2):
     os.replace(tmp, path)
 
 
+@pyscript_executor
 def load_json(path, default=None):
     if os.path.exists(path):
         with open(path) as f:
@@ -621,13 +633,16 @@ def khione_meals_midnight_refresh():
 
 
 @service
-def khione_meals_log_weight(kg=None):
+def khione_meals_log_weight():
+    # Lovelace tap_action data: is NOT Jinja-rendered -- a button can only
+    # ever send the literal template text, never the live value. Every
+    # service below reads the relevant input_* helper directly instead.
     try:
-        kg = round(float(kg), 1)
+        kg = round(float(state.get("input_number.khione_weight_kg")), 1)
         if not 30 <= kg <= 300:
             raise ValueError
     except (TypeError, ValueError):
-        log.error(f"khione_meals_log_weight: bad kg value {kg!r}")
+        log.error("khione_meals_log_weight: bad kg value from input_number.khione_weight_kg")
         return
     today_iso = date.today().isoformat()
     entries = [e for e in load_json(WEIGHT_LOG_PATH, []) if e["date"] != today_iso]
@@ -637,9 +652,15 @@ def khione_meals_log_weight(kg=None):
 
 
 @service
-def khione_meals_save_profile(age=None, height_cm=None, sex=None, activity=None):
+def khione_meals_save_profile():
     try:
-        profile = {"age": int(age), "height_cm": int(height_cm), "sex": sex, "activity": float(activity)}
+        activity = state.get("input_select.khione_profile_activity")
+        profile = {
+            "age": int(float(state.get("input_number.khione_profile_age"))),
+            "height_cm": int(float(state.get("input_number.khione_profile_height"))),
+            "sex": state.get("input_select.khione_profile_sex"),
+            "activity": float(activity),
+        }
         if not (10 <= profile["age"] <= 120 and 100 <= profile["height_cm"] <= 250
                 and profile["sex"] in ("male", "female")
                 and str(activity) in ACTIVITY_FACTORS):
@@ -652,17 +673,20 @@ def khione_meals_save_profile(age=None, height_cm=None, sex=None, activity=None)
 
 
 @service
-def khione_meals_save_recipe(id=None, name=None, meal_type=None, kcal_min=None, kcal_max=None,
-                              protein_min=None, protein_max=None, ingredients=None,
-                              instructions=None, batch=None, fresh=None):
+def khione_meals_save_recipe():
     try:
-        name = (name or "").strip()[:200]
-        kcal_min, kcal_max = int(kcal_min), int(kcal_max)
-        protein_min, protein_max = int(protein_min), int(protein_max)
-        batch = int(batch) if batch not in (None, "") else 0
-        fresh = str(fresh).strip().lower() in ("1", "true", "yes", "on")
-        ingredients = (ingredients or "").strip()[:2000]
-        instructions = (instructions or "").strip()[:2000]
+        rid = (state.get("input_text.khione_recipe_id") or "").strip()
+        name = (state.get("input_text.khione_recipe_name") or "").strip()[:200]
+        meal_type = state.get("input_select.khione_recipe_meal_type")
+        kcal_min = int(float(state.get("input_number.khione_recipe_kcal_min")))
+        kcal_max = int(float(state.get("input_number.khione_recipe_kcal_max")))
+        protein_min = int(float(state.get("input_number.khione_recipe_protein_min")))
+        protein_max = int(float(state.get("input_number.khione_recipe_protein_max")))
+        batch = int(float(state.get("input_number.khione_recipe_batch")))
+        fresh = state.get("input_boolean.khione_recipe_fresh") == "on"
+        # input_text's max length is capped at 255 by HA itself.
+        ingredients = (state.get("input_text.khione_recipe_ingredients") or "").strip()[:255]
+        instructions = (state.get("input_text.khione_recipe_instructions") or "").strip()[:255]
         if not (name and meal_type in MEAL_TYPES
                 and 0 <= kcal_min <= kcal_max <= 3000
                 and 0 <= protein_min <= protein_max <= 300
@@ -673,9 +697,16 @@ def khione_meals_save_recipe(id=None, name=None, meal_type=None, kcal_min=None, 
         return
     recipes = load_recipes()
     ids = {r["id"] for r in recipes}
-    rid = (id or "").strip()
-    if rid and rid in ids:
-        recipe = next(r for r in recipes if r["id"] == rid)
+    existing = next((r for r in recipes if r["id"] == rid), None) if rid and rid in ids else None
+    if existing is not None:
+        recipe = existing
+        # Editing: the form is never pre-filled from the existing recipe,
+        # so a blank field means "didn't type anything there" -- keep the
+        # old value rather than wiping it.
+        if not ingredients:
+            ingredients = recipe.get("ingredients", "")
+        if not instructions:
+            instructions = recipe.get("instructions", "")
     else:
         rid = unique_id(slugify(name), ids)
         recipe = {"id": rid}
@@ -692,8 +723,8 @@ def khione_meals_save_recipe(id=None, name=None, meal_type=None, kcal_min=None, 
 
 
 @service
-def khione_meals_delete_recipe(id=None):
-    rid = (id or "").strip()
+def khione_meals_delete_recipe():
+    rid = (state.get("input_text.khione_recipe_id") or "").strip()
     if not rid:
         log.error("khione_meals_delete_recipe: missing id")
         return

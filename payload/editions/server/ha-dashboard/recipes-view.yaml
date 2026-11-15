@@ -34,18 +34,10 @@ views:
               action: perform-action
               perform_action: pyscript.khione_meals_save_recipe
               target: {}
-              data:
-                id: "{{ states('input_text.khione_recipe_id') }}"
-                name: "{{ states('input_text.khione_recipe_name') }}"
-                meal_type: "{{ states('input_select.khione_recipe_meal_type') }}"
-                kcal_min: "{{ states('input_number.khione_recipe_kcal_min') }}"
-                kcal_max: "{{ states('input_number.khione_recipe_kcal_max') }}"
-                protein_min: "{{ states('input_number.khione_recipe_protein_min') }}"
-                protein_max: "{{ states('input_number.khione_recipe_protein_max') }}"
-                ingredients: "{{ states('input_text.khione_recipe_ingredients') }}"
-                instructions: "{{ states('input_text.khione_recipe_instructions') }}"
-                batch: "{{ states('input_number.khione_recipe_batch') }}"
-                fresh: "{{ is_state('input_boolean.khione_recipe_fresh', 'on') }}"
+              # No data: block -- tap_action data is static YAML, never
+              # Jinja-rendered, so a templated value here would just send
+              # the literal template text. The service reads every one of
+              # the 11 recipe-form helpers itself.
           - type: button
             name: Delete Recipe
             icon: mdi:delete
@@ -53,8 +45,8 @@ views:
               action: perform-action
               perform_action: pyscript.khione_meals_delete_recipe
               target: {}
-              data:
-                id: "{{ states('input_text.khione_recipe_id') }}"
+              # No data: block, same reason as Save Recipe above -- the
+              # service reads input_text.khione_recipe_id itself.
 
       - type: grid
         cards:

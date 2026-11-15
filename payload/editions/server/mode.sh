@@ -37,6 +37,9 @@ SERVICES_ENABLE=(
   wsdd.service
   sshd.service
   ha-rss.timer ha-rss.service
+  khione-system.timer khione-system.service
+  khione-disks.timer khione-disks.service
+  khione-temps.timer khione-temps.service
   docker.service
   home-assistant.service
 )
@@ -53,6 +56,7 @@ FIREWALL_RULES=(
 
 HOME_ASSISTANT_UNIT_REL="editions/server/home-assistant.service"
 HA_DASHBOARD_DIR_REL="editions/server/ha-dashboard"
+HA_COLLECTORS_DIR_REL="editions/server/ha-dashboard/collectors"
 
 FIRST_BOOT_DIALOG_TITLE="Welcome to Khione Server"
 

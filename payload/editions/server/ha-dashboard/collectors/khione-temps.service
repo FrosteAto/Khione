@@ -1,0 +1,9 @@
+[Unit]
+Description=Collect hardware temperatures for the HA dashboard
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/khione-temps
+
+[Install]
+WantedBy=multi-user.target

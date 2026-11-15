@@ -199,56 +199,19 @@ configure_samba() {
 EOF
 }
 
-configure_glance() {
-  local config_source="$1"
-  if [[ -z "$config_source" ]]; then
-    echo "No Glance config for this mode, skipping."
-    return 0
-  fi
-  if [[ ! -f "$config_source" ]]; then
-    echo "ERROR: Glance config not found: $config_source"
-    return 1
-  fi
-  # Overwrites the default config shipped by the glance-bin package.
-  echo "Installing Glance config..."
-  sudo install -Dm644 "$config_source" /etc/glance.yml
-
-  # LAN-facing links in the config use @@GLANCE_HOST@@. Substitute the
-  # machine's LAN IP: .local mDNS names don't resolve on all clients
-  # (notably Android browsers). Falls back to <hostname>.local if the
-  # IP can't be detected. Give the server a DHCP reservation so the
-  # baked-in IP stays valid.
-  local host
-  host="$(ip -4 route get 1.1.1.1 2>/dev/null | grep -oP 'src \K\S+' || true)"
-  if [[ -z "$host" ]]; then
-    host="$(cat /etc/hostname 2>/dev/null || true)"
-    host="${host:+${host}.local}"
-    host="${host:-localhost}"
-  fi
-  sudo sed -i "s/@@GLANCE_HOST@@/${host}/g" /etc/glance.yml
-}
-
-configure_glance_helpers() {
+configure_host_collectors() {
   local src_dir="$1"
   if [[ -z "$src_dir" ]]; then
-    echo "No Glance helpers for this mode, skipping."
+    echo "No host collector scripts for this mode, skipping."
     return 0
   fi
   if [[ ! -d "$src_dir" ]]; then
-    echo "ERROR: Glance helpers dir not found: $src_dir"
+    echo "ERROR: Host collectors dir not found: $src_dir"
     return 1
   fi
-  echo "Installing Glance helper scripts and systemd units..."
-  # SATA drive temperatures (glance-temps) come from the drivetemp module.
+  echo "Installing host collector scripts and systemd units..."
+  # SATA drive temperatures (khione-temps) come from the drivetemp module.
   echo drivetemp | sudo tee /etc/modules-load.d/drivetemp.conf >/dev/null
-  # API-key env files are editable from the dashboard's Admin page (the
-  # :8081 helper runs as glance), so they must exist and belong to glance.
-  local envf
-  for envf in /etc/glance-hass.env /etc/glance-bank.env; do
-    sudo touch "$envf"
-    sudo chown glance:glance "$envf"
-    sudo chmod 600 "$envf"
-  done
   local f name
   for f in "$src_dir"/*; do
     [[ -f "$f" ]] || continue
@@ -259,12 +222,6 @@ configure_glance_helpers() {
         ;;
       *.hook)
         sudo install -Dm644 "$f" "/etc/pacman.d/hooks/$name"
-        ;;
-      *.html|*.css)
-        # Static assets served by Glance at /assets/ (dir must stay
-        # writable by the glance user for the helper scripts).
-        sudo install -d -o glance -g glance /var/lib/glance/assets
-        sudo install -m644 "$f" "/var/lib/glance/assets/$name"
         ;;
       *)
         sudo install -Dm755 "$f" "/usr/local/bin/$name"
@@ -348,9 +305,10 @@ configure_home_assistant_dashboard() {
   fi
   echo "Installing Home Assistant dashboard assets..."
 
-  # Collector scripts (glance-system/-disks/-temps) run as the glance user
-  # and dual-write here; the HA container only ever reads this directory.
-  sudo install -d -o glance -g glance -m755 /var/lib/hass/snapshots
+  # The khione-system/-disks/-temps/ha-rss collector scripts (installed by
+  # configure_host_collectors, run as root) write here; the HA container
+  # only ever reads this directory.
+  sudo install -d -m755 /var/lib/hass/snapshots
   sudo install -d -m755 /var/lib/hass/themes
   sudo install -d -m755 /var/lib/hass/dashboards
 

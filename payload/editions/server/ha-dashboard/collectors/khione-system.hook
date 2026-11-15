@@ -1,0 +1,11 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Operation = Remove
+Type = Package
+Target = *
+
+[Action]
+Description = Refreshing pending-updates count...
+When = PostTransaction
+Exec = /usr/bin/systemctl start --no-block khione-system.service

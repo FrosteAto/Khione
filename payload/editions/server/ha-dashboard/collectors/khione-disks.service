@@ -1,0 +1,9 @@
+[Unit]
+Description=Collect disk usage for the HA dashboard
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/khione-disks
+
+[Install]
+WantedBy=multi-user.target

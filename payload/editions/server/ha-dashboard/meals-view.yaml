@@ -62,8 +62,10 @@ views:
               action: perform-action
               perform_action: pyscript.khione_meals_log_weight
               target: {}
-              data:
-                kg: "{{ states('input_number.khione_weight_kg') }}"
+              # No data: block -- tap_action data is static YAML, never
+              # Jinja-rendered, so a templated value here would just send
+              # the literal template text. The service reads
+              # input_number.khione_weight_kg itself instead.
           - type: entities
             title: Weight Profile
             entities:
@@ -78,11 +80,8 @@ views:
               action: perform-action
               perform_action: pyscript.khione_meals_save_profile
               target: {}
-              data:
-                age: "{{ states('input_number.khione_profile_age') }}"
-                height_cm: "{{ states('input_number.khione_profile_height') }}"
-                sex: "{{ states('input_select.khione_profile_sex') }}"
-                activity: "{{ states('input_select.khione_profile_activity') }}"
+              # No data: block, same reason as Log Weight above -- the
+              # service reads all four profile helpers itself.
 
       - type: grid
         cards:

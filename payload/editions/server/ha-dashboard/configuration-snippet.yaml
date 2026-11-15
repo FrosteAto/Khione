@@ -207,10 +207,10 @@ input_text:
     max: 200
   khione_recipe_ingredients:
     name: Ingredients
-    max: 2000
+    max: 255  # HA caps input_text at 255; a value over this fails config validation
   khione_recipe_instructions:
     name: Instructions
-    max: 2000
+    max: 255
 
 lovelace:
   # resource_mode: yaml is required alongside resources: below, or the

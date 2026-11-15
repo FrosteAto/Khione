@@ -9,8 +9,7 @@ Setup has finished and services are configured.
 - Added KDE partition manager
 - Added 7zip
 - Added tools for NAS management: mdadm, samba, wsdd, cockpit, cockpit-file-sharing,smartmontools
-- Added Finances dashboard page (cash flow, top merchants, recent transactions, recurring payments)
-- Added Home Assistant (containerised, port 8123) for smart-home control
+- Added Home Assistant (containerised, port 8123) for smart-home control, now including the dashboard (weather, server stats, news) and the Meals rotation/weigh-in tracker
 
 ## Home Assistant
 
