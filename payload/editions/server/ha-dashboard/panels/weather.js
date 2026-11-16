@@ -1397,6 +1397,10 @@ class KhioneWeatherPanel extends HTMLElement {
       clearInterval(this._radarRefreshInterval);
       this._radarRefreshInterval = null;
     }
+    if (this._radarTickTimer) {
+      clearInterval(this._radarTickTimer);
+      this._radarTickTimer = null;
+    }
   }
 
   _render() {
@@ -1490,13 +1494,17 @@ class KhioneWeatherPanel extends HTMLElement {
     this._initRadar(lat, lon);
   }
 
-  // Live rain radar: real Leaflet map, real OpenStreetMap base tiles, real
-  // live rain-radar tiles from RainViewer's free public API (no key
-  // needed). Logic kept identical to the already-fixed mockup version:
-  // ONE reused tile layer swapped per-frame via setUrl() (not one layer per
-  // frame, which previously rate-limited RainViewer), maxNativeZoom:7.
+  // Live rain radar: real Leaflet map, Esri's keyless World_Light_Gray_Base
+  // tiles (see the base-tile-layer comment below for why it's Esri and not
+  // OSM/CARTO), real live rain-radar tiles from RainViewer's free public
+  // API (no key needed). ONE reused tile layer swapped per-frame via
+  // setUrl() (not one layer per frame, which previously rate-limited
+  // RainViewer), maxNativeZoom:7.
   _initRadar(LAT, LON) {
     const root = this._root;
+    const self = this; // the radar's tick/loop functions below are plain
+    // function declarations, not arrow functions, so they don't close
+    // over the class instance's `this` -- captured once here instead.
     const mapEl = root.getElementById("radar-map");
     if (typeof L === "undefined" || !mapEl) return;
 
@@ -1534,7 +1542,6 @@ class KhioneWeatherPanel extends HTMLElement {
     let frames = [];
     let activeIdx = -1;
     let playing = true;
-    let timer = null;
 
     function tileUrlForFrame(frame) {
       return "https://tilecache.rainviewer.com" + frame.path + "/256/{z}/{x}/{y}/2/1_1.png";
@@ -1559,12 +1566,18 @@ class KhioneWeatherPanel extends HTMLElement {
     }
     function startLoop() {
       stopLoop();
-      timer = setInterval(tick, 900);
+      // shortcut: a 900ms frame-advance timer that's never cleared on
+      // disconnect would otherwise run forever in the background every
+      // time the user navigates away from this panel (confirmed as a
+      // real, always-reproducible leak in review) -- stored on the class
+      // instance, same as the 10-minute frame-list refresh below, so
+      // disconnectedCallback can actually clear it.
+      self._radarTickTimer = setInterval(tick, 900);
     }
     function stopLoop() {
-      if (timer) {
-        clearInterval(timer);
-        timer = null;
+      if (self._radarTickTimer) {
+        clearInterval(self._radarTickTimer);
+        self._radarTickTimer = null;
       }
     }
 
@@ -1721,7 +1734,14 @@ class KhioneWeatherPanel extends HTMLElement {
       const night = isNightAt(dt, sunriseMin, sunsetMin);
       return {
         t: fmtTime(dt),
-        temp: Math.round(f.temperature),
+        // null, not NaN, when missing -- Math.round(undefined) is NaN,
+        // and NaN poisons Math.min/Math.max for the WHOLE array the
+        // moment any single entry has it, collapsing the entire chart
+        // (confirmed as a real, reproducible bug in review: any one
+        // forecast entry missing `temperature` blanked all 12 points,
+        // not just that one chip). Same null-then-filter pattern the
+        // week section below already uses correctly.
+        temp: f.temperature != null ? Math.round(f.temperature) : null,
         cond: conditionToIcon(f.condition, night),
       };
     });
@@ -1731,11 +1751,12 @@ class KhioneWeatherPanel extends HTMLElement {
       hourlyInner.innerHTML = '<div class="hour-chip"><span class="hour-time mono-num">loading&hellip;</span></div>';
       hourlySub.textContent = "—";
     } else {
-      const minT = Math.min.apply(null, hourly.map((h) => h.temp));
-      const maxT = Math.max.apply(null, hourly.map((h) => h.temp));
+      const temps = hourly.map((h) => h.temp).filter((v) => v != null);
+      const minT = temps.length ? Math.min.apply(null, temps) : 0;
+      const maxT = temps.length ? Math.max.apply(null, temps) : 1;
       const span = maxT - minT || 1;
       const colW = 600 / 12;
-      const pts = hourly.map((h, i) => ({ x: colW * i + colW / 2, y: 60 - ((h.temp - minT) / span) * 50 }));
+      const pts = hourly.map((h, i) => ({ x: colW * i + colW / 2, y: 60 - (((h.temp ?? minT) - minT) / span) * 50 }));
       const lineStr = pts.map((p) => p.x.toFixed(1) + "," + p.y.toFixed(1)).join(" ");
       const areaStr = "M" + pts.map((p) => p.x.toFixed(1) + "," + p.y.toFixed(1)).join(" L") + " L600,65 L0,65 Z";
       const chartSVG =
@@ -1769,8 +1790,8 @@ class KhioneWeatherPanel extends HTMLElement {
               "</span>" +
               weatherSVG(h.cond, "hour-icon") +
               '<span class="hour-temp mono-num">' +
-              h.temp +
-              "°</span>" +
+              (h.temp != null ? h.temp + "°" : "—") +
+              "</span>" +
               "</div>"
           )
           .join("") +
