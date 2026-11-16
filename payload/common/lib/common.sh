@@ -310,16 +310,8 @@ configure_home_assistant_dashboard() {
   # only ever reads this directory.
   sudo install -d -m755 /var/lib/hass/snapshots
   sudo install -d -m755 /var/lib/hass/themes
-  sudo install -d -m755 /var/lib/hass/dashboards
 
   sudo install -Dm644 "$dashboard_dir/khione-theme.yaml" /var/lib/hass/themes/khione.yaml
-
-  local view_file view_name
-  for view_file in "$dashboard_dir"/*-view.yaml; do
-    [[ -f "$view_file" ]] || continue
-    view_name="$(basename "$view_file")"
-    sudo install -Dm644 "$view_file" "/var/lib/hass/dashboards/$view_name"
-  done
 
   sudo install -d -m755 /var/lib/hass/www/panels
   local panel_file panel_name
@@ -335,50 +327,6 @@ configure_home_assistant_dashboard() {
   fi
 
   merge_ha_configuration_snippet "$dashboard_dir/configuration-snippet.yaml" /var/lib/hass/configuration.yaml
-
-  echo "Fetching HACS + card-mod + Mushroom + rss-news-card (best-effort)..."
-  sudo install -d -m755 /var/lib/hass/custom_components
-  sudo install -d -m755 /var/lib/hass/www/community
-
-  if ! sudo test -d /var/lib/hass/custom_components/hacs; then
-    # get.hacs.xyz auto-detects the HA config dir by looking for marker
-    # files (e.g. .HA_VERSION) in its OWN cwd — it must be run FROM
-    # /var/lib/hass, not wherever this installer script happens to be
-    # running from (confirmed live: running it with the wrong cwd fails
-    # with "Could not find the directory for Home Assistant").
-    if curl -fsSL https://get.hacs.xyz -o /tmp/hacs-install.sh 2>/dev/null; then
-      sudo bash -c 'cd /var/lib/hass && HACS_container=True bash /tmp/hacs-install.sh' || \
-        echo "WARNING: HACS bootstrap failed — install it manually later via its own install script."
-      rm -f /tmp/hacs-install.sh
-    else
-      echo "WARNING: HACS bootstrap failed (network?) — install it manually later via its own install script."
-    fi
-  fi
-
-  _fetch_ha_frontend_asset() {
-    # These single-file Lovelace plugins ship their built JS two different
-    # ways depending on the project: attached as a GitHub release asset
-    # (card-mod, rss-news-card do NOT do this; mushroom does), or committed
-    # directly at the repo root (card-mod, rss-news-card do this; mushroom
-    # does not) — confirmed live for all three. Try the release-asset URL
-    # first, fall back to the raw repo file at the resolved latest tag.
-    local name="$1" repo="$2" file="$3" dest="/var/lib/hass/www/community/$1"
-    sudo install -d -m755 "$dest"
-    local tag
-    tag="$(curl -fsSL "https://api.github.com/repos/$repo/releases/latest" 2>/dev/null \
-      | grep -m1 '"tag_name"' | sed -E 's/.*"tag_name": *"([^"]+)".*/\1/')"
-    if ! curl -fsSL "https://github.com/$repo/releases/latest/download/$file" -o "/tmp/$name.js" 2>/dev/null &&
-       ! curl -fsSL "https://raw.githubusercontent.com/$repo/${tag:-master}/$file" -o "/tmp/$name.js"; then
-      echo "WARNING: failed to download $name — card won't load until it's fetched manually."
-      return 0
-    fi
-    sudo install -Dm644 "/tmp/$name.js" "$dest/$name.js"
-    rm -f "/tmp/$name.js"
-  }
-
-  _fetch_ha_frontend_asset card-mod thomasloven/lovelace-card-mod card-mod.js
-  _fetch_ha_frontend_asset mushroom piitaya/lovelace-mushroom mushroom.js
-  _fetch_ha_frontend_asset rss-news-card suxlala/rss-news-card rss-news-card.js
 }
 
 configure_greetd() {
