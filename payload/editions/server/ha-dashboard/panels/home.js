@@ -167,7 +167,10 @@ section{ padding-block: .85rem; position:relative; }
 .card.hoverable:hover{ transform: translateY(-3px); box-shadow: 0 6px 14px rgba(var(--shadow-c),.18), 0 30px 50px -18px rgba(var(--shadow-c),.28); }
 
 /* ---------- today row: weather+clothing (combined card) + news, half/half ---------- */
-.today-row{ display:grid; grid-template-columns: 1fr 1fr; gap:1.2rem; align-items:start; }
+/* align-items defaults to stretch -- both cards take the row's height
+   (the taller card's natural height), which is what makes them equal
+   without a fixed number. */
+.today-row{ display:grid; grid-template-columns: 1fr 1fr; gap:1.2rem; }
 .weather-clothing-card{ position:relative; overflow:hidden; }
 .weather-top{ display:flex; align-items:flex-start; gap:1rem; justify-content:space-between; flex-wrap:wrap; }
 .weather-main{ display:flex; align-items:center; gap:1rem; }
