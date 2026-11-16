@@ -27,6 +27,12 @@ panel_custom:
     url_path: khione-meals
     module_url: /local/panels/meals.js
     embed_iframe: false
+  - name: khione-recipes-panel
+    sidebar_title: Recipes
+    sidebar_icon: mdi:book-open-variant
+    url_path: khione-recipes
+    module_url: /local/panels/recipes.js
+    embed_iframe: false
 
 command_line:
   - sensor:
@@ -161,25 +167,3 @@ input_number:
     max: 12
     step: 1
     initial: 1
-
-lovelace:
-  # resource_mode: yaml is required alongside resources: below, or the
-  # list is silently ignored (confirmed against HA's own dashboards docs
-  # after all three custom cards failed identically live -- this was
-  # missing, which is why none of card-mod/mushroom/rss-news-card ever
-  # actually registered as a usable resource).
-  resource_mode: yaml
-  resources:
-    - url: /local/community/card-mod/card-mod.js
-      type: module
-    - url: /local/community/mushroom/mushroom.js
-      type: module
-    - url: /local/community/rss-news-card/rss-news-card.js
-      type: module
-  dashboards:
-    khione-recipes:
-      mode: yaml
-      filename: dashboards/recipes-view.yaml
-      title: Recipes
-      icon: mdi:book-open-variant
-      show_in_sidebar: true
