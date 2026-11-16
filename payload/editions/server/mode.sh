@@ -68,13 +68,12 @@ FIREWALL_RULES_LAN=(
 )
 
 SETUP_SECURITY_HARDENING="true"
-# No "cockpit" jail: confirmed live, this fail2ban build ships no
-# cockpit filter at all (it skips the jail with "no accessible config
-# files for filter.d/cockpit"), and authoring a custom regex against its
-# log format without real failed-auth samples to test against would be
-# guessing. Cockpit's exposure is already cut down via the LAN-scoped
-# firewall rule above, which is the bigger mitigation anyway.
-FAIL2BAN_JAILS=( sshd )
+# "cockpit" has no fail2ban filter shipped for it anywhere -- the one
+# configure_fail2ban writes for it was built and verified against this
+# server's own real journal (triggered real failed logins, checked the
+# actual PAM log lines, validated the regex with fail2ban-regex), not
+# guessed.
+FAIL2BAN_JAILS=( sshd cockpit )
 # Where the Plex2Shell incident's payload actually landed -- watched by
 # both AIDE (daily diff) and auditd (write/attribute-change alerts),
 # never excluded by configure_file_integrity_monitoring's noise filters.

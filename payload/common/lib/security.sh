@@ -119,12 +119,35 @@ configure_fail2ban() {
     return 0
   fi
   echo "Configuring fail2ban jails: ${jails[*]}..."
+
+  # "cockpit" isn't a jail fail2ban ships a definition for at all (no
+  # filter, no default backend/journalmatch) -- unlike sshd, which
+  # inherits sensible defaults from fail2ban's own jail.conf. This
+  # filter was built and verified against this server's real journal
+  # (not guessed): cockpit auth goes through PAM, and both failure
+  # shapes actually seen live are covered -- unknown user, and wrong
+  # password for a real user (which adds a trailing " user=<name>").
+  for j in "${jails[@]}"; do
+    if [[ "$j" == "cockpit" ]]; then
+      sudo tee /etc/fail2ban/filter.d/cockpit.conf >/dev/null <<'EOF'
+[Definition]
+failregex = ^.*cockpit-session\[\d+\]: pam_unix\(cockpit:auth\): authentication failure;.*rhost=<HOST>
+ignoreregex =
+EOF
+    fi
+  done
+
   {
     for j in "${jails[@]}"; do
-      printf '[%s]\nenabled = true\nmaxretry = 4\nfindtime = 10m\nbantime = 1h\nbantime.increment = true\n\n' "$j"
+      if [[ "$j" == "cockpit" ]]; then
+        printf '[cockpit]\nenabled = true\nbackend = systemd\njournalmatch = _COMM=cockpit-session\nmaxretry = 4\nfindtime = 10m\nbantime = 1h\nbantime.increment = true\n\n'
+      else
+        printf '[%s]\nenabled = true\nmaxretry = 4\nfindtime = 10m\nbantime = 1h\nbantime.increment = true\n\n' "$j"
+      fi
     done
   } | sudo tee /etc/fail2ban/jail.d/99-khione.conf >/dev/null
   sudo systemctl enable --now fail2ban.service
+  sudo systemctl restart fail2ban.service
 }
 
 # ---------------------------------------------------------------------
