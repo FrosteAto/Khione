@@ -719,8 +719,6 @@ class KhioneRecipesPanel extends HTMLElement {
     const confirmYes = root.getElementById("confirmYes");
     const confirmNo = root.getElementById("confirmNo");
 
-    let editingId = null;
-
     const setStatus = (msg, kind) => {
       statusEl.textContent = msg;
       statusEl.className = "status" + (kind ? " " + kind : "");
@@ -738,7 +736,6 @@ class KhioneRecipesPanel extends HTMLElement {
     const hideConfirm = () => { confirmRow.hidden = true; };
 
     function loadIntoForm(r) {
-      editingId = r.id;
       fId.value = r.id;
       fName.value = r.name;
       fMeal.value = r.mealType;
@@ -756,7 +753,6 @@ class KhioneRecipesPanel extends HTMLElement {
     }
 
     const clearForm = () => {
-      editingId = null;
       form.reset();
       fBatch.value = 1;
       setStatus("", "");
@@ -784,10 +780,31 @@ class KhioneRecipesPanel extends HTMLElement {
         ingredients: fIngredients.value.trim(), instructions: fInstructions.value.trim(),
         batch: Number(fBatch.value) || 0, fresh: fCookedFresh.checked,
       };
+
+      // Mirrors khione_meals.py's khione_meals_save_recipe validation
+      // exactly (0 <= min <= max <= 3000/300, 0 <= batch <= 20): the
+      // backend rejects out-of-range values with a silent log.error +
+      // return (no exception), so the service call still resolves and a
+      // naive .then() would show "Saved" even though nothing was
+      // written. Check client-side first so the user gets a real error
+      // instead of a false success.
+      if (!(0 <= payload.kcal_min && payload.kcal_min <= payload.kcal_max && payload.kcal_max <= 3000)) {
+        setStatus("Kcal min/max must be between 0 and 3000, with min ≤ max.", "err");
+        return;
+      }
+      if (!(0 <= payload.protein_min && payload.protein_min <= payload.protein_max && payload.protein_max <= 300)) {
+        setStatus("Protein min/max must be between 0 and 300, with min ≤ max.", "err");
+        return;
+      }
+      if (!(0 <= payload.batch && payload.batch <= 20)) {
+        setStatus("Batch size must be between 0 and 20.", "err");
+        return;
+      }
+
       saveBtn.disabled = true;
       setStatus("Saving “" + name + "”…", "");
       this._hass.callService("pyscript", "khione_meals_save_recipe", payload)
-        .then(() => { setStatus("Saved “" + name + "”.", "ok"); editingId = payload.id || editingId; })
+        .then(() => setStatus("Saved “" + name + "”.", "ok"))
         .catch(() => setStatus("Save failed — check the Home Assistant logs.", "err"))
         .finally(() => { saveBtn.disabled = false; });
     });
