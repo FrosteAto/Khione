@@ -110,7 +110,7 @@ button{ font-family: inherit; }
 .icon-badge.sm .icon{ width:20px; height:20px; }
 
 /* ---------- header band ---------- */
-.hero{ position: relative; overflow:hidden; background: linear-gradient(170deg, var(--band-bg) 0%, color-mix(in srgb, var(--band-bg) 78%, var(--band-ink)) 100%); padding-block: 2.4rem 2rem; }
+.hero{ position: relative; overflow:hidden; background: linear-gradient(170deg, var(--band-bg) 0%, color-mix(in srgb, var(--band-bg) 78%, var(--band-ink)) 100%); padding-block: 1.2rem 1rem; }
 .hero .blob{ opacity:.14; background:#fff; }
 .hero .blob.hb1{ width:260px; height:260px; top:-90px; right:8%; }
 .hero .blob.hb2{ width:160px; height:160px; bottom:-60px; left:14%; }
@@ -140,15 +140,15 @@ button{ font-family: inherit; }
 
 /* ---------- sections ---------- */
 main{ display:block; }
-section{ padding-block: 2rem; position:relative; }
-.section-head{ display:flex; align-items:center; gap:.85rem; margin-bottom: 1.1rem; }
+section{ padding-block: .85rem; position:relative; }
+.section-head{ display:flex; align-items:center; gap:.85rem; margin-bottom: .8rem; }
 .section-head h2{ font-size: 1.3rem; }
 .section-head .count{ color: var(--muted); font-size:.8rem; font-weight:600; margin-left:.2rem; }
 
 .card{
   background: var(--card-bg);
   border-radius: 24px;
-  padding: 1.3rem 1.4rem;
+  padding: .9rem 1.1rem;
   box-shadow: 0 3px 8px rgba(var(--shadow-c),.14), 0 22px 40px -18px rgba(var(--shadow-c),.22);
   border: 1px solid rgba(var(--ink-rgb),.06);
   min-width: 0;
@@ -156,27 +156,30 @@ section{ padding-block: 2rem; position:relative; }
 }
 .card.hoverable:hover{ transform: translateY(-3px); box-shadow: 0 6px 14px rgba(var(--shadow-c),.18), 0 30px 50px -18px rgba(var(--shadow-c),.28); }
 
-/* ---------- weather + clothing row ---------- */
-.weather-row{ display:grid; grid-template-columns: 1.7fr 1fr; gap:1.2rem; }
-.weather-card{ position:relative; overflow:hidden; }
+/* ---------- today row: weather+clothing (combined card) + news, half/half ---------- */
+.today-row{ display:grid; grid-template-columns: 1fr 1fr; gap:1.2rem; align-items:start; }
+.weather-clothing-card{ position:relative; overflow:hidden; }
 .weather-top{ display:flex; align-items:flex-start; gap:1rem; justify-content:space-between; flex-wrap:wrap; }
 .weather-main{ display:flex; align-items:center; gap:1rem; }
-.weather-temp{ font-size: clamp(2.6rem, 2rem + 2vw, 3.6rem); font-weight:700; color: var(--ink); line-height:1; }
-.weather-cond{ font-weight:800; font-family: var(--font-display); font-size:1.15rem; color: var(--khione-deep); margin-top:.15rem; }
-.weather-loc{ font-size:.8rem; color: var(--muted); margin-top:.1rem; }
-.weather-stats{ display:flex; gap:.7rem; flex-wrap:wrap; margin-top:1.1rem; }
-.wstat{ display:flex; align-items:center; gap:.5rem; background: color-mix(in srgb, var(--khione-green) 12%, var(--card-bg)); border-radius: 999px; padding:.45rem .9rem .45rem .5rem; }
-.wstat .icon-badge{ width:30px; height:30px; }
-.wstat .icon-badge .icon{ width:16px; height:16px; }
-.wstat b{ font-size:.92rem; }
-.wstat span{ display:block; font-size:.68rem; color: var(--muted); text-transform:uppercase; letter-spacing:.04em; }
-.weather-note{ font-family: var(--font-script); font-size:1.25rem; color: var(--accent); margin-top:1.1rem; max-width: 34em; }
+.weather-temp{ font-size: clamp(2.2rem, 1.8rem + 1.6vw, 3rem); font-weight:700; color: var(--ink); line-height:1; }
+.weather-cond{ font-weight:800; font-family: var(--font-display); font-size:1.1rem; color: var(--khione-deep); margin-top:.15rem; }
+.weather-loc{ font-size:.78rem; color: var(--muted); margin-top:.1rem; }
+.weather-stats{ display:flex; gap:.6rem; flex-wrap:wrap; margin-top:.9rem; }
+.wstat{ display:flex; align-items:center; gap:.5rem; background: color-mix(in srgb, var(--khione-green) 12%, var(--card-bg)); border-radius: 999px; padding:.4rem .8rem .4rem .45rem; }
+.wstat .icon-badge{ width:28px; height:28px; }
+.wstat .icon-badge .icon{ width:15px; height:15px; }
+.wstat b{ font-size:.88rem; }
+.wstat span{ display:block; font-size:.66rem; color: var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+.weather-note{ font-family: var(--font-script); font-size:1.15rem; color: var(--accent); margin-top:.8rem; max-width: 34em; }
 
-.clothing-card{ display:flex; flex-direction:column; justify-content:center; text-align:left; }
-.clothing-head{ display:flex; align-items:center; gap:.8rem; margin-bottom:.7rem; }
-.clothing-card h3{ font-size:1.15rem; }
-.clothing-sub{ color: var(--muted); font-size:.85rem; margin-top:.2rem; }
-.clothing-chips{ display:flex; gap:.4rem; flex-wrap:wrap; margin-top:1rem; }
+/* clothing recommendation lives inside the same card now, below the
+   weather half -- the dashed top border (same idiom as .sys-line/
+   .temp-row elsewhere on this page) reads as a divider without a
+   dedicated element. */
+.clothing-head{ display:flex; align-items:center; gap:.7rem; margin-top:.9rem; padding-top:.9rem; border-top:1px dashed rgba(var(--ink-rgb),.18); }
+.clothing-head h3{ font-size:1.05rem; }
+.clothing-sub{ color: var(--muted); font-size:.82rem; margin-top:.15rem; }
+.clothing-chips{ display:flex; gap:.4rem; flex-wrap:wrap; margin-top:.7rem; }
 
 .chip{ font-size:.68rem; font-weight:800; padding:.25rem .65rem; border-radius:999px; background: color-mix(in srgb, var(--khione-green) 20%, var(--card-bg)); color: var(--khione-deep); }
 .chip.soft{ background: color-mix(in srgb, var(--accent-soft) 40%, var(--card-bg)); color: var(--accent); }
@@ -185,12 +188,11 @@ section{ padding-block: 2rem; position:relative; }
 .chip.yellow{ background: color-mix(in srgb, var(--khione-yellow) 22%, var(--card-bg)); color: var(--khione-yellow); }
 
 /* ---------- news feed ---------- */
-.news-row{ display:grid; grid-template-columns: 1fr 1fr; gap:1.2rem; }
 .news-head{ display:flex; align-items:center; justify-content:space-between; gap:.8rem; margin-bottom:1rem; }
 .news-head .ttl{ display:flex; align-items:center; gap:.8rem; }
 .feed{ display:flex; flex-direction:column; }
 .feed-item{
-  display:flex; gap:.8rem; align-items:flex-start; padding-block:.75rem;
+  display:flex; gap:.8rem; align-items:flex-start; padding-block:.55rem;
   border-top: 1px dashed rgba(var(--ink-rgb),.18);
   transition: padding-left .2s ease, background .2s ease;
   border-radius: 10px;
@@ -205,10 +207,14 @@ section{ padding-block: 2rem; position:relative; }
 .feed-meta time{ font-size:.72rem; color: var(--muted); }
 
 /* ---------- bento system grid ---------- */
-.bento{ display:grid; grid-template-columns: repeat(12, 1fr); gap:1.2rem; }
-.tile{ grid-column: span 4; display:flex; flex-direction:column; gap:1rem; }
-.tile.wide{ grid-column: span 6; }
-.tile.narrow{ grid-column: span 3; }
+/* All 6 tiles equal-width in one row (2 of 12 columns each) instead of
+   wrapping to 2 rows -- this page needs to fit one 1080p screen without
+   scrolling, and there's plenty of horizontal room at 16:9 to spend
+   instead of stacking vertically. */
+.bento{ display:grid; grid-template-columns: repeat(12, 1fr); gap:1rem; }
+.tile{ grid-column: span 2; display:flex; flex-direction:column; gap:.7rem; }
+.tile.wide{ grid-column: span 2; }
+.tile.narrow{ grid-column: span 2; }
 .tile-head{ display:flex; align-items:center; gap:.7rem; }
 .tile-head h3{ font-size:1rem; }
 
@@ -266,7 +272,7 @@ section{ padding-block: 2rem; position:relative; }
 .sys-line:first-of-type{ border-top:none; }
 .sys-line b{ font-variant-numeric: tabular-nums; }
 
-footer{ background: linear-gradient(170deg, var(--band-bg) 0%, color-mix(in srgb, var(--band-bg) 78%, var(--band-ink)) 100%); padding-block: 1.6rem; text-align:center; color: var(--band-ink); font-size:.8rem; font-weight:600; margin-top: 1rem; }
+footer{ background: linear-gradient(170deg, var(--band-bg) 0%, color-mix(in srgb, var(--band-bg) 78%, var(--band-ink)) 100%); padding-block: .6rem; text-align:center; color: var(--band-ink); font-size:.8rem; font-weight:600; margin-top: .3rem; }
 footer .wrap{ opacity:.85; }
 
 @keyframes pulse{ 0%{ transform:scale(.8); opacity:.7;} 100%{ transform:scale(1.8); opacity:0;} }
@@ -276,8 +282,7 @@ footer .wrap{ opacity:.85; }
 }
 
 @media (max-width: 900px){
-  .weather-row{ grid-template-columns: 1fr; }
-  .news-row{ grid-template-columns: 1fr; }
+  .today-row{ grid-template-columns: 1fr; }
   .tile, .tile.wide, .tile.narrow{ grid-column: span 12; }
 }
 @media (max-width: 500px){
@@ -422,16 +427,16 @@ const PAGE_SHELL_HTML = `
 
 <main class="wrap">
 
-  <section aria-labelledby="h-weather">
+  <section aria-labelledby="h-today">
     <div class="section-head reveal">
       <div class="icon-badge"><div class="blob blob-b"></div><svg class="icon"><use href="#i-cloud-sun"></use></svg></div>
-      <h2 id="h-weather">Weather &amp; what to wear</h2>
+      <h2 id="h-today">Today</h2>
     </div>
-    <div class="weather-row">
-      <div class="card weather-card hoverable reveal">
+    <div class="today-row">
+      <div class="card weather-clothing-card hoverable reveal">
         <div class="weather-top">
           <div class="weather-main">
-            <div class="icon-badge" style="width:72px;height:72px;"><div class="blob blob-a"></div><svg class="icon" style="width:38px;height:38px"><use href="#i-cloud-sun"></use></svg></div>
+            <div class="icon-badge" style="width:60px;height:60px;"><div class="blob blob-a"></div><svg class="icon" style="width:32px;height:32px"><use href="#i-cloud-sun"></use></svg></div>
             <div>
               <div class="weather-temp tabular" id="weather-temp">&mdash;</div>
               <div class="weather-cond" id="weather-cond">&nbsp;</div>
@@ -445,11 +450,9 @@ const PAGE_SHELL_HTML = `
           <div class="wstat"><div class="icon-badge sm blue"><div class="blob blob-b"></div><svg class="icon"><use href="#i-droplet"></use></svg></div><div><b class="tabular" id="wstat-humidity">&mdash;</b><span>Humidity</span></div></div>
         </div>
         <p class="weather-note" id="weather-note">&nbsp;</p>
-      </div>
 
-      <div class="card clothing-card hoverable reveal">
         <div class="clothing-head">
-          <div class="icon-badge soft"><div class="blob blob-c"></div><svg class="icon"><use id="clothing-icon-use" href="#i-jacket"></use></svg></div>
+          <div class="icon-badge soft sm"><div class="blob blob-c"></div><svg class="icon"><use id="clothing-icon-use" href="#i-jacket"></use></svg></div>
           <div>
             <h3 id="clothing-headline">&nbsp;</h3>
             <p class="clothing-sub" id="clothing-sub">&nbsp;</p>
@@ -457,30 +460,13 @@ const PAGE_SHELL_HTML = `
         </div>
         <div class="clothing-chips" id="clothing-chips"></div>
       </div>
-    </div>
-  </section>
 
-  <section aria-labelledby="h-news">
-    <div class="section-head reveal">
-      <div class="icon-badge yellow"><div class="blob blob-d"></div><svg class="icon"><use href="#i-feed"></use></svg></div>
-      <h2 id="h-news">News</h2>
-      <span class="count">Updates hourly</span>
-    </div>
-    <div class="news-row">
-      <div class="card reveal">
+      <div class="card news-card reveal">
         <div class="news-head">
-          <div class="ttl"><div class="icon-badge sm"><div class="blob blob-a"></div><svg class="icon"><use href="#i-feed"></use></svg></div><h3>BBC UK / Derbyshire Live</h3></div>
-          <span class="chip blue">RSS</span>
+          <div class="ttl"><div class="icon-badge sm yellow"><div class="blob blob-d"></div><svg class="icon"><use href="#i-feed"></use></svg></div><h3>News</h3></div>
+          <span class="count">Updates hourly</span>
         </div>
-        <div class="feed" id="feed-bbc"></div>
-      </div>
-
-      <div class="card reveal">
-        <div class="news-head">
-          <div class="ttl"><div class="icon-badge sm purple"><div class="blob blob-b"></div><svg class="icon"><use href="#i-terminal"></use></svg></div><h3>Arch Linux News</h3></div>
-          <span class="chip purple">RSS</span>
-        </div>
-        <div class="feed" id="feed-arch"></div>
+        <div class="feed" id="feed-news"></div>
       </div>
     </div>
   </section>
@@ -680,10 +666,12 @@ function buildFeedHtml(articles) {
     .join("");
 }
 
-// shortcut: caps each rendered feed at this many items so the card doesn't
-// grow unbounded if a source sensor returns a long article list; raise if
-// the layout can take it.
-const NEWS_LIMIT = 6;
+// shortcut: caps the merged feed at this many items so the card doesn't
+// grow unbounded if a source sensor returns a long article list -- kept
+// deliberately low now that it's one feed covering 3 sources (it used to
+// be 6 per feed across 2 separate cards), since this page needs to fit
+// one screen without scrolling.
+const NEWS_LIMIT = 4;
 
 function sortByPubDateDesc(articles) {
   return articles.slice().sort((a, b) => (Date.parse(b.pubDate) || 0) - (Date.parse(a.pubDate) || 0));
@@ -857,20 +845,20 @@ class KhioneHomePanel extends HTMLElement {
       : '<span class="chip">—</span>';
 
     // ---- news ----
+    // One merged, tagged feed instead of 2 separate cards (BBC/Derbyshire
+    // + Arch) -- same total card chrome either way, but half the vertical
+    // space on this page specifically, which needs to fit one screen.
     const bbcArticles = ((rssBbc && rssBbc.attributes && rssBbc.attributes.articles) || []).map((a) => ({
       title: a && a.title, pubDate: a && a.pubDate, chipText: "National", chipCls: "soft",
     }));
     const derbyArticles = ((rssDerbyshire && rssDerbyshire.attributes && rssDerbyshire.attributes.articles) || []).map((a) => ({
       title: a && a.title, pubDate: a && a.pubDate, chipText: "Local", chipCls: "soft",
     }));
-    const localFeed = sortByPubDateDesc(bbcArticles.concat(derbyArticles)).slice(0, NEWS_LIMIT);
-    root.getElementById("feed-bbc").innerHTML = buildFeedHtml(localFeed);
-
     const archArticles = ((rssArch && rssArch.attributes && rssArch.attributes.articles) || []).map((a) => ({
-      title: a && a.title, pubDate: a && a.pubDate, tag: "purple",
+      title: a && a.title, pubDate: a && a.pubDate, chipText: "Arch", chipCls: "purple", tag: "purple",
     }));
-    const archFeed = sortByPubDateDesc(archArticles).slice(0, NEWS_LIMIT);
-    root.getElementById("feed-arch").innerHTML = buildFeedHtml(archFeed);
+    const newsFeed = sortByPubDateDesc(bbcArticles.concat(derbyArticles, archArticles)).slice(0, NEWS_LIMIT);
+    root.getElementById("feed-news").innerHTML = buildFeedHtml(newsFeed);
 
     // ---- services ----
     const renderServiceStatus = (el, state) => {

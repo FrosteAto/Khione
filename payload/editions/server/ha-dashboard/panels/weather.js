@@ -1349,11 +1349,16 @@ function weatherSVG(type, extraClass) {
 
 const LEAFLET_SRC = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js";
 // shortcut: RainViewer's 256px radar tiles only have real data up to zoom 7
-// (confirmed live: every z>=8 request returns an identical "Zoom Level Not
-// Supported" placeholder) — keep default ZOOM and maxNativeZoom at 7.
+// (confirmed live: every z>=8 TILE REQUEST returns an identical "Zoom Level
+// Not Supported" placeholder) -- maxNativeZoom:7 on the radar's own
+// L.tileLayer (see refreshFrames() below) already handles this correctly by
+// capping which tile zoom actually gets requested and upscaling that z7
+// tile to fill in for anything higher, so the MAP's own initial view zoom
+// (this constant) is free to go above 7 -- it's a different knob. Raised
+// from 7 (showed roughly the whole UK) to a regional/Midlands-scale view.
 const DEFAULT_LAT = 54.3;
 const DEFAULT_LON = -2.2;
-const ZOOM = 7;
+const ZOOM = 9;
 
 class KhioneWeatherPanel extends HTMLElement {
   constructor() {
