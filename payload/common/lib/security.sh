@@ -334,6 +334,11 @@ EOF
 Description=Apply khione's space-path auditd watches (can't go through rules.d)
 After=auditd.service
 Requires=auditd.service
+# Must finish arming these BEFORE audit-rules.service loads the "-e 2"
+# immutable finalize rule below -- once that's live, a plain `auditctl
+# -w` call like this one fails with "Operation not permitted" until the
+# next reboot, same as any other live rule change.
+Before=audit-rules.service
 
 [Service]
 Type=oneshot
@@ -346,6 +351,37 @@ EOF
     sudo systemctl daemon-reload
     sudo systemctl enable khione-audit-extra-watch.service
     sudo /usr/local/bin/khione-audit-extra-watch
+  fi
+
+  # Immutable audit config -- "-e 2" as the LAST rule loaded makes the
+  # running ruleset tamper-proof until the next reboot (confirmed live:
+  # once active, even `auditctl -D` as root fails with "Operation not
+  # permitted"). This is the standard CIS Benchmark recommendation
+  # ("ensure the audit configuration is immutable"); confirmed live that
+  # audit-rules.service genuinely runs augenrules --load automatically
+  # on every boot (pulled in by auditd.service's Wants=, despite showing
+  # "disabled" in `systemctl list-unit-files` -- that only reflects it
+  # having no WantedBy symlink of its own), so this file alone is enough
+  # for it to survive reboots with no extra enablement.
+  # "999-" sorts after "99-khione.rules" alphabetically, so this loads
+  # last, which is what makes it the final word for that boot.
+  echo "-e 2" | sudo tee /etc/audit/rules.d/999-khione-finalize.rules >/dev/null
+  # shortcut: once immutable, re-running this function (e.g. re-running
+  # the installer later to tweak something unrelated) can no longer
+  # reload rules live -- checked first so that case gets a clear message
+  # instead of a confusing failure from the commands above.
+  if sudo auditctl -s 2>/dev/null | grep -q "^enabled 2"; then
+    echo "Audit ruleset is already immutable (that takes a reboot to"
+    echo "change) -- rules.d files are current and will apply fresh on"
+    echo "the next boot."
+  else
+    sudo augenrules --load || true
+    if sudo auditctl -s 2>/dev/null | grep -q "^enabled 2"; then
+      echo "Audit ruleset is now immutable until the next reboot."
+    else
+      echo "WARNING: expected the audit ruleset to be immutable now --"
+      echo "check with: sudo auditctl -s"
+    fi
   fi
 }
 
