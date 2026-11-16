@@ -9,6 +9,12 @@ panel_custom:
     module_url: /local/panels/weather.js
     embed_iframe: false
     trust_external_script: true
+  - name: khione-home-panel
+    sidebar_title: Home
+    sidebar_icon: mdi:home
+    url_path: khione-home
+    module_url: /local/panels/home.js
+    embed_iframe: false
 
 command_line:
   - sensor:
@@ -236,12 +242,6 @@ lovelace:
     - url: /local/community/rss-news-card/rss-news-card.js
       type: module
   dashboards:
-    khione-home:
-      mode: yaml
-      filename: dashboards/home-view.yaml
-      title: Home
-      icon: mdi:home
-      show_in_sidebar: true
     khione-meals:
       mode: yaml
       filename: dashboards/meals-view.yaml
