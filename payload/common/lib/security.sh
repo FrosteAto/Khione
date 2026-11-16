@@ -494,46 +494,47 @@ EOF
 # Plex-specific systemd sandboxing, beyond whatever generic hardening is
 # already in place. Plex staff confirm it's meant to run unprivileged and
 # never needs root. Uses a drop-in, never the shipped unit file directly,
-# since package upgrades silently reset in-place edits to that. Needs a
-# real transcode test before being trusted -- MemoryDenyWriteExecute in
-# particular is a real, untested risk for codec libraries that may JIT.
-# ---------------------------------------------------------------------
-# shortcut: DISABLED for now. Tried this for real on the live server --
-# Plex segfaulted on every single start with this drop-in applied (crash
-# report + coredump, not a clean permission error), confirmed via
-# `journalctl -u plexmediaserver`. One of these directives is genuinely
-# incompatible with Plex's own binary; finding out which one needs a
-# bisection (add them back one at a time, restart, confirm it survives)
-# that isn't safe to run against a server in daily use -- it means
-# repeated crash/restart cycles on a real production Plex. Left here,
-# commented, as a starting point for that debugging on a maintenance
-# window or a test box, not applied automatically. Reverted live and
-# confirmed Plex is healthy without it.
+# since package upgrades silently reset in-place edits to that.
+#
+# shortcut: RestrictAddressFamilies is deliberately NOT in this list.
+# The full original set (this plus RestrictAddressFamilies=AF_INET
+# AF_INET6 AF_UNIX) segfaulted Plex on every single start, confirmed
+# live via journalctl -- a crash report + coredump, not a clean
+# permission error, meaning Plex's binary genuinely needs some other
+# address family at startup that directive blocks. Bisected by testing
+# directives individually/in subsets against the real server (each
+# round: apply, restart, check, revert immediately if it crashed) rather
+# than guessing: ProtectHome alone was fine; RestrictAddressFamilies
+# alone reproduced the exact same crash; the full set below, minus just
+# that one directive, has run clean including repeated restarts.
+# PrivateDevices has one known, accepted side effect: Plex's Tuner
+# Service logs "Critical: libusb_init failed" (confirmed absent without
+# PrivateDevices) because it can no longer probe USB TV-tuner hardware
+# -- harmless if you don't use Plex's DVR/tuner feature; drop
+# PrivateDevices here if you ever do.
 harden_plexmediaserver_service() {
-  echo "Plex systemd sandboxing is deliberately disabled -- see the"
-  echo "comment above this function. Confirmed live: it crashes Plex."
-  return 0
-  # if ! systemctl list-unit-files plexmediaserver.service &>/dev/null; then
-  #   echo "plexmediaserver.service not installed, skipping its sandboxing."
-  #   return 0
-  # fi
-  # echo "Sandboxing plexmediaserver.service..."
-  # sudo install -d -m755 /etc/systemd/system/plexmediaserver.service.d
-  # sudo tee /etc/systemd/system/plexmediaserver.service.d/99-khione-hardening.conf >/dev/null <<'EOF'
-  # [Service]
-  # NoNewPrivileges=true
-  # PrivateTmp=true
-  # PrivateDevices=true
-  # ProtectSystem=strict
-  # ProtectHome=true
-  # ProtectKernelTunables=true
-  # ProtectKernelModules=true
-  # ProtectControlGroups=true
-  # RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
-  # ReadWritePaths=/var/lib/plex
-  # EOF
-  # sudo systemctl daemon-reload
-  # sudo systemctl restart plexmediaserver.service
+  if ! systemctl list-unit-files plexmediaserver.service &>/dev/null; then
+    echo "plexmediaserver.service not installed, skipping its sandboxing."
+    return 0
+  fi
+  echo "Sandboxing plexmediaserver.service..."
+  sudo install -d -m755 /etc/systemd/system/plexmediaserver.service.d
+  sudo tee /etc/systemd/system/plexmediaserver.service.d/99-khione-hardening.conf >/dev/null <<'EOF'
+[Service]
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+ReadWritePaths=/var/lib/plex
+EOF
+  sudo systemctl daemon-reload
+  sudo systemctl restart plexmediaserver.service
+  echo "Sandboxed. Still worth a real playback/transcode check once --"
+  echo "check with: systemd-analyze security plexmediaserver"
 }
 
 # ---------------------------------------------------------------------
