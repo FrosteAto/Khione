@@ -420,6 +420,10 @@ const PAGE_SHELL_HTML = `
   <symbol id="i-moon" viewBox="0 0 24 24">
     <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" stroke-linejoin="round"/>
   </symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24">
+    <path d="M12 3.8 18.4 6.2v5.6c0 4.4-2.9 7.7-6.4 9-3.5-1.3-6.4-4.6-6.4-9V6.2z" stroke-linejoin="round"/>
+    <path d="M9.3 12.1l1.9 1.9 3.5-3.9" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
 </svg>
 
 <link rel="preconnect" href="https://fonts.gstatic.com">
@@ -531,6 +535,16 @@ const PAGE_SHELL_HTML = `
         <p class="sys-security-detail" id="sys-security-detail" hidden></p>
         <div class="sys-line"><svg class="icon" style="color:var(--khione-deep)"><use href="#i-clock"></use></svg>Uptime &middot; <b class="tabular" id="sys-uptime">&mdash;</b></div>
         <div class="sys-line"><svg class="icon" style="color:var(--khione-deep)"><use href="#i-terminal"></use></svg>Kernel &middot; <b class="tabular" id="sys-kernel">&mdash;</b></div>
+      </div>
+
+      <div class="card tile hoverable reveal">
+        <div class="tile-head"><div class="icon-badge sm purple"><div class="blob blob-c"></div><svg class="icon"><use href="#i-shield"></use></svg></div><h3>Security</h3></div>
+        <span class="sys-badge" id="sec-badge"><svg class="icon" style="width:.9em;height:.9em"><use href="#i-shield"></use></svg><span id="sec-headline">&nbsp;</span></span>
+        <p class="sys-security-detail" id="sec-detail" hidden></p>
+        <div class="sys-line"><svg class="icon" style="color:var(--khione-deep)"><use href="#i-toggle"></use></svg>Blocked &middot; <b class="tabular" id="sec-blocked">&mdash;</b></div>
+        <div class="sys-line"><svg class="icon" style="color:var(--khione-deep)"><use href="#i-disk"></use></svg>Integrity &middot; <b class="tabular" id="sec-aide">&mdash;</b></div>
+        <div class="sys-line"><svg class="icon" style="color:var(--khione-deep)"><use href="#i-terminal"></use></svg>Auditing &middot; <b class="tabular" id="sec-auditd">&mdash;</b></div>
+        <div class="sys-line"><svg class="icon" style="color:var(--khione-deep)"><use href="#i-gauge"></use></svg>Outbound &middot; <b class="tabular" id="sec-outbound">&mdash;</b></div>
       </div>
 
       <div class="card tile wide hoverable reveal">
@@ -932,6 +946,56 @@ class KhioneHomePanel extends HTMLElement {
     }
     root.getElementById("sys-uptime").textContent = sysAttrs.uptime ?? "—";
     root.getElementById("sys-kernel").textContent = sysAttrs.kernel ?? "—";
+
+    // ---- security ----
+    const security = hass.states["sensor.khione_security"];
+    const netwatch = hass.states["sensor.khione_netwatch"];
+    const secAttrs = (security && security.attributes) || {};
+    const netAttrs = (netwatch && netwatch.attributes) || {};
+    const bannedIps = Number(secAttrs.banned_ips) || 0;
+    const csDecisions = Number(secAttrs.crowdsec_decisions) || 0;
+    const totalBlocked = bannedIps + csDecisions;
+    const aideStatus = secAttrs.aide_status || "unknown";
+    const auditdActive = secAttrs.auditd_active === true;
+    const auditdImmutable = secAttrs.auditd_immutable === true;
+    const unusualOutbound = Number(netAttrs.unusual_outbound) || 0;
+    const unusualDetail = Array.isArray(netAttrs.unusual_detail) ? netAttrs.unusual_detail : [];
+
+    const secBadge = root.getElementById("sec-badge");
+    const secDetailEl = root.getElementById("sec-detail");
+    // "Urgent" here means something fail2ban/CrowdSec's own network-layer
+    // view can't catch on its own: unexpected outbound traffic, unexpected
+    // file changes, or the file/process watchers themselves being down.
+    // Active bans/decisions mean the defenses are doing their job, not
+    // that something got through -- that's reported but not urgent.
+    const secUrgent = aideStatus === "changes_detected" || !auditdActive || unusualOutbound > 0;
+    if (secUrgent) {
+      secBadge.classList.add("urgent");
+      const reasons = [];
+      if (unusualOutbound > 0) reasons.push(unusualOutbound + " unusual outbound connection" + (unusualOutbound === 1 ? "" : "s"));
+      if (aideStatus === "changes_detected") reasons.push("file changes detected");
+      if (!auditdActive) reasons.push("auditd not running");
+      root.getElementById("sec-headline").textContent = reasons.join(", ");
+      const firstUnusual = unusualDetail[0];
+      secDetailEl.hidden = !firstUnusual;
+      if (firstUnusual) {
+        secDetailEl.textContent = firstUnusual.process + " → " + firstUnusual.remote_ip + ":" + firstUnusual.remote_port;
+      }
+    } else {
+      secBadge.classList.remove("urgent");
+      root.getElementById("sec-headline").textContent = totalBlocked > 0
+        ? totalBlocked + " threat" + (totalBlocked === 1 ? "" : "s") + " blocked"
+        : "All clear";
+      secDetailEl.hidden = true;
+    }
+    root.getElementById("sec-blocked").textContent = totalBlocked;
+    root.getElementById("sec-aide").textContent =
+      aideStatus === "clean" ? "OK" :
+      aideStatus === "changes_detected" ? "Changes detected" :
+      aideStatus === "not_yet_run" ? "Not yet run" : "Unknown";
+    root.getElementById("sec-auditd").textContent =
+      (auditdActive ? "Active" : "Inactive") + (auditdImmutable ? " · locked" : "");
+    root.getElementById("sec-outbound").textContent = unusualOutbound > 0 ? unusualOutbound + " unusual" : "Normal";
 
     // ---- disks ----
     const diskRows = (disks && disks.attributes && disks.attributes.disks) || [];

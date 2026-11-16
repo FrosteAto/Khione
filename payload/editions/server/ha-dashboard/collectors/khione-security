@@ -1,0 +1,83 @@
+#!/bin/bash
+set -euo pipefail
+
+out=/var/lib/hass/snapshots/security.json
+mkdir -p "$(dirname "$out")"
+
+# fail2ban: sum of "Currently banned" across every configured jail --
+# confirmed live against this server's real output format
+# ("Jail list:\tcockpit, sshd", "Currently banned:\t0").
+f2b_banned=0
+if command -v fail2ban-client &>/dev/null; then
+  jail_list="$(fail2ban-client status 2>/dev/null | sed -n 's/.*Jail list:[[:space:]]*//p')"
+  if [[ -n "$jail_list" ]]; then
+    IFS=',' read -ra jails <<<"$jail_list"
+    for j in "${jails[@]}"; do
+      j="$(echo "$j" | xargs)"
+      [[ -z "$j" ]] && continue
+      count="$(fail2ban-client status "$j" 2>/dev/null | sed -n 's/.*Currently banned:[[:space:]]*//p')"
+      count="${count//[^0-9]/}"
+      f2b_banned=$((f2b_banned + ${count:-0}))
+    done
+  fi
+fi
+
+# CrowdSec: active decisions actually being enforced right now (not the
+# size of the downloaded community blocklist, which is much larger and
+# isn't itself a sign anything happened on this box).
+cs_decisions=0
+if command -v cscli &>/dev/null; then
+  cs_json="$(cscli decisions list -o json 2>/dev/null || echo '[]')"
+  cs_decisions="$(python3 -c "
+import json, sys
+try:
+    d = json.loads(sys.argv[1])
+except ValueError:
+    d = []
+print(len(d) if isinstance(d, list) else 0)
+" "$cs_json" 2>/dev/null || echo 0)"
+fi
+
+# AIDE: result of its last daily run. AIDE's exit code is a bitmask of
+# what kind of change it found (added/removed/modified) -- any nonzero
+# value means SOMETHING changed on disk, which fail2ban/CrowdSec (both
+# purely network-facing) can't see at all.
+aide_status="unknown"
+aide_last_run=""
+if systemctl list-unit-files aidecheck.service &>/dev/null; then
+  aide_exit="$(systemctl show aidecheck.service -p ExecMainStatus --value 2>/dev/null || true)"
+  aide_last_run="$(systemctl show aidecheck.service -p ExecMainExitTimestamp --value 2>/dev/null || true)"
+  if [[ -z "$aide_last_run" ]]; then
+    aide_status="not_yet_run"
+  elif [[ "$aide_exit" == "0" ]]; then
+    aide_status="clean"
+  else
+    aide_status="changes_detected"
+  fi
+fi
+
+# auditd: actually running, and is the ruleset tamper-proofed (immutable
+# until reboot -- auditctl -s's "enabled" field: 1 = mutable, 2 =
+# immutable, confirmed live)?
+auditd_active=false
+auditd_immutable=false
+if command -v auditctl &>/dev/null; then
+  systemctl is-active --quiet auditd.service && auditd_active=true
+  if auditctl -s 2>/dev/null | grep -q "^enabled 2"; then
+    auditd_immutable=true
+  fi
+fi
+
+python3 - "$f2b_banned" "$cs_decisions" "$aide_status" "$aide_last_run" "$auditd_active" "$auditd_immutable" <<'PYEOF' > "$out.tmp"
+import json, sys
+f2b_banned, cs_decisions, aide_status, aide_last_run, auditd_active, auditd_immutable = sys.argv[1:7]
+print(json.dumps({
+    "banned_ips": int(f2b_banned),
+    "crowdsec_decisions": int(cs_decisions),
+    "aide_status": aide_status,
+    "aide_last_run": aide_last_run,
+    "auditd_active": auditd_active == "true",
+    "auditd_immutable": auditd_immutable == "true",
+}))
+PYEOF
+mv "$out.tmp" "$out"

@@ -66,6 +66,30 @@ command_line:
       json_attributes:
         - temps
       scan_interval: 60
+  - sensor:
+      name: Khione Security
+      unique_id: khione_security
+      command: "cat /config/snapshots/security.json"
+      value_template: "{{ value_json.banned_ips | int + value_json.crowdsec_decisions | int }}"
+      unit_of_measurement: blocks
+      json_attributes:
+        - banned_ips
+        - crowdsec_decisions
+        - aide_status
+        - aide_last_run
+        - auditd_active
+        - auditd_immutable
+      scan_interval: 60
+  - sensor:
+      name: Khione Netwatch
+      unique_id: khione_netwatch
+      command: "cat /config/snapshots/netwatch.json"
+      value_template: "{{ value_json.unusual_outbound }}"
+      unit_of_measurement: connections
+      json_attributes:
+        - unusual_outbound
+        - unusual_detail
+      scan_interval: 60
   - binary_sensor:
       name: Khione Plex
       unique_id: khione_plex

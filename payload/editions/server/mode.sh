@@ -43,6 +43,8 @@ SERVICES_ENABLE=(
   khione-system.timer khione-system.service
   khione-disks.timer khione-disks.service
   khione-temps.timer khione-temps.service
+  khione-security.timer khione-security.service
+  khione-netwatch.timer khione-netwatch.service
   docker.service
   home-assistant.service
 )

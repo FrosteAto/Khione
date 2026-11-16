@@ -1,0 +1,11 @@
+[Unit]
+Description=Snapshot outbound connections for the HA dashboard's Security card
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/khione-netwatch
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,11 @@
+[Unit]
+Description=Collect fail2ban/CrowdSec/AIDE/auditd status for the HA dashboard
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/khione-security
+
+[Install]
+WantedBy=multi-user.target

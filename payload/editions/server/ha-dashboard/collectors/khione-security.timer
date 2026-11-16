@@ -1,0 +1,9 @@
+[Unit]
+Description=Check fail2ban/CrowdSec/AIDE/auditd status every 10 minutes
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=10min
+
+[Install]
+WantedBy=timers.target

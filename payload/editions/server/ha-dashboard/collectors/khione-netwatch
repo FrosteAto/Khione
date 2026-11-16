@@ -1,0 +1,92 @@
+#!/usr/bin/env python3
+"""Flag outbound connections to ports this server doesn't normally use,
+surfaced on the HA dashboard's Security card.
+
+shortcut: TCP only (`ss -t`), heuristic only -- a connection whose LOCAL
+port is one of this box's own listening ports is treated as inbound
+(already covered by ufw/fail2ban/CrowdSec) and skipped; everything else
+is "us connecting out," flagged if the remote port isn't one normally
+used for outbound traffic here. Malware that calls out over port 443
+blends in by design and isn't caught by this -- it catches the same
+shape of thing the Nov 2026 incident used (mining pools on arbitrary
+non-standard ports), not a full egress firewall.
+"""
+import json
+import os
+import re
+import subprocess
+
+OUT = "/var/lib/hass/snapshots/netwatch.json"
+
+# Ports this server LISTENS on -- hand-synced with
+# payload/editions/server/mode.sh's FIREWALL_RULES + FIREWALL_RULES_LAN,
+# not read from it directly. A connection whose LOCAL port is one of
+# these is someone connecting TO us, not us connecting out.
+OUR_SERVICE_PORTS = {22, 9090, 32400, 8123, 445, 139, 137, 138, 5353, 1900}
+
+# Remote ports normal outbound traffic from this box actually uses
+# (web/update traffic, Plex's own phone-home to plex.tv and other Plex
+# servers) -- confirmed live against this server's real connections.
+KNOWN_GOOD_REMOTE_PORTS = {80, 443, 53, 123, 32400, 8443}
+
+LOOPBACK_IPS = {"127.0.0.1", "::1", "[::1]"}
+
+
+def parse_established():
+    try:
+        out = subprocess.run(
+            ["ss", "-H", "-tnp", "state", "established"],
+            capture_output=True, text=True, timeout=5, check=True,
+        ).stdout
+    except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
+        return []
+    rows = []
+    for line in out.splitlines():
+        parts = line.split()
+        # ss -H with a single "state" filter omits the State column
+        # entirely -- confirmed live: recv-q, send-q, local, peer,
+        # process is 5 fields, not the usual 6.
+        if len(parts) < 4:
+            continue
+        local, remote = parts[2], parts[3]
+        proc_match = re.search(r'"([^"]+)"', line)
+        process = proc_match.group(1) if proc_match else "?"
+        try:
+            local_port = int(local.rsplit(":", 1)[1])
+            remote_ip, remote_port_s = remote.rsplit(":", 1)
+            remote_port = int(remote_port_s)
+        except (IndexError, ValueError):
+            continue
+        rows.append({
+            "local_port": local_port,
+            "remote_ip": remote_ip,
+            "remote_port": remote_port,
+            "process": process,
+        })
+    return rows
+
+
+connections = parse_established()
+outbound = [
+    c for c in connections
+    if c["local_port"] not in OUR_SERVICE_PORTS and c["remote_ip"] not in LOOPBACK_IPS
+]
+flagged = [c for c in outbound if c["remote_port"] not in KNOWN_GOOD_REMOTE_PORTS]
+
+seen = set()
+unique_flagged = []
+for c in flagged:
+    key = (c["process"], c["remote_ip"], c["remote_port"])
+    if key in seen:
+        continue
+    seen.add(key)
+    unique_flagged.append(c)
+
+os.makedirs(os.path.dirname(OUT), exist_ok=True)
+tmp = OUT + ".tmp"
+with open(tmp, "w") as f:
+    json.dump({
+        "unusual_outbound": len(unique_flagged),
+        "unusual_detail": unique_flagged[:10],
+    }, f)
+os.replace(tmp, OUT)
