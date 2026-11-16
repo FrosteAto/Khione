@@ -43,6 +43,8 @@ command_line:
       unit_of_measurement: updates
       json_attributes:
         - updates
+        - security_updates
+        - security_detail
         - uptime
         - kernel
       scan_interval: 60

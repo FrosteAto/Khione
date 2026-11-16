@@ -281,6 +281,16 @@ section{ padding-block: .85rem; position:relative; }
 
 /* system */
 .sys-badge{ display:inline-flex; align-items:center; gap:.4rem; background: color-mix(in srgb, var(--khione-yellow) 24%, var(--card-bg)); color: var(--khione-yellow); font-weight:800; font-size:.76rem; padding:.3rem .7rem; border-radius:999px; margin-bottom:.4rem; }
+/* A pending update with a fix available for a Critical/High-severity or
+   code-execution-class CVE (per arch-audit) gets this instead of the
+   routine yellow badge -- deliberately louder (solid fill, white text,
+   a slow pulse) since "there's a routine update" and "there's a known
+   remote-code-execution fix you haven't applied yet" are not the same
+   urgency, and this incident is exactly why that distinction matters now. */
+.sys-badge.urgent{ background: var(--accent); color: #fff; animation: badgePulse 2.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce){ .sys-badge.urgent{ animation:none; } }
+@keyframes badgePulse{ 0%,100%{ box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent); } 50%{ box-shadow: 0 0 0 6px transparent; } }
+.sys-security-detail{ font-size:.78rem; color: var(--accent); font-weight:700; padding-block:.3rem; }
 .sys-line{ display:flex; align-items:center; gap:.55rem; font-size:.84rem; padding-block:.4rem; border-top:1px dashed rgba(var(--ink-rgb),.15); }
 .sys-line:first-of-type{ border-top:none; }
 .sys-line b{ font-variant-numeric: tabular-nums; }
@@ -517,7 +527,8 @@ const PAGE_SHELL_HTML = `
 
       <div class="card tile hoverable reveal">
         <div class="tile-head"><div class="icon-badge sm yellow"><div class="blob blob-d"></div><svg class="icon"><use href="#i-refresh"></use></svg></div><h3>System</h3></div>
-        <span class="sys-badge"><svg class="icon" style="width:.9em;height:.9em"><use href="#i-refresh"></use></svg><span id="sys-updates">&nbsp;</span></span>
+        <span class="sys-badge" id="sys-badge"><svg class="icon" style="width:.9em;height:.9em"><use href="#i-refresh"></use></svg><span id="sys-updates">&nbsp;</span></span>
+        <p class="sys-security-detail" id="sys-security-detail" hidden></p>
         <div class="sys-line"><svg class="icon" style="color:var(--khione-deep)"><use href="#i-clock"></use></svg>Uptime &middot; <b class="tabular" id="sys-uptime">&mdash;</b></div>
         <div class="sys-line"><svg class="icon" style="color:var(--khione-deep)"><use href="#i-terminal"></use></svg>Kernel &middot; <b class="tabular" id="sys-kernel">&mdash;</b></div>
       </div>
@@ -900,7 +911,25 @@ class KhioneHomePanel extends HTMLElement {
 
     // ---- system ----
     const sysAttrs = (system && system.attributes) || {};
-    root.getElementById("sys-updates").textContent = (system && system.state != null ? system.state : "—") + " updates pending";
+    const securityCount = Number(sysAttrs.security_updates) || 0;
+    const securityDetail = Array.isArray(sysAttrs.security_detail) ? sysAttrs.security_detail : [];
+    const sysBadge = root.getElementById("sys-badge");
+    const securityEl = root.getElementById("sys-security-detail");
+    if (securityCount > 0) {
+      sysBadge.classList.add("urgent");
+      root.getElementById("sys-updates").textContent =
+        securityCount + (securityCount === 1 ? " security update — update now" : " security updates — update now");
+      const first = securityDetail[0];
+      securityEl.hidden = false;
+      securityEl.textContent = first
+        ? first.package + ": " + (first.severity || "High") + " risk" + (first.cve ? " (" + first.cve + ")" : "") +
+          (securityCount > 1 ? " — +" + (securityCount - 1) + " more" : "")
+        : "Run pacman to apply a known security fix.";
+    } else {
+      sysBadge.classList.remove("urgent");
+      root.getElementById("sys-updates").textContent = (system && system.state != null ? system.state : "—") + " updates pending";
+      securityEl.hidden = true;
+    }
     root.getElementById("sys-uptime").textContent = sysAttrs.uptime ?? "—";
     root.getElementById("sys-kernel").textContent = sysAttrs.kernel ?? "—";
 

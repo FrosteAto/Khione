@@ -12,11 +12,53 @@ else
   updates=0
 fi
 
+# arch-audit cross-references installed packages against the Arch Security
+# Tracker. --upgradable narrows this to vulnerabilities that already have a
+# fix available -- a vulnerability with no fix yet has no "update now"
+# action, so it's deliberately left out of this count (that's a different
+# kind of warning this dashboard doesn't attempt to show). Critical/High
+# severity, or any code-execution class regardless of severity score, is
+# what the dashboard treats as "big red warning, update now" instead of
+# the routine yellow "updates pending" -- arch-audit may not be installed
+# on every system this collector runs on, hence the command -v guard.
+audit_json="[]"
+if command -v arch-audit &>/dev/null; then
+  audit_json="$(arch-audit --upgradable --json 2>/dev/null || echo '[]')"
+fi
+
 uptime_s=$(cut -d. -f1 /proc/uptime)
 days=$((uptime_s / 86400))
 hours=$(((uptime_s % 86400) / 3600))
 mins=$(((uptime_s % 3600) / 60))
 
-printf '{"updates": %d, "uptime": "%dd %dh %dm", "kernel": "%s"}\n' \
-  "$updates" "$days" "$hours" "$mins" "$(uname -r)" > "$out.tmp"
+python3 - "$updates" "$audit_json" "${days}d ${hours}h ${mins}m" "$(uname -r)" <<'PYEOF' > "$out.tmp"
+import json
+import sys
+
+updates, audit_json, uptime, kernel = sys.argv[1:5]
+entries = json.loads(audit_json) if audit_json else []
+urgent = [
+    e for e in entries
+    if e.get("severity") in ("Critical", "High")
+    or "code execution" in e.get("type", "")
+    or "command execution" in e.get("type", "")
+]
+security_detail = [
+    {
+        "package": ", ".join(e.get("packages", [])),
+        "severity": e.get("severity"),
+        "type": e.get("type"),
+        "cve": (e.get("issues") or [None])[0],
+    }
+    for e in urgent
+]
+
+print(json.dumps({
+    "updates": int(updates),
+    "security_updates": len(urgent),
+    "security_detail": security_detail,
+    "uptime": uptime,
+    "kernel": kernel,
+}))
+PYEOF
 mv "$out.tmp" "$out"

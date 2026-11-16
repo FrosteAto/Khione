@@ -14,6 +14,7 @@ OFFICIAL_PACKAGES=(
   noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu ttf-jetbrains-mono
   samba cockpit smartmontools
   pacman-contrib
+  arch-audit          # feeds khione-system's security_updates/security_detail attributes
   docker              # runs the Home Assistant container
 )
 
