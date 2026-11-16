@@ -830,8 +830,15 @@ class KhioneMealsPanel extends HTMLElement {
         showConfirm(msg, "Enter a valid weight first.");
         return;
       }
-      showConfirm(msg, "Logged " + kg.toFixed(1) + "kg for today.");
-      return this._hass.callService("pyscript", "khione_meals_log_weight", { kg });
+      // shortcut: the confirm message now waits for the service call to
+      // actually resolve/reject instead of showing "Logged" optimistically
+      // before HA has confirmed anything -- a real, if narrow, gap a
+      // review caught: a dropped connection would have silently claimed
+      // success while doing nothing.
+      return this._hass.callService("pyscript", "khione_meals_log_weight", { kg }).then(
+        () => showConfirm(msg, "Logged " + kg.toFixed(1) + "kg for today."),
+        () => showConfirm(msg, "Couldn't log that — check the connection and try again.")
+      );
     });
 
     const saveProfileBtn = root.getElementById("save-profile-btn");
@@ -845,8 +852,10 @@ class KhioneMealsPanel extends HTMLElement {
         showConfirm(msg, "Enter a valid age and height first.");
         return;
       }
-      showConfirm(msg, "Profile saved.");
-      return this._hass.callService("pyscript", "khione_meals_save_profile", { age, height_cm, sex, activity });
+      return this._hass.callService("pyscript", "khione_meals_save_profile", { age, height_cm, sex, activity }).then(
+        () => showConfirm(msg, "Profile saved."),
+        () => showConfirm(msg, "Couldn't save that — check the connection and try again.")
+      );
     });
 
     guardedClick(root.getElementById("week-prev-btn"), () =>
