@@ -321,6 +321,20 @@ const PAGE_SHELL_HTML = `
     <path d="M8.3 4.3 12 6.6l3.7-2.3 3.1 2.5-2.4 2.6.1 9.7c0 .9-.7 1.6-1.6 1.6H9.1c-.9 0-1.6-.7-1.6-1.6V9.4L5.2 6.8z"/>
     <path d="M12 6.6v12.6" stroke-linecap="round"/>
   </symbol>
+  <symbol id="i-umbrella" viewBox="0 0 24 24">
+    <path d="M4 11c0-4.4 3.6-8 8-8s8 3.6 8 8H4z"/>
+    <path d="M12 11v7.5c0 1-.8 1.8-1.8 1.8-.7 0-1.3-.4-1.6-1" stroke-linecap="round"/>
+    <path d="M12 3v1.3" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="i-coat-rack" viewBox="0 0 24 24">
+    <path d="M12 3v16" stroke-linecap="round"/>
+    <path d="M7 6.3h10M6 9.3h12" stroke-linecap="round"/>
+    <path d="M9 9.3 7.5 16.5h9L15 9.3"/>
+    <circle cx="12" cy="19.5" r="1"/>
+  </symbol>
+  <symbol id="i-tshirt" viewBox="0 0 24 24">
+    <path d="M8.5 4.5 4 7l1.8 3L8 9v9.5c0 .6.4 1 1 1h6c.6 0 1-.4 1-1V9l2.2 1L20 7l-4.5-2.5c-.6 1-1.7 1.7-3 1.7s-2.4-.7-3-1.7z"/>
+  </symbol>
   <symbol id="i-feed" viewBox="0 0 24 24">
     <path d="M4.3 5.7c3.4-.6 6.9-.6 10.3 0 1.6.3 2.7 1.2 2.7 2.6v9.2c0 .9-.8 1.5-1.7 1.4-3.7-.5-7.6-.5-11.3 0-.9.1-1.7-.5-1.7-1.4V8.3c0-1.4 1.1-2.3 1.7-2.6z"/>
     <path d="M6.4 9.4h7M6.4 12h9.3M6.4 14.5h9.3" stroke-linecap="round"/>
@@ -435,7 +449,7 @@ const PAGE_SHELL_HTML = `
 
       <div class="card clothing-card hoverable reveal">
         <div class="clothing-head">
-          <div class="icon-badge soft"><div class="blob blob-c"></div><svg class="icon"><use href="#i-jacket"></use></svg></div>
+          <div class="icon-badge soft"><div class="blob blob-c"></div><svg class="icon"><use id="clothing-icon-use" href="#i-jacket"></use></svg></div>
           <div>
             <h3 id="clothing-headline">&nbsp;</h3>
             <p class="clothing-sub" id="clothing-sub">&nbsp;</p>
@@ -817,6 +831,12 @@ class KhioneHomePanel extends HTMLElement {
     root.getElementById("wstat-humidity").textContent = wAttrs.humidity != null ? Math.round(wAttrs.humidity) + "%" : "—";
     root.getElementById("weather-note").textContent = clothingState ?? "—";
 
+    const clothingIconUse = root.getElementById("clothing-icon-use");
+    if (clothingIconUse) {
+      const mdiIcon = (clothing && clothing.attributes && clothing.attributes.icon) || "";
+      const iconMap = { "mdi:umbrella": "i-umbrella", "mdi:coat-rack": "i-coat-rack", "mdi:jacket": "i-jacket", "mdi:tshirt-crew": "i-tshirt" };
+      clothingIconUse.setAttribute("href", "#" + (iconMap[mdiIcon] || "i-jacket"));
+    }
     root.getElementById("clothing-headline").textContent = clothingHeadline(clothingState);
     root.getElementById("clothing-sub").textContent =
       temp != null ? "Based on " + fmtTemp(temp) + ", " + conditionLabel(condition).toLowerCase() : "—";
