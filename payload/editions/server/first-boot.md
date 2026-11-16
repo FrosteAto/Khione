@@ -20,9 +20,11 @@ Home Assistant runs as a container. The very first start downloads its image, so
 
 ## Home Assistant dashboard
 
-The HA-native "Home" dashboard (sidebar → Home) covers weather, clothing
-suggestion, RSS, server stats, disk/temp readouts, and Plex/Cockpit status —
-all live there now.
+Five custom pages live in the sidebar: **Weather**, **Home** (clothing
+suggestion, RSS, server stats, disk/temp readouts, Plex/Cockpit status),
+**Plants**, **Meals**, and **Recipes**. These are plain custom panels, not
+Lovelace dashboards — nothing to install or configure for them beyond what
+the installer already did.
 
 A handful of pieces can't be baked into the installer — they need one
 human click each, same as HA's own account setup above:
@@ -30,33 +32,23 @@ human click each, same as HA's own account setup above:
 1. **Weather** — Settings → Devices & Services → Add Integration → search
    "Met.no" → add it for your location. **Rename its weather entity to
    `weather.home`** (Settings → Entities → find it → the gear icon → rename
-   the Entity ID) — the dashboard and the clothing-recommendation sensor
-   both expect that exact ID.
+   the Entity ID) — the Weather panel and the clothing-recommendation
+   sensor both expect that exact ID.
 2. **System Monitor** — Add Integration → "System Monitor" (it doesn't ask
    which resources to track — it creates everything, mostly **disabled by
    default**). Go to Settings → Entities, search "processor" and "memory",
    and enable `sensor.system_monitor_processor_use` and
    `sensor.system_monitor_memory_usage` (gear icon → toggle "Enabled") —
-   those exact entity IDs are what the dashboard expects.
+   those exact entity IDs are what the Home panel expects.
 3. **Speedtest.net** — Add Integration → "Speedtest.net" → accept the
    defaults.
-4. **HACS** — if its files were fetched successfully at install time,
-   open Settings → Devices & Services and follow HACS's own one-time
-   GitHub device-code authorization prompt. If HACS *isn't* there, the
-   install-time fetch failed (check for a `WARNING: HACS bootstrap failed`
-   line in the install log) — rerun its install script from
-   https://get.hacs.xyz by hand.
-5. **pyscript** (powers the Meals page) — once HACS is authorized (step 4),
-   go to HACS → Integrations → search "pyscript" → Download, then restart
-   Home Assistant once more. The Meals and Recipes pages will show
-   "Entity not found" everywhere until this step is done.
-
-If the dashboard looks broken (missing cards, a grey box instead of a
-tile) after all five steps: open the dashboard in a browser, check
-DevTools → Console for a 404 on `/local/community/...` — that means one of
-card-mod/Mushroom/rss-news-card didn't download at install time; re-run the
-corresponding `curl` line from `configure_home_assistant_dashboard()` in
-`common.sh` by hand.
+4. **HACS** — always manual, not fetched by the installer. Install it by
+   hand from https://get.hacs.xyz, then open Settings → Devices & Services
+   and follow HACS's own one-time GitHub device-code authorization prompt.
+5. **pyscript** (powers the Meals and Recipes panels) — once HACS is
+   authorized (step 4), go to HACS → Integrations → search "pyscript" →
+   Download, then restart Home Assistant once more. The Meals and Recipes
+   panels will show "Entity not found" everywhere until this step is done.
 
 ## Recommended checks
 

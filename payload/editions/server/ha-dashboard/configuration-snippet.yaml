@@ -80,10 +80,9 @@ command_line:
       payload_off: "1"
       command_timeout: 5
       scan_interval: 60
-  # Backs the rss-news-card on the dashboard. Confirmed live against the
-  # card's own source: it reads a per-feed sensor's "articles" json
-  # attribute (title/link/pubDate per item) rather than fetching RSS
-  # itself — data comes from the ha-rss systemd timer.
+  # Backs the Home panel's news section. Each feed is a json "articles"
+  # attribute (title/link/pubDate per item) read directly by home.js —
+  # data comes from the ha-rss systemd timer.
   - sensor:
       name: Khione RSS BBC
       unique_id: khione_rss_bbc
