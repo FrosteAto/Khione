@@ -569,25 +569,26 @@ print(json.dumps(d, indent=2))
 }
 
 # ---------------------------------------------------------------------
-# AppArmor. This host's Secure Boot is disabled and it boots via GRUB
-# (not systemd-boot+UKI) -- the specific boot-breakage pattern research
-# found (AppArmor kernel param + Secure Boot + UKI) doesn't apply here,
-# which is why this is safe to enable rather than deferred like rootless
-# Docker above. Confirm it actually booted before relying on it; GRUB's
-# own menu/previous-entry is the fallback if it somehow didn't.
-# ---------------------------------------------------------------------
+# AppArmor. DISABLED -- confirmed live this breaks boot entirely on this
+# host (plain GRUB + linux-lts, Secure Boot off). Research's documented
+# risk pattern was specifically systemd-boot+UKI+Secure Boot, which this
+# host doesn't use, so the kernel param was applied as "safe" -- it
+# wasn't. The box dropped off the network after the next real reboot,
+# reproducibly (a second reboot didn't fix it, since it's a config
+# problem, not a transient one), and recovery needed physical/console
+# access to edit the GRUB boot entry and strip apparmor=1
+# security=apparmor for a one-time boot. The exact root cause on this
+# kernel wasn't chased down -- aa-status showed the apparmor kernel
+# module as loaded beforehand, so it's not simply "unsupported kernel",
+# but whatever it is, it's real and reproducible on this exact setup.
+# Not worth re-attempting without a non-production box to actually debug
+# it on, same reasoning as the Plex sandboxing bisection, but with a
+# much worse failure mode (whole-box network loss vs. one service
+# crashing) -- so left off rather than re-bisected.
 configure_apparmor() {
-  if ! command -v aa-status &>/dev/null; then
-    echo "apparmor not installed, skipping."
-    return 0
-  fi
-  echo "Enabling AppArmor..."
-  if [[ -f /etc/default/grub ]] && ! grep -q "apparmor=1" /etc/default/grub; then
-    sudo sed -i 's/^GRUB_CMDLINE_LINUX_DEFAULT="/GRUB_CMDLINE_LINUX_DEFAULT="apparmor=1 security=apparmor /' /etc/default/grub
-    sudo grub-mkconfig -o /boot/grub/grub.cfg
-    echo "AppArmor kernel params added -- takes effect after the next reboot."
-  fi
-  sudo systemctl enable apparmor.service
+  echo "AppArmor is deliberately disabled -- see the comment above this"
+  echo "function. Confirmed live: it broke boot entirely on this host."
+  return 0
 }
 
 # ---------------------------------------------------------------------

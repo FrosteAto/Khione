@@ -16,7 +16,7 @@ OFFICIAL_PACKAGES=(
   pacman-contrib
   arch-audit          # feeds khione-system's security_updates/security_detail attributes AND the daily CVE-check timer
   docker              # runs the Home Assistant container
-  fail2ban audit informant apparmor
+  fail2ban audit informant
 )
 
 AUR_PACKAGES=(
