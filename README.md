@@ -94,11 +94,78 @@ Home Assistant runs containerised on :8123 for smart-home control, with support 
 
 Enough local tooling for hands-on debugging - terminal, file manager, text editor - plus SSH open for standard remote access, with ufw locked to only the ports each service actually needs.
 
+**Security Hardening**
+
+Server Edition opts into a full hardening pass: a default-deny firewall scoped to LAN where it can be, fail2ban and CrowdSec watching for abuse, file-integrity and audit monitoring, locked-down SSH/PAM/sysctl defaults, a hardened Docker daemon, a GRUB bootloader password, gated auto-updates that won't apply a security fix silently, and Quad9 DNS filtering for known-malicious domains. See the architecture diagram below for how it all fits together.
+
 <br>
 
 <p align="center">
   <img width="1920" height="1200" alt="Khione Server screenshot 2" src="./docs/images/Server.png" />
 </p>
+
+<br>
+
+<h3 align="center">Server Architecture Overview</h3>
+
+```mermaid
+flowchart TD
+    INTERNET(("Internet"))
+    ROUTER["Home Router<br/>192.168.1.0/24 LAN"]
+    QUAD9["Quad9 DNS - 9.9.9.9<br/>blocks known-malicious domains"]
+    CS_CLOUD["CrowdSec Central API<br/>community IP blocklist (pull-only, no sharing)"]
+
+    INTERNET --> ROUTER
+
+    subgraph EDGE["Network Edge"]
+        UFW["ufw - default deny incoming<br/>Global: 22/tcp limited, 1900/udp, 5353/udp<br/>LAN-only: 32400, 9090, 137-139, 445, 8123"]
+        F2B["fail2ban<br/>jails: sshd, cockpit"]
+        CSBOUNCER["CrowdSec agent + nftables bouncer"]
+    end
+
+    ROUTER --> UFW
+    UFW --> F2B
+    UFW --> CSBOUNCER
+    UFW -. DNS queries .-> QUAD9
+    CSBOUNCER -. pulls blocklist .-> CS_CLOUD
+
+    subgraph HOST["Host Hardening"]
+        SSHD["sshd<br/>no root login, 3 max auth tries,<br/>key-only once keys exist"]
+        PAM["pam_faillock<br/>5 fails -> 15 min lockout"]
+        SYSCTL["sysctl hardening<br/>kptr_restrict, ptrace_scope, rp_filter..."]
+        GRUB["GRUB bootloader password"]
+        DOCKERD["Docker daemon hardening<br/>no-new-privileges, icc off, log limits"]
+    end
+
+    F2B --> SSHD
+    CSBOUNCER --> HOST
+
+    subgraph SERVICES["Services"]
+        PLEX["Plex Media Server<br/>systemd-sandboxed (9 hardening directives)"]
+        HA["Home Assistant<br/>Docker + Zigbee dongle passthrough"]
+        SAMBA["Samba + wsdd<br/>file sharing"]
+        COCKPIT["Cockpit :9090<br/>admin web UI"]
+        DASH["Khione Dashboard<br/>custom HA panel"]
+    end
+
+    HOST --> SERVICES
+    DOCKERD --> HA
+
+    subgraph WATCH["Integrity, Auditing & Patching"]
+        AIDE["AIDE<br/>daily file-integrity diff"]
+        AUDITD["auditd<br/>watches Plex plugin/codec dirs"]
+        PACTIMER["pacman -Syu timer"]
+        INFORMANT["informant<br/>blocks upgrade until Arch News is read"]
+        ARCHAUDIT["arch-audit --upgradable<br/>flags Critical/High CVEs"]
+    end
+
+    PLEX -. watched by .-> AIDE
+    PLEX -. watched by .-> AUDITD
+    PACTIMER --> INFORMANT
+    ARCHAUDIT --> DASH
+```
+
+> Not pictured: AppArmor was evaluated and deliberately left disabled - it broke boot on this specific GRUB + `linux-lts` setup, with no Secure Boot involved. The root cause wasn't pinned down, so it stays off rather than risk round two.
 
 ---
 
