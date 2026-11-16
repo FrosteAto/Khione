@@ -628,3 +628,37 @@ EOF
   echo "=============================================================="
   echo
 }
+
+# ---------------------------------------------------------------------
+# DNS threat blocking via Quad9 (9.9.9.9) -- a nonprofit, security-
+# focused public resolver that blocks known-malicious domains using IBM
+# X-Force threat intel, updated continuously on their end, nothing to
+# sync or maintain here. This is the layer that would have actually
+# caught the mining pools from this project's Nov 2026 incident
+# (gulf.moneroocean.stream, pool.hashvault.pro) -- they're named
+# domains, not bare IPs. Real limit: malware connecting straight to a
+# raw IP skips DNS entirely and isn't touched by this.
+#
+# Overrides the active connection's DNS via NetworkManager (every
+# edition in this repo enables NetworkManager.service, confirmed by
+# grep across all mode.sh files) rather than editing /etc/resolv.conf
+# directly, which NetworkManager would just overwrite on the next
+# reconnect/reboot. Finds the real uplink connection by device type so
+# it never touches loopback or Docker's bridge.
+# ---------------------------------------------------------------------
+configure_dns_threat_blocking() {
+  if ! command -v nmcli &>/dev/null; then
+    echo "NetworkManager not installed, skipping DNS threat blocking."
+    return 0
+  fi
+  local conn
+  conn="$(nmcli -t -f NAME,TYPE con show --active | awk -F: '$2=="802-3-ethernet" || $2=="802-11-wireless" {print $1; exit}')"
+  if [[ -z "$conn" ]]; then
+    echo "WARNING: no active wired/wireless connection found -- skipping DNS threat blocking."
+    return 0
+  fi
+  echo "Pointing '$conn' at Quad9's filtered DNS (9.9.9.9)..."
+  sudo nmcli con mod "$conn" ipv4.dns "9.9.9.9 149.112.112.112" ipv4.ignore-auto-dns yes
+  sudo nmcli con mod "$conn" ipv6.dns "2620:fe::fe 2620:fe::9" ipv6.ignore-auto-dns yes
+  sudo nmcli con up "$conn" >/dev/null
+}

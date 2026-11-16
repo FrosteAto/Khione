@@ -240,6 +240,7 @@ if [[ "$SETUP_SECURITY_HARDENING" == "true" ]]; then
   configure_auto_updates
   configure_apparmor
   configure_bootloader_password
+  configure_dns_threat_blocking
 fi
 for pkg in "${AUR_UPDATE_CHECKS[@]}"; do
   configure_aur_update_check "$ARCH_USER" "$pkg"
