@@ -1,7 +1,15 @@
 // payload/editions/server/ha-dashboard/panels/_tokens.js
 // Exact frosteato.com brand values — do not approximate these.
+// shortcut: these rules use :host (and :host([data-theme=...])), never
+// :root — :root only ever matches the real document's <html>, never a
+// shadow tree, so a :root rule here would silently never apply and the
+// whole page would render unstyled. :host targets the custom element
+// itself (the shadow root's host), which IS reachable from inside its
+// own shadow tree. Caught live while wiring the first real panel into a
+// shadow root — Task 1 alone never exercised this since it never
+// instantiated the module inside a shadow DOM.
 export const SHARED_TOKENS_CSS = `
-:root {
+:host {
   --bg: #fefae0;
   --card-bg: #f5eed8;
   --ink: #283618;
@@ -16,7 +24,7 @@ export const SHARED_TOKENS_CSS = `
   --band-ink: #4d3014;
   color-scheme: light;
 }
-:root[data-theme="dark"] {
+:host([data-theme="dark"]) {
   --bg: #0a1b15;
   --card-bg: #09221d;
   --ink: #fefae0;
@@ -28,7 +36,7 @@ export const SHARED_TOKENS_CSS = `
   color-scheme: dark;
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
+  :host(:not([data-theme="light"])) {
     --bg: #0a1b15;
     --card-bg: #09221d;
     --ink: #fefae0;
@@ -55,20 +63,26 @@ export const GOOGLE_FONTS_LINK_HTML =
 // Reads/writes the same localStorage key every panel's theme toggle uses,
 // so a choice made on one page is remembered on the others too (same
 // origin inside the HA frontend, unlike the standalone mockup artifacts).
-export function initTheme(rootEl) {
+//
+// hostEl must be the custom element itself (pass `this` from inside a
+// panel class), NOT its shadow root (`this._root`) — a ShadowRoot is a
+// DocumentFragment and has no setAttribute/getAttribute at all, and the
+// CSS above keys off :host([data-theme=...]), which reads the attribute
+// from the host element, not the shadow tree.
+export function initTheme(hostEl) {
   try {
     const saved = localStorage.getItem("khione-dash-theme");
     if (saved === "light" || saved === "dark") {
-      rootEl.setAttribute("data-theme", saved);
+      hostEl.setAttribute("data-theme", saved);
     }
   } catch (e) { /* localStorage unavailable, fall back to system preference */ }
 }
 
-export function toggleTheme(rootEl) {
-  const current = rootEl.getAttribute("data-theme") ||
+export function toggleTheme(hostEl) {
+  const current = hostEl.getAttribute("data-theme") ||
     (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
   const next = current === "dark" ? "light" : "dark";
-  rootEl.setAttribute("data-theme", next);
+  hostEl.setAttribute("data-theme", next);
   try { localStorage.setItem("khione-dash-theme", next); } catch (e) {}
   return next;
 }
