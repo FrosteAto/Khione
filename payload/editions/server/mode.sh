@@ -14,8 +14,9 @@ OFFICIAL_PACKAGES=(
   noto-fonts noto-fonts-cjk noto-fonts-emoji ttf-dejavu ttf-jetbrains-mono
   samba cockpit smartmontools
   pacman-contrib
-  arch-audit          # feeds khione-system's security_updates/security_detail attributes
+  arch-audit          # feeds khione-system's security_updates/security_detail attributes AND the daily CVE-check timer
   docker              # runs the Home Assistant container
+  fail2ban audit informant apparmor
 )
 
 AUR_PACKAGES=(
@@ -23,6 +24,7 @@ AUR_PACKAGES=(
   wsdd                # makes the server visible in Windows Explorer's Network browser
   cockpit-file-sharing  # Samba share management GUI inside Cockpit
   cockpit-storaged      # disk/partition/RAID management GUI inside Cockpit
+  aide crowdsec crowdsec-firewall-bouncer-nftables
 )
 
 SERVICES_ENABLE=(
@@ -47,13 +49,41 @@ SERVICES_ENABLE=(
 
 SERVICES_MASK=( sleep.target suspend.target hibernate.target hybrid-sleep.target samba.service )
 
-FIREWALL_RULES=(
-  22/tcp 32400/tcp 1900/udp 5353/udp
+# SSH is rate-limited (not just allowed) by configure_firewall; discovery
+# protocols (SSDP/mDNS) are link-local broadcast and not meaningfully
+# scopeable by source subnet, so they stay here too.
+FIREWALL_RULES=( 22/tcp 1900/udp 5353/udp )
+
+# Scoped to the LAN subnet instead of the whole internet -- Plex was
+# reachable from anywhere when this project's Nov 2026 incident happened,
+# and Cockpit/HA/Samba have no legitimate reason to be internet-facing
+# either. If Remote Access ever gets re-enabled on Plex by mistake, this
+# is the safety net that still blocks it from outside the LAN.
+FIREWALL_RULES_LAN=(
+  32400/tcp       # Plex
   9090/tcp        # Cockpit web UI
   137/udp 138/udp # Samba NetBIOS
   139/tcp 445/tcp # Samba SMB
   8123/tcp        # Home Assistant web UI
 )
+
+SETUP_SECURITY_HARDENING="true"
+# No "cockpit" jail: confirmed live, this fail2ban build ships no
+# cockpit filter at all (it skips the jail with "no accessible config
+# files for filter.d/cockpit"), and authoring a custom regex against its
+# log format without real failed-auth samples to test against would be
+# guessing. Cockpit's exposure is already cut down via the LAN-scoped
+# firewall rule above, which is the bigger mitigation anyway.
+FAIL2BAN_JAILS=( sshd )
+# Where the Plex2Shell incident's payload actually landed -- watched by
+# both AIDE (daily diff) and auditd (write/attribute-change alerts),
+# never excluded by configure_file_integrity_monitoring's noise filters.
+FIM_EXTRA_WATCH=( "/var/lib/plex/Plex Media Server/Codecs" "/var/lib/plex/Plex Media Server/Plug-in Support" )
+AUDITD_EXTRA_WATCH=( "/var/lib/plex/Plex Media Server/Codecs" "/var/lib/plex/Plex Media Server/Plug-in Support" )
+# plex-media-server is AUR-only, so the official-repo-only auto-update
+# timer above never sees it -- it was the literal entry point for the
+# incident this hardening pass responds to, so it gets its own notify.
+AUR_UPDATE_CHECKS=( plex-media-server )
 
 HOME_ASSISTANT_UNIT_REL="editions/server/home-assistant.service"
 HA_DASHBOARD_DIR_REL="editions/server/ha-dashboard"
