@@ -13,9 +13,10 @@ OFFICIAL_PACKAGES=(
   xfce4-docklike-plugin xfce4-weather-plugin xfce4-genmon-plugin xfce4-pulseaudio-plugin
   playerctl pipewire-pulse wireplumber network-manager-applet adw-gtk-theme picom
   xfce4-screenshooter xfce4-taskmanager
+  arch-audit informant audit
 )
 
-AUR_PACKAGES=()
+AUR_PACKAGES=( aide )
 
 FLATPAK_PACKAGES=()
 
@@ -37,3 +38,8 @@ CURSOR_THEME_SIZE="32"
 KITTY_TRANSLUCENCY_FIX_REL="editions/ulw/kitty-translucency-fix"
 
 FIRST_BOOT_DIALOG_TITLE="Welcome to Khione ULW"
+
+# See payload/editions/desktop/mode.sh for why fail2ban/CrowdSec/apparmor
+# are deliberately left out here.
+SETUP_SECURITY_HARDENING="true"
+FIM_SCOPE="system-only"

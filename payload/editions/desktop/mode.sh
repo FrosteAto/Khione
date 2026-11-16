@@ -19,6 +19,7 @@ OFFICIAL_PACKAGES=(
   lib32-pipewire lib32-libpulse lib32-alsa-lib lib32-alsa-plugins
   vulkan-radeon lib32-vulkan-radeon xf86-video-amdgpu
   gimp inkscape carla ark qbittorrent prismlauncher protontricks
+  arch-audit informant audit
 )
 
 AUR_PACKAGES=(
@@ -28,6 +29,7 @@ AUR_PACKAGES=(
   lsp-plugins hayase-desktop-bin input-wacom-dkms-git
   spicetify-cli konsave
   # tone3000-plugin disabled: slow install
+  aide
 )
 
 FLATPAK_PACKAGES=(
@@ -44,3 +46,12 @@ FIRST_BOOT_DIALOG_TITLE="Welcome to Khione Desktop"
 SETUP_AUDIO_PRODUCTION=true
 SETUP_THEMING_GUARDS=true
 ICON_THEME_REL="YAMIS.tar.gz"
+
+# No fail2ban/CrowdSec/apparmor here -- no sshd on this edition to
+# protect, and AppArmor's documented systemd-boot+UKI+Secure-Boot boot
+# risk can't be ruled out on hardware this installer doesn't control
+# the way it could be confirmed safe on the server. AIDE/auditd/sysctls/
+# pam_faillock/the update timer/the GRUB password all still apply --
+# generic hardening, not tied to running an exposed service.
+SETUP_SECURITY_HARDENING="true"
+FIM_SCOPE="system-only"
