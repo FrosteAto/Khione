@@ -10,6 +10,13 @@
 // instantiated the module inside a shadow DOM.
 export const SHARED_TOKENS_CSS = `
 :host {
+  /* shortcut: every panel sets display:block on :host but none set a
+     height, so the page's background only ever extends as tall as its
+     own content -- invisible on a tall page (Weather, Home) but exposed
+     as a hard cutoff with HA's own background showing below on a short
+     one (confirmed live on Plants). min-height:100vh makes every panel
+     fill at least the viewport regardless of content length. */
+  min-height: 100vh;
   --bg: #fefae0;
   --card-bg: #f5eed8;
   --ink: #283618;
