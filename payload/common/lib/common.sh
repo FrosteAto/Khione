@@ -144,6 +144,7 @@ mask_services() {
 
 configure_firewall() {
   local -n rules="$1"
+  local -n lan_rules="$2"
   local kernel_release
   local in_chroot=0
 
@@ -152,8 +153,43 @@ configure_firewall() {
   sudo ufw default deny incoming
   sudo ufw default allow outgoing
   for r in "${rules[@]}"; do
-    sudo ufw allow "$r"
+    # SSH gets ufw's own connection-rate limiting (6+ attempts from one IP
+    # in 30s is dropped) on top of fail2ban/CrowdSec -- defense in depth,
+    # not redundant: this one still works even if those haven't started yet.
+    if [[ "$r" == "22/tcp" ]]; then
+      sudo ufw limit "$r"
+    else
+      sudo ufw allow "$r"
+    fi
   done
+
+  if ((${#lan_rules[@]})); then
+    # Scoped to the directly-connected subnet rather than left open to
+    # whatever reaches the port -- Plex was reachable from the whole
+    # internet when this project's Nov 2026 incident happened; Cockpit,
+    # Home Assistant, and Samba have no business being reachable beyond
+    # the LAN either, and none of them need to be.
+    # shortcut: confirmed live that picking the first scope-link route
+    # unconditionally grabs Docker's own bridge subnet (172.17.0.0/16 on
+    # docker0) instead of the real LAN whenever Docker's already running
+    # -- docker0's route sorted first. Anchoring on the default route's
+    # OWN interface instead reliably finds the real LAN, since a bridge
+    # like docker0 never carries the default route.
+    local iface subnet
+    iface="$(ip -4 route show default 2>/dev/null | awk '{for (i=1;i<=NF;i++) if ($i=="dev") print $(i+1)}' | head -1)"
+    subnet="$(ip -4 route list scope link dev "$iface" 2>/dev/null | awk '{print $1; exit}')"
+    if [[ -n "$subnet" ]]; then
+      echo "Scoping ${#lan_rules[@]} rule(s) to LAN subnet $subnet..."
+      for r in "${lan_rules[@]}"; do
+        sudo ufw allow from "$subnet" to any port "${r%/*}" proto "${r#*/}"
+      done
+    else
+      echo "WARNING: couldn't detect a LAN subnet -- allowing ${lan_rules[*]} from anywhere instead."
+      for r in "${lan_rules[@]}"; do
+        sudo ufw allow "$r"
+      done
+    fi
+  fi
 
   if command -v systemd-detect-virt &>/dev/null && systemd-detect-virt --chroot --quiet; then
     in_chroot=1
