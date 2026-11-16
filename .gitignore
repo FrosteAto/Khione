@@ -54,3 +54,4 @@ payload/editions/desktop/dotfiles/local/share/krita/resourcecache.sqlite*
 # ones (e.g. the 2026-11-02 theming-automation docs) are left as-is.
 docs/superpowers/specs/
 docs/superpowers/plans/
+docs/superpowers/BACKLOG.md
