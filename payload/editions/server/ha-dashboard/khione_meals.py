@@ -633,16 +633,14 @@ def khione_meals_midnight_refresh():
 
 
 @service
-def khione_meals_log_weight():
-    # Lovelace tap_action data: is NOT Jinja-rendered -- a button can only
-    # ever send the literal template text, never the live value. Every
-    # service below reads the relevant input_* helper directly instead.
+def khione_meals_log_weight(kg=None):
+    # Direct parameter from the Meals panel's hass.callService call.
     try:
-        kg = round(float(state.get("input_number.khione_weight_kg")), 1)
+        kg = round(float(kg), 1)
         if not 30 <= kg <= 300:
             raise ValueError
     except (TypeError, ValueError):
-        log.error("khione_meals_log_weight: bad kg value from input_number.khione_weight_kg")
+        log.error("khione_meals_log_weight: bad kg value %r", kg)
         return
     today_iso = date.today().isoformat()
     entries = [e for e in load_json(WEIGHT_LOG_PATH, []) if e["date"] != today_iso]
@@ -652,13 +650,12 @@ def khione_meals_log_weight():
 
 
 @service
-def khione_meals_save_profile():
+def khione_meals_save_profile(age=None, height_cm=None, sex=None, activity=None):
     try:
-        activity = state.get("input_select.khione_profile_activity")
         profile = {
-            "age": int(float(state.get("input_number.khione_profile_age"))),
-            "height_cm": int(float(state.get("input_number.khione_profile_height"))),
-            "sex": state.get("input_select.khione_profile_sex"),
+            "age": int(float(age)),
+            "height_cm": int(float(height_cm)),
+            "sex": sex,
             "activity": float(activity),
         }
         if not (10 <= profile["age"] <= 120 and 100 <= profile["height_cm"] <= 250
@@ -673,20 +670,22 @@ def khione_meals_save_profile():
 
 
 @service
-def khione_meals_save_recipe():
+def khione_meals_save_recipe(id=None, name=None, meal_type=None, kcal_min=None,
+                              kcal_max=None, protein_min=None, protein_max=None,
+                              ingredients=None, instructions=None, batch=None,
+                              fresh=None):
     try:
-        rid = (state.get("input_text.khione_recipe_id") or "").strip()
-        name = (state.get("input_text.khione_recipe_name") or "").strip()[:200]
-        meal_type = state.get("input_select.khione_recipe_meal_type")
-        kcal_min = int(float(state.get("input_number.khione_recipe_kcal_min")))
-        kcal_max = int(float(state.get("input_number.khione_recipe_kcal_max")))
-        protein_min = int(float(state.get("input_number.khione_recipe_protein_min")))
-        protein_max = int(float(state.get("input_number.khione_recipe_protein_max")))
-        batch = int(float(state.get("input_number.khione_recipe_batch")))
-        fresh = state.get("input_boolean.khione_recipe_fresh") == "on"
-        # input_text's max length is capped at 255 by HA itself.
-        ingredients = (state.get("input_text.khione_recipe_ingredients") or "").strip()[:255]
-        instructions = (state.get("input_text.khione_recipe_instructions") or "").strip()[:255]
+        rid = (id or "").strip()
+        name = (name or "").strip()[:200]
+        kcal_min = int(float(kcal_min))
+        kcal_max = int(float(kcal_max))
+        protein_min = int(float(protein_min))
+        protein_max = int(float(protein_max))
+        batch = int(float(batch))
+        fresh = bool(fresh)
+        # cap length for sanity/storage, same limit the old input_text helpers had.
+        ingredients = (ingredients or "").strip()[:255]
+        instructions = (instructions or "").strip()[:255]
         if not (name and meal_type in MEAL_TYPES
                 and 0 <= kcal_min <= kcal_max <= 3000
                 and 0 <= protein_min <= protein_max <= 300
@@ -701,9 +700,9 @@ def khione_meals_save_recipe():
     existing = recipes_by_id.get(rid) if rid and rid in ids else None
     if existing is not None:
         recipe = existing
-        # Editing: the form is never pre-filled from the existing recipe,
-        # so a blank field means "didn't type anything there" -- keep the
-        # old value rather than wiping it.
+        # Editing: a real form might still legitimately submit a blank
+        # ingredients/instructions field -- keep the old value rather than
+        # wiping it.
         if not ingredients:
             ingredients = recipe.get("ingredients", "")
         if not instructions:
@@ -724,8 +723,8 @@ def khione_meals_save_recipe():
 
 
 @service
-def khione_meals_delete_recipe():
-    rid = (state.get("input_text.khione_recipe_id") or "").strip()
+def khione_meals_delete_recipe(id=None):
+    rid = (id or "").strip()
     if not rid:
         log.error("khione_meals_delete_recipe: missing id")
         return

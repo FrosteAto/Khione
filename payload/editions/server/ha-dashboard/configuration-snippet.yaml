@@ -15,6 +15,12 @@ panel_custom:
     url_path: khione-home
     module_url: /local/panels/home.js
     embed_iframe: false
+  - name: khione-plants-panel
+    sidebar_title: Plants
+    sidebar_icon: mdi:flower
+    url_path: khione-plants
+    module_url: /local/panels/plants.js
+    embed_iframe: false
 
 command_line:
   - sensor:
@@ -143,89 +149,12 @@ pyscript:
   hass_is_global: true
 
 input_number:
-  khione_weight_kg:
-    name: Log Weight (kg)
-    min: 30
-    max: 300
-    step: 0.1
-    initial: 80
-  khione_profile_age:
-    name: Age
-    min: 10
-    max: 120
-    step: 1
-    initial: 30
-  khione_profile_height:
-    name: Height (cm)
-    min: 100
-    max: 250
-    step: 1
-    initial: 183
   khione_meals_preview_week:
     name: Preview Week
     min: 1
     max: 12
     step: 1
     initial: 1
-  khione_recipe_kcal_min:
-    name: Kcal Min
-    min: 0
-    max: 3000
-    step: 10
-    initial: 0
-  khione_recipe_kcal_max:
-    name: Kcal Max
-    min: 0
-    max: 3000
-    step: 10
-    initial: 0
-  khione_recipe_protein_min:
-    name: Protein Min (g)
-    min: 0
-    max: 300
-    step: 1
-    initial: 0
-  khione_recipe_protein_max:
-    name: Protein Max (g)
-    min: 0
-    max: 300
-    step: 1
-    initial: 0
-  khione_recipe_batch:
-    name: Batch Size
-    min: 0
-    max: 20
-    step: 1
-    initial: 0
-
-input_select:
-  khione_profile_sex:
-    name: Sex
-    options: ["male", "female"]
-  khione_profile_activity:
-    name: Activity Level
-    options: ["1.2", "1.375", "1.55", "1.725"]
-  khione_recipe_meal_type:
-    name: Meal Type
-    options: ["breakfast", "lunch", "snack", "dinner"]
-
-input_boolean:
-  khione_recipe_fresh:
-    name: Cooked Fresh (not reheated leftovers)
-
-input_text:
-  khione_recipe_id:
-    name: Recipe ID (leave blank to create new)
-    max: 100
-  khione_recipe_name:
-    name: Recipe Name
-    max: 200
-  khione_recipe_ingredients:
-    name: Ingredients
-    max: 255  # HA caps input_text at 255; a value over this fails config validation
-  khione_recipe_instructions:
-    name: Instructions
-    max: 255
 
 lovelace:
   # resource_mode: yaml is required alongside resources: below, or the
