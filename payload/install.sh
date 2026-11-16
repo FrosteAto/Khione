@@ -58,6 +58,8 @@ REPO_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 # shellcheck source=/dev/null
 source "$REPO_ROOT/common/lib/common.sh"
+# shellcheck source=/dev/null
+source "$REPO_ROOT/common/lib/security.sh"
 
 MODE="${MODE:-desktop}"
 ARCH_USER="${ARCH_USER:-}"
@@ -134,6 +136,23 @@ source "$MODE_FILE"
 if ! declare -p FLATPAK_PACKAGES >/dev/null 2>&1; then
   FLATPAK_PACKAGES=()
 fi
+if ! declare -p FIREWALL_RULES_LAN >/dev/null 2>&1; then
+  FIREWALL_RULES_LAN=()
+fi
+if ! declare -p FAIL2BAN_JAILS >/dev/null 2>&1; then
+  FAIL2BAN_JAILS=(sshd)
+fi
+if ! declare -p FIM_EXTRA_WATCH >/dev/null 2>&1; then
+  FIM_EXTRA_WATCH=()
+fi
+if ! declare -p AUDITD_EXTRA_WATCH >/dev/null 2>&1; then
+  AUDITD_EXTRA_WATCH=()
+fi
+if ! declare -p AUR_UPDATE_CHECKS >/dev/null 2>&1; then
+  AUR_UPDATE_CHECKS=()
+fi
+SETUP_SECURITY_HARDENING="${SETUP_SECURITY_HARDENING:-false}"
+FIM_SCOPE="${FIM_SCOPE:-full}"
 
 init_paths "$REPO_ROOT" "$ARCH_USER"
 
@@ -204,8 +223,27 @@ configure_home_assistant_dashboard "${HA_DASHBOARD_DIR_REL:+$REPO_ROOT/$HA_DASHB
 configure_host_collectors "${HA_COLLECTORS_DIR_REL:+$REPO_ROOT/$HA_COLLECTORS_DIR_REL}"
 enable_services SERVICES_ENABLE
 mask_services SERVICES_MASK
-configure_firewall FIREWALL_RULES
+configure_firewall FIREWALL_RULES FIREWALL_RULES_LAN
 configure_samba
+
+section "Security hardening"
+harden_plexmediaserver_service
+configure_docker_daemon_hardening
+if [[ "$SETUP_SECURITY_HARDENING" == "true" ]]; then
+  configure_ssh_hardening "$ARCH_USER"
+  configure_pam_faillock
+  configure_sysctl_hardening
+  configure_fail2ban FAIL2BAN_JAILS
+  configure_crowdsec
+  configure_file_integrity_monitoring "$FIM_SCOPE" FIM_EXTRA_WATCH
+  configure_auditd AUDITD_EXTRA_WATCH
+  configure_auto_updates
+  configure_apparmor
+  configure_bootloader_password
+fi
+for pkg in "${AUR_UPDATE_CHECKS[@]}"; do
+  configure_aur_update_check "$ARCH_USER" "$pkg"
+done
 
 section "Configuring greetd and PAM"
 configure_greetd "$GREETD_SESSION_CMD"
