@@ -34,7 +34,17 @@ import { SHARED_TOKENS_CSS, ensureGoogleFontsLoaded, initTheme, toggleTheme, ens
 // ---------------------------------------------------------------------------
 const PAGE_CSS = `
 :host{
-  display:block;
+  /* This is the one page meant to be a single, non-scrolling screen (the
+     other 4 are interactive and fine to scroll). _tokens.js's shared
+     min-height:100vh already keeps the background filled on a short
+     page; this flex column goes further on a TALL one (a screen taller
+     than the content's own ~1000px) -- main (flex:1) absorbs whatever
+     extra height :host has beyond hero+footer's natural size, then
+     distributes it as breathing room between its own two sections via
+     justify-content below, instead of leaving it as dead space under
+     the footer. */
+  display:flex;
+  flex-direction:column;
   --khione-deep:#5f8a3f;
   --shadow-c:112,77,44;
   --ink-rgb:40,54,24;
@@ -110,7 +120,7 @@ button{ font-family: inherit; }
 .icon-badge.sm .icon{ width:20px; height:20px; }
 
 /* ---------- header band ---------- */
-.hero{ position: relative; overflow:hidden; background: linear-gradient(170deg, var(--band-bg) 0%, color-mix(in srgb, var(--band-bg) 78%, var(--band-ink)) 100%); padding-block: 1.2rem 1rem; }
+.hero{ flex-shrink:0; position: relative; overflow:hidden; background: linear-gradient(170deg, var(--band-bg) 0%, color-mix(in srgb, var(--band-bg) 78%, var(--band-ink)) 100%); padding-block: 1.2rem 1rem; }
 .hero .blob{ opacity:.14; background:#fff; }
 .hero .blob.hb1{ width:260px; height:260px; top:-90px; right:8%; }
 .hero .blob.hb2{ width:160px; height:160px; bottom:-60px; left:14%; }
@@ -139,7 +149,7 @@ button{ font-family: inherit; }
 .theme-toggle .icon{ width:20px; height:20px; }
 
 /* ---------- sections ---------- */
-main{ display:block; }
+main{ display:flex; flex-direction:column; flex:1 1 auto; justify-content: space-evenly; gap: 1rem; }
 section{ padding-block: .85rem; position:relative; }
 .section-head{ display:flex; align-items:center; gap:.85rem; margin-bottom: .8rem; }
 .section-head h2{ font-size: 1.3rem; }
@@ -272,7 +282,7 @@ section{ padding-block: .85rem; position:relative; }
 .sys-line:first-of-type{ border-top:none; }
 .sys-line b{ font-variant-numeric: tabular-nums; }
 
-footer{ background: linear-gradient(170deg, var(--band-bg) 0%, color-mix(in srgb, var(--band-bg) 78%, var(--band-ink)) 100%); padding-block: .6rem; text-align:center; color: var(--band-ink); font-size:.8rem; font-weight:600; margin-top: .3rem; }
+footer{ flex-shrink:0; background: linear-gradient(170deg, var(--band-bg) 0%, color-mix(in srgb, var(--band-bg) 78%, var(--band-ink)) 100%); padding-block: .6rem; text-align:center; color: var(--band-ink); font-size:.8rem; font-weight:600; margin-top: .3rem; }
 footer .wrap{ opacity:.85; }
 
 @keyframes pulse{ 0%{ transform:scale(.8); opacity:.7;} 100%{ transform:scale(1.8); opacity:0;} }
