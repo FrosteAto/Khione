@@ -231,7 +231,10 @@ main{ flex:1 1 auto; display:grid; grid-template-columns: 1.65fr 1fr; gap: 1.4re
    sensors), so this wraps rather than assuming a fixed set of columns. */
 .temp-mini-wrap{ display:flex; flex-wrap:wrap; gap: .5rem 1.3rem; }
 
-footer{ flex-shrink:0; background: linear-gradient(170deg, var(--band-bg) 0%, color-mix(in srgb, var(--band-bg) 78%, var(--band-ink)) 100%); padding-block: .6rem; text-align:center; color: var(--band-ink); font-size:.8rem; font-weight:600; }
+/* No banded background -- that was the other half of the old top hero
+   band, which the Hero+Rail layout removed entirely. Left on its own,
+   a solid sage block here just reads as a stray colored bar. */
+footer{ flex-shrink:0; padding-block: .7rem; text-align:center; color: var(--muted); font-size:.8rem; font-weight:600; border-top: 1px solid rgba(var(--ink-rgb),.1); }
 footer .wrap{ opacity:.85; }
 
 .sys-badge{ display:inline-flex; align-items:center; gap:.4rem; background: color-mix(in srgb, var(--khione-yellow) 24%, var(--card-bg)); color: var(--khione-yellow); font-weight:800; font-size:.76rem; padding:.3rem .7rem; border-radius:999px; }
