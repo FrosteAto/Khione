@@ -1,48 +1,31 @@
 // payload/editions/server/ha-dashboard/panels/home.js
-// Khione Home custom panel. Ported from the approved mockup scratchpad
-// mockups/home-redesign-washi-ghibli-brand.html — this file is a data-wiring
-// change onto that approved design, not a redesign. See _tokens.js for the
-// shared brand tokens/theme toggle, and weather.js for the sibling panel
-// this follows the same wrapper mechanics as.
+// Khione Home custom panel. Rewritten from the original "Today" section +
+// bento grid layout into a Hero+Rail layout (one big weather/clothing/news
+// column + one dense status rail), ported from the approved mockup
+// scratchpad dashboard-sim/concepts.html's Concept 3 after several rounds
+// of visual iteration there. See _tokens.js for the shared brand
+// tokens/theme toggle, and weather.js for the sibling panel this follows
+// the same wrapper mechanics as.
 import { SHARED_TOKENS_CSS, ensureGoogleFontsLoaded, initTheme, toggleTheme, ensureMobileMenuButton, setMobileMenuButtonVisible } from "./_tokens.js";
 
 // ---------------------------------------------------------------------------
-// PAGE_CSS — ported from the mockup's main <style> block. Three kinds of
-// adaptation on top of the mockup text, each isolated below:
-//
-// 1. Shadow-DOM retargeting (same reasoning as weather.js): `body{...}` /
-//    `body::before{...}` become `:host{...}` / `:host::after{...}` — a
-//    shadow root has no real <body>, so those selectors would otherwise
-//    match nothing. `display:block` is added because custom elements
-//    default to `display:inline`.
-// 2. The mockup's own `:root{...}` / dark-mode token block is NOT
-//    duplicated here — `--bg`, `--card-bg`, `--ink`, `--muted`, `--accent`,
-//    `--accent-soft`, `--band-bg`, `--band-ink` already come from
-//    SHARED_TOKENS_CSS (prepended in the same <style> tag), with the exact
-//    same light/dark values.
-// 3. The mockup used its OWN names for three brand colors that
-//    SHARED_TOKENS_CSS already exports under different names with the
-//    identical hex values: `--khione` -> `--khione-green` (#8bb862),
-//    `--purple` -> `--khione-purple` (#5d4799), `--blue` -> `--khione-blue`
-//    (#40c4db), `--yellow` -> `--khione-yellow` (#c9a23d). Every var(...)
-//    reference to those three was renamed accordingly so this page actually
-//    reads the shared tokens instead of silently resolving to nothing.
-//    `--khione-deep`, `--shadow-c`, `--ink-rgb`, `--font-display`,
-//    `--font-body`, `--font-script` have no shared equivalent, so they're
-//    kept as page-local tokens (declared in :host below, with the same
-//    light/dark values the mockup's :root block used).
+// PAGE_CSS — see _tokens.js for why `:host`/`:host([data-theme=...])` are
+// used instead of `:root`/`body` (shadow DOM has no real <body>, and
+// :root never matches inside a shadow tree). `--khione-deep`, `--shadow-c`,
+// `--ink-rgb`, `--font-display`, `--font-body`, `--font-script` have no
+// shared-token equivalent, so they're page-local, declared in :host below.
 // ---------------------------------------------------------------------------
 const PAGE_CSS = `
 :host{
-  /* This is the one page meant to be a single, non-scrolling screen (the
-     other 4 are interactive and fine to scroll). _tokens.js's shared
-     min-height:100vh already keeps the background filled on a short
-     page; this flex column goes further on a TALL one (a screen taller
-     than the content's own ~1000px) -- main (flex:1) absorbs whatever
-     extra height :host has beyond hero+footer's natural size, then
-     distributes it as breathing room between its own two sections via
-     justify-content below, instead of leaving it as dead space under
-     the footer. */
+  /* Single, non-scrolling screen. SHARED_TOKENS_CSS's min-height:100vh
+     keeps the background filled on a short page; this flex column lets
+     main (flex:1) absorb extra height on a TALL one. Unlike the
+     previous layout, main is now a single-row grid (hero col + rail),
+     not multiple stacked sections -- there's nothing left to spread
+     leftover height between as artificial gaps, which was the actual
+     cause of the "dead space" this layout replaced. Any true leftover
+     on an unusually tall screen just sits below the grid, before the
+     footer, as one ordinary margin -- not three. */
   display:flex;
   flex-direction:column;
   --khione-deep:#5f8a3f;
@@ -118,92 +101,68 @@ button{ font-family: inherit; }
 .icon-badge.yellow .icon{ color: var(--khione-yellow); }
 .icon-badge.sm{ width:40px; height:40px; }
 .icon-badge.sm .icon{ width:20px; height:20px; }
+.icon-badge.xs{ width:34px; height:34px; }
+.icon-badge.xs .icon{ width:17px; height:17px; }
 
-/* ---------- header band ---------- */
-.hero{ flex-shrink:0; position: relative; overflow:hidden; background: linear-gradient(170deg, var(--band-bg) 0%, color-mix(in srgb, var(--band-bg) 78%, var(--band-ink)) 100%); padding-block: 1.2rem 1rem; }
-.hero .blob{ opacity:.14; background:#fff; }
-.hero .blob.hb1{ width:260px; height:260px; top:-90px; right:8%; }
-.hero .blob.hb2{ width:160px; height:160px; bottom:-60px; left:14%; }
-.hero-inner{ position:relative; z-index:1; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:1.4rem; }
-.hero-left{ display:flex; flex-direction:column; gap:.2rem; }
-.hero-clock{ font-family: var(--font-body); font-weight:700; font-size: clamp(2.6rem, 2rem + 3vw, 4.2rem); color: var(--band-ink); letter-spacing:.01em; line-height:1; }
-.hero-date{ color: var(--band-ink); opacity:.78; font-size:.92rem; font-weight:600; }
-.hero-note{ font-family: var(--font-script); font-size: 1.4rem; color: var(--band-ink); margin-top:.3rem; }
-.hero-right{ display:flex; align-items:center; gap:1rem; background: rgba(255,255,255,.16); border-radius: 999px; padding:.6rem 1.2rem .6rem .6rem; }
-.hero-right .icon-badge .blob{ background: rgba(255,255,255,.3); box-shadow:none; }
-.hero-right .icon-badge .icon{ color: var(--band-ink); }
-.hero-right-text b{ display:block; font-size:1.15rem; color: var(--band-ink); font-weight:800; }
-.hero-right-text span{ font-size:.78rem; color: var(--band-ink); opacity:.8; }
-
-/* Theme toggle — not in the mockup (it had no toggle button at all), added
-   per brief Step 3, styled to match the existing hero-right pill since this
-   page has no separate top band the way weather.js's mockup did. */
-.hero-right-group{ display:flex; align-items:center; gap:.7rem; }
+/* Theme toggle -- lives in the weather card's top-right corner now
+   (see .hero-corner), not a separate header band. The old band's only
+   other content (a big clock + a condensed weather chip) is redundant
+   once the full weather display sits right below it on the same card. */
 .theme-toggle{
-  position:relative; width:40px; height:40px; flex:0 0 auto;
-  border-radius:50%; border:1px solid rgba(255,255,255,.3);
-  background: rgba(255,255,255,.16); color: var(--band-ink);
+  position:relative; width:38px; height:38px; flex:0 0 auto;
+  border-radius:50%; border:1px solid rgba(var(--ink-rgb),.15);
+  background: color-mix(in srgb, var(--accent-soft) 30%, var(--card-bg)); color: var(--accent);
   display:flex; align-items:center; justify-content:center; cursor:pointer;
 }
-.theme-toggle:hover{ background: rgba(255,255,255,.26); }
-.theme-toggle .icon{ width:20px; height:20px; }
+.theme-toggle:hover{ background: color-mix(in srgb, var(--accent-soft) 45%, var(--card-bg)); }
+.theme-toggle .icon{ width:18px; height:18px; }
 
-/* ---------- sections ---------- */
-main{ display:flex; flex-direction:column; flex:1 1 auto; justify-content: space-evenly; gap: 1rem; }
-section{ padding-block: .85rem; position:relative; }
-.section-head{ display:flex; align-items:center; gap:.85rem; margin-bottom: .8rem; }
-.section-head h2{ font-size: 1.3rem; }
-.section-head .count{ color: var(--muted); font-size:.8rem; font-weight:600; margin-left:.2rem; }
+/* ---------- layout: hero column (left) + status rail (right) ---------- */
+main{ flex:1 1 auto; display:grid; grid-template-columns: 1.65fr 1fr; gap: 1.4rem; min-height:0; padding-block: 1.2rem; }
+.hero-col{ display:flex; flex-direction:column; gap: 1.2rem; min-height:0; }
 
 .card{
   background: var(--card-bg);
   border-radius: 24px;
-  padding: .9rem 1.1rem;
+  padding: 1.1rem 1.3rem;
   box-shadow: 0 3px 8px rgba(var(--shadow-c),.14), 0 22px 40px -18px rgba(var(--shadow-c),.22);
   border: 1px solid rgba(var(--ink-rgb),.06);
   min-width: 0;
+  min-height: 0;
   transition: transform .25s ease, box-shadow .25s ease;
 }
 .card.hoverable:hover{ transform: translateY(-3px); box-shadow: 0 6px 14px rgba(var(--shadow-c),.18), 0 30px 50px -18px rgba(var(--shadow-c),.28); }
 
-/* ---------- today row: weather+clothing (combined card) + news, half/half ---------- */
-/* align-items defaults to stretch -- both cards take the row's height
-   (the taller card's natural height), which is what makes them equal
-   without a fixed number. */
-.today-row{ display:grid; grid-template-columns: 1fr 1fr; gap:1.2rem; }
-.weather-clothing-card{ position:relative; overflow:hidden; }
-.weather-top{ display:flex; align-items:flex-start; gap:1rem; justify-content:space-between; flex-wrap:wrap; }
-.weather-main{ display:flex; align-items:center; gap:1rem; }
-.weather-temp{ font-size: clamp(2.2rem, 1.8rem + 1.6vw, 3rem); font-weight:700; color: var(--ink); line-height:1; }
-.weather-cond{ font-weight:800; font-family: var(--font-display); font-size:1.1rem; color: var(--khione-deep); margin-top:.15rem; }
-.weather-loc{ font-size:.78rem; color: var(--muted); margin-top:.1rem; }
-.weather-stats{ display:flex; gap:.6rem; flex-wrap:wrap; margin-top:.9rem; }
-.wstat{ display:flex; align-items:center; gap:.5rem; background: color-mix(in srgb, var(--khione-green) 12%, var(--card-bg)); border-radius: 999px; padding:.4rem .8rem .4rem .45rem; }
-.wstat .icon-badge{ width:28px; height:28px; }
-.wstat .icon-badge .icon{ width:15px; height:15px; }
-.wstat b{ font-size:.88rem; }
-.wstat span{ display:block; font-size:.66rem; color: var(--muted); text-transform:uppercase; letter-spacing:.04em; }
-.weather-note{ font-family: var(--font-script); font-size:1.15rem; color: var(--accent); margin-top:.8rem; max-width: 34em; }
+/* ---------- hero weather+clothing card ---------- */
+.hero-weather-card{ position:relative; overflow:hidden; flex: 1.4 1 0; display:flex; flex-direction:column; justify-content:center; padding: 2rem 2.4rem; }
+.hero-corner{ position:absolute; top:1.5rem; right:2rem; display:flex; align-items:center; gap:.7rem; z-index:2; }
+.hero-clock{ font-weight:700; font-size:1.15rem; color: var(--muted); }
+.weather-main{ display:flex; align-items:center; gap:1.3rem; }
+.weather-temp{ font-size: clamp(3rem, 2rem + 4vh, 4.6rem); font-weight:700; color: var(--ink); line-height:1; }
+.weather-cond{ font-weight:800; font-family: var(--font-display); font-size:1.3rem; color: var(--khione-deep); margin-top:.2rem; }
+.weather-loc{ font-size:.85rem; color: var(--muted); margin-top:.1rem; }
+.hero-note{ font-family: var(--font-script); font-size: 1.6rem; color: var(--accent); margin-top:1.2rem; max-width: 34em; }
+.weather-stats{ display:flex; gap:1.8rem; margin-top:1.3rem; flex-wrap:wrap; }
+.weather-stats > div > b{ font-size:1.1rem; }
+.weather-stats > div > span{ display:block; font-size:.7rem; color: var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-top:.15rem; }
 
-/* clothing recommendation lives inside the same card now, below the
-   weather half -- the dashed top border (same idiom as .sys-line/
-   .temp-row elsewhere on this page) reads as a divider without a
-   dedicated element. */
-.clothing-head{ display:flex; align-items:center; gap:.7rem; margin-top:.9rem; padding-top:.9rem; border-top:1px dashed rgba(var(--ink-rgb),.18); }
-.clothing-head h3{ font-size:1.05rem; }
+.clothing-head{ display:flex; align-items:center; gap:1rem; margin-top:1.4rem; padding-top:1.3rem; border-top:1px dashed rgba(var(--ink-rgb),.18); flex-wrap:wrap; }
+.clothing-head h3{ font-size:1.15rem; }
 .clothing-sub{ color: var(--muted); font-size:.82rem; margin-top:.15rem; }
-.clothing-chips{ display:flex; gap:.4rem; flex-wrap:wrap; margin-top:.7rem; }
+.clothing-chips{ display:flex; gap:.5rem; flex-wrap:wrap; margin-left:auto; }
 
-.chip{ font-size:.68rem; font-weight:800; padding:.25rem .65rem; border-radius:999px; background: color-mix(in srgb, var(--khione-green) 20%, var(--card-bg)); color: var(--khione-deep); }
+.chip{ font-size:.68rem; font-weight:800; padding:.25rem .65rem; border-radius:999px; background: color-mix(in srgb, var(--khione-green) 20%, var(--card-bg)); color: var(--khione-deep); white-space:nowrap; }
 .chip.soft{ background: color-mix(in srgb, var(--accent-soft) 40%, var(--card-bg)); color: var(--accent); }
 .chip.blue{ background: color-mix(in srgb, var(--khione-blue) 20%, var(--card-bg)); color: var(--khione-blue); }
 .chip.purple{ background: color-mix(in srgb, var(--khione-purple) 18%, var(--card-bg)); color: var(--khione-purple); }
 .chip.yellow{ background: color-mix(in srgb, var(--khione-yellow) 22%, var(--card-bg)); color: var(--khione-yellow); }
+.chip.urgent{ background: var(--accent); color:#fff; animation: badgePulse 2.4s ease-in-out infinite; }
 
 /* ---------- news feed ---------- */
-.news-head{ display:flex; align-items:center; justify-content:space-between; gap:.8rem; margin-bottom:1rem; }
+.news-card{ flex: 1 1 0; display:flex; flex-direction:column; min-height:0; }
+.news-head{ display:flex; align-items:center; justify-content:space-between; gap:.8rem; margin-bottom:.9rem; }
 .news-head .ttl{ display:flex; align-items:center; gap:.8rem; }
-.feed{ display:flex; flex-direction:column; }
+.feed{ display:flex; flex-direction:column; overflow:auto; }
 .feed-item{
   display:flex; gap:.8rem; align-items:flex-start; padding-block:.55rem;
   border-top: 1px dashed rgba(var(--ink-rgb),.18);
@@ -219,84 +178,67 @@ section{ padding-block: .85rem; position:relative; }
 .feed-meta{ display:flex; gap:.5rem; align-items:center; margin-top:.3rem; flex-wrap:wrap; }
 .feed-meta time{ font-size:.72rem; color: var(--muted); }
 
-/* ---------- bento system grid ---------- */
-/* All 6 tiles equal-width in one row (2 of 12 columns each) instead of
-   wrapping to 2 rows -- this page needs to fit one 1080p screen without
-   scrolling, and there's plenty of horizontal room at 16:9 to spend
-   instead of stacking vertically. */
-.bento{ display:grid; grid-template-columns: repeat(12, 1fr); gap:1rem; }
-.tile{ grid-column: span 2; display:flex; flex-direction:column; gap:.7rem; }
-.tile.wide{ grid-column: span 2; }
-.tile.narrow{ grid-column: span 2; }
-.tile-head{ display:flex; align-items:center; gap:.7rem; }
-.tile-head h3{ font-size:1rem; }
+/* ---------- status rail (right column) ---------- */
+.rail-card{ display:flex; flex-direction:column; min-height:0; overflow:hidden; }
+.rail-card > h2{ font-size:1.2rem; margin-bottom: 1.1rem; flex-shrink:0; }
+.rail-groups{ flex:1; display:flex; flex-direction:column; justify-content:space-between; min-height:0; gap: .9rem; overflow:auto; }
+.rail-group{ display:flex; gap:14px; align-items:flex-start; padding-left:16px; }
+.rail-group-head{ font-size:.72rem; font-weight:800; letter-spacing:.04em; color: var(--muted); }
+.rail-group-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:.6rem; gap:.5rem; }
+.rail-group-body{ flex:1; min-width:0; }
+.rail-group.services{ border-left:3px solid var(--khione-green); }
+.rail-group.system{ border-left:3px solid var(--khione-yellow); }
+.rail-group.security{ border-left:3px solid var(--khione-purple); }
+.rail-group.patching{ border-left:3px solid var(--khione-yellow); }
+.rail-group.disks{ border-left:3px solid var(--khione-deep); }
+.rail-group.network{ border-left:3px solid var(--khione-blue); }
 
-/* services */
-.svc-row{ display:flex; align-items:center; justify-content:space-between; gap:.8rem; padding:.7rem .85rem; border-radius:16px; background: color-mix(in srgb, var(--khione-green) 7%, transparent); transition: background .2s ease, transform .2s ease; }
-.svc-row:hover{ background: color-mix(in srgb, var(--khione-green) 15%, transparent); transform: translateX(2px); }
-.svc-id{ display:flex; align-items:center; gap:.6rem; font-weight:700; font-size:.9rem; }
-.svc-status{ display:flex; align-items:center; gap:.45rem; font-size:.74rem; font-weight:800; color: var(--khione-deep); text-transform:uppercase; letter-spacing:.03em; }
-.status-dot{ width:9px; height:9px; border-radius:50%; background: var(--khione-green); position:relative; }
+.mini-stats{ display:flex; justify-content:space-between; gap:.6rem .9rem; flex-wrap:wrap; margin-bottom:.5rem; }
+.mini-stats:last-child{ margin-bottom:0; }
+.mini-stat b{ font-size:1.05rem; font-variant-numeric: tabular-nums; display:block; }
+.mini-stat span{ font-size:.66rem; color: var(--muted); }
+.mini-stat.warn b{ color: var(--khione-yellow); }
+
+.status-dot{ width:9px; height:9px; border-radius:50%; background: var(--khione-green); position:relative; flex-shrink:0; }
 .status-dot::after{ content:""; position:absolute; inset:-4px; border-radius:50%; border:1.5px solid var(--khione-green); opacity:.6; animation: pulse 2.2s ease-out infinite; }
 @media (prefers-reduced-motion: reduce){ .status-dot::after{ animation:none; } }
+.status-dot.off{ background: var(--muted); }
+.status-dot.off::after{ display:none; }
+.svc-mini{ display:flex; align-items:center; gap:.4rem; }
+.svc-mini b{ font-size:.88rem; }
+.svc-mini-status{ font-size:.68rem; color: var(--khione-deep); font-weight:800; margin-top:.2rem; }
+.svc-mini-status.off{ color: var(--muted); }
 
-/* services: offline/unknown state — not in the mockup (every example row was
-   "Online"), added so a real down service doesn't still show a green
-   pulsing "Online" dot. */
-.svc-status.off{ color: var(--muted); }
-.svc-status.off .status-dot{ background: var(--muted); }
-.svc-status.off .status-dot::after{ display:none; }
+.rail-bar-row{ display:flex; justify-content:space-between; font-size:.8rem; margin-bottom:.3rem; }
+.rail-bar{ height:9px; border-radius:999px; background: rgba(var(--ink-rgb),.1); overflow:hidden; margin-bottom:.6rem; }
+.rail-bar > span{ display:block; height:100%; border-radius:999px; background: linear-gradient(90deg, var(--khione-green) 0%, var(--khione-deep) 100%); transition: width .4s ease; }
+.rail-bar.warm > span{ background: linear-gradient(90deg, var(--khione-yellow) 0%, var(--accent) 100%); }
 
-/* stat rows + gradient bars */
-.stat-row{ display:flex; justify-content:space-between; align-items:baseline; font-size:.85rem; margin-bottom:.35rem; }
-.stat-row b{ font-variant-numeric: tabular-nums; }
-.bar{ height:11px; border-radius:999px; background: rgba(var(--ink-rgb),.1); overflow:hidden; margin-bottom:.1rem; }
-.bar > span{ display:block; height:100%; border-radius:999px; background: linear-gradient(90deg, var(--khione-green) 0%, var(--khione-deep) 100%); transition: width .4s ease; }
-.bar.warm > span{ background: linear-gradient(90deg, var(--accent-soft) 0%, var(--accent) 100%); }
-.stat-block{ margin-bottom:.6rem; }
-.stat-block:last-child{ margin-bottom:0; }
+.rail-history{ font-size:.72rem; color: var(--muted); border-top:1px dashed rgba(var(--ink-rgb),.15); padding-top:.5rem; margin-top:.5rem; }
+.rail-history b{ color: var(--khione-deep); }
 
-/* disks */
-.disk-row{ margin-bottom:.85rem; }
-.disk-row:last-child{ margin-bottom:0; }
-.disk-top{ display:flex; justify-content:space-between; font-size:.84rem; margin-bottom:.35rem; }
-.disk-top .path{ font-weight:700; }
-.disk-top .nums{ color: var(--muted); font-variant-numeric: tabular-nums; }
+.smart-pill{ font-size:.6rem; font-weight:800; color: var(--khione-deep); background: color-mix(in srgb, var(--khione-green) 20%, var(--card-bg)); padding:.1rem .4rem; border-radius:999px; white-space:nowrap; }
+.smart-pill.warn{ color: var(--khione-yellow); background: color-mix(in srgb, var(--khione-yellow) 22%, var(--card-bg)); }
+.smart-pill.fail{ color:#fff; background: var(--accent); }
 
-/* speed */
-.speed-grid{ display:flex; flex-direction:column; gap:.7rem; }
-.speed-cell{ display:flex; align-items:baseline; justify-content:space-between; border-bottom:1px dashed rgba(var(--ink-rgb),.15); padding-bottom:.6rem; }
-.speed-cell:last-child{ border-bottom:none; padding-bottom:0; }
-.speed-cell .val{ font-size:1.3rem; font-weight:700; font-variant-numeric: tabular-nums; color: var(--khione-deep); }
-.speed-cell .unit{ font-size:.72rem; color: var(--muted); margin-left:.3rem; font-weight:600; }
-.speed-cell .lbl{ font-size:.78rem; color: var(--muted); font-weight:600; }
+.disk-rail-row{ margin-bottom:.55rem; }
+.disk-rail-row:last-child{ margin-bottom:0; }
+.disk-rail-top{ display:flex; justify-content:space-between; align-items:baseline; font-size:.8rem; margin-bottom:.25rem; gap:.5rem; flex-wrap:wrap; }
+.disk-rail-top .path{ font-weight:700; flex-shrink:0; }
+.disk-rail-top .nums{ display:flex; align-items:center; gap:7px; color: var(--muted); font-variant-numeric: tabular-nums; }
 
-/* temps */
-.temp-row{ display:flex; align-items:center; justify-content:space-between; gap:.6rem; padding-block:.5rem; border-top:1px dashed rgba(var(--ink-rgb),.15); }
-.temp-row:first-of-type{ border-top:none; }
-.temp-id{ display:flex; align-items:center; gap:.55rem; font-size:.86rem; font-weight:600; }
-.temp-val{ font-weight:700; font-variant-numeric: tabular-nums; color: var(--khione-deep); }
-.temp-row.hot .temp-val{ color: var(--accent); }
-.temp-row.hot .temp-id::after{ content:"\\26A0"; font-size:.7rem; color: var(--accent); margin-left:.2rem; }
+/* Dynamic count (lm-sensors/drivetemp can report any number of named
+   sensors), so this wraps rather than assuming a fixed set of columns. */
+.temp-mini-wrap{ display:flex; flex-wrap:wrap; gap: .5rem 1.3rem; }
 
-/* system */
-.sys-badge{ display:inline-flex; align-items:center; gap:.4rem; background: color-mix(in srgb, var(--khione-yellow) 24%, var(--card-bg)); color: var(--khione-yellow); font-weight:800; font-size:.76rem; padding:.3rem .7rem; border-radius:999px; margin-bottom:.4rem; }
-/* A pending update with a fix available for a Critical/High-severity or
-   code-execution-class CVE (per arch-audit) gets this instead of the
-   routine yellow badge -- deliberately louder (solid fill, white text,
-   a slow pulse) since "there's a routine update" and "there's a known
-   remote-code-execution fix you haven't applied yet" are not the same
-   urgency, and this incident is exactly why that distinction matters now. */
+footer{ flex-shrink:0; background: linear-gradient(170deg, var(--band-bg) 0%, color-mix(in srgb, var(--band-bg) 78%, var(--band-ink)) 100%); padding-block: .6rem; text-align:center; color: var(--band-ink); font-size:.8rem; font-weight:600; }
+footer .wrap{ opacity:.85; }
+
+.sys-badge{ display:inline-flex; align-items:center; gap:.4rem; background: color-mix(in srgb, var(--khione-yellow) 24%, var(--card-bg)); color: var(--khione-yellow); font-weight:800; font-size:.76rem; padding:.3rem .7rem; border-radius:999px; }
 .sys-badge.urgent{ background: var(--accent); color: #fff; animation: badgePulse 2.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce){ .sys-badge.urgent{ animation:none; } }
 @keyframes badgePulse{ 0%,100%{ box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 55%, transparent); } 50%{ box-shadow: 0 0 0 6px transparent; } }
-.sys-security-detail{ font-size:.78rem; color: var(--accent); font-weight:700; padding-block:.3rem; }
-.sys-line{ display:flex; align-items:center; gap:.55rem; font-size:.84rem; padding-block:.4rem; border-top:1px dashed rgba(var(--ink-rgb),.15); }
-.sys-line:first-of-type{ border-top:none; }
-.sys-line b{ font-variant-numeric: tabular-nums; }
-
-footer{ flex-shrink:0; background: linear-gradient(170deg, var(--band-bg) 0%, color-mix(in srgb, var(--band-bg) 78%, var(--band-ink)) 100%); padding-block: .6rem; text-align:center; color: var(--band-ink); font-size:.8rem; font-weight:600; margin-top: .3rem; }
-footer .wrap{ opacity:.85; }
+.sys-security-detail{ font-size:.72rem; color: var(--accent); font-weight:700; margin-top:.35rem; }
 
 @keyframes pulse{ 0%{ transform:scale(.8); opacity:.7;} 100%{ transform:scale(1.8); opacity:0;} }
 @media (prefers-reduced-motion: no-preference){
@@ -304,28 +246,20 @@ footer .wrap{ opacity:.85; }
   @keyframes riseIn{ from{ opacity:0; transform: translateY(10px); } to{ opacity:1; transform:none; } }
 }
 
-@media (max-width: 900px){
-  .today-row{ grid-template-columns: 1fr; }
-  .tile, .tile.wide, .tile.narrow{ grid-column: span 12; }
+@media (max-width: 1100px){
+  main{ grid-template-columns: 1fr; }
 }
 @media (max-width: 500px){
-  .hero-right{ width:100%; }
+  .hero-weather-card{ padding: 1.4rem 1.5rem; }
+  .hero-corner{ top:1rem; right:1.2rem; }
 }
 `;
 
 // ---------------------------------------------------------------------------
-// PAGE_SHELL_HTML — markup ported from the mockup. Every hand-drawn icon
-// <symbol> from the mockup's <svg class="sr-only"> defs block is kept
-// byte-for-byte, with two new symbols appended (i-sun/i-moon) for the theme
-// toggle, which the mockup had no markup for at all (see brief Step 3).
-// Sample content (clock, weather numbers, headlines, disks, temps, etc.) is
-// replaced by ids that _renderLiveData()/_renderClock() fill in; dynamic
-// lists (news feeds, disks, temperatures) get an empty container here and
-// are built from live arrays, same approach as weather.js's hourly/week
-// grids. The mockup's own inline <script> (clock tick + hot-threshold
-// detection) is dropped entirely — the custom element's
-// connectedCallback/_renderClock and the real `hot` flag from
-// sensor.khione_temps replace it.
+// PAGE_SHELL_HTML — icon <symbol> defs kept byte-for-byte from the previous
+// layout (including i-play/i-toggle, now unused by any element here but
+// harmless to keep). Dynamic content (news, disks, temps, rail mini-stats)
+// gets an empty container filled by _renderLiveData().
 // ---------------------------------------------------------------------------
 const PAGE_SHELL_HTML = `
 <svg class="sr-only" aria-hidden="true" focusable="false">
@@ -428,146 +362,161 @@ const PAGE_SHELL_HTML = `
 
 <link rel="preconnect" href="https://fonts.gstatic.com">
 
-<header class="hero">
-  <div class="blob hb1"></div>
-  <div class="blob hb2"></div>
-  <div class="wrap hero-inner">
-    <div class="hero-left">
-      <div class="hero-clock tabular" id="clock">&nbsp;</div>
-      <p class="hero-date" id="date-line">&nbsp;</p>
-      <p class="hero-note" id="hero-note">&nbsp;</p>
-    </div>
-    <div class="hero-right-group">
-      <div class="hero-right">
-        <div class="icon-badge"><div class="blob blob-a"></div><svg class="icon"><use href="#i-cloud-sun"></use></svg></div>
-        <div class="hero-right-text">
-          <b id="hero-chip-cond">&nbsp;</b>
-          <span id="hero-chip-feels-loc">&nbsp;</span>
-        </div>
-      </div>
-      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle light/dark theme" title="Toggle light/dark theme">
-        <svg class="icon" id="theme-toggle-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-moon"></use></svg>
-      </button>
-    </div>
-  </div>
-</header>
-
 <main class="wrap">
 
-  <section aria-labelledby="h-today">
-    <div class="section-head reveal">
-      <div class="icon-badge"><div class="blob blob-b"></div><svg class="icon"><use href="#i-cloud-sun"></use></svg></div>
-      <h2 id="h-today">Today</h2>
-    </div>
-    <div class="today-row">
-      <div class="card weather-clothing-card hoverable reveal">
-        <div class="weather-top">
-          <div class="weather-main">
-            <div class="icon-badge" style="width:60px;height:60px;"><div class="blob blob-a"></div><svg class="icon" style="width:32px;height:32px"><use href="#i-cloud-sun"></use></svg></div>
-            <div>
-              <div class="weather-temp tabular" id="weather-temp">&mdash;</div>
-              <div class="weather-cond" id="weather-cond">&nbsp;</div>
-              <div class="weather-loc" id="weather-loc">&nbsp;</div>
-            </div>
-          </div>
+  <div class="hero-col">
+    <div class="card hero-weather-card hoverable reveal">
+      <div class="hero-corner">
+        <span class="hero-clock tabular" id="clock">&nbsp;</span>
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle light/dark theme" title="Toggle light/dark theme">
+          <svg class="icon" id="theme-toggle-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-moon"></use></svg>
+        </button>
+      </div>
+      <div class="weather-main">
+        <div class="icon-badge" style="width:80px;height:80px;"><div class="blob blob-a"></div><svg class="icon" style="width:42px;height:42px"><use href="#i-cloud-sun"></use></svg></div>
+        <div>
+          <div class="weather-temp tabular" id="weather-temp">&mdash;</div>
+          <div class="weather-cond" id="weather-cond">&nbsp;</div>
+          <div class="weather-loc" id="weather-loc">&nbsp;</div>
         </div>
-        <div class="weather-stats">
-          <div class="wstat"><div class="icon-badge sm soft"><div class="blob blob-c"></div><svg class="icon"><use href="#i-thermo"></use></svg></div><div><b class="tabular" id="wstat-feels">&mdash;</b><span>Feels like</span></div></div>
-          <div class="wstat"><div class="icon-badge sm blue"><div class="blob blob-d"></div><svg class="icon"><use href="#i-wind"></use></svg></div><div><b class="tabular" id="wstat-wind">&mdash;</b><span>Wind</span></div></div>
-          <div class="wstat"><div class="icon-badge sm blue"><div class="blob blob-b"></div><svg class="icon"><use href="#i-droplet"></use></svg></div><div><b class="tabular" id="wstat-humidity">&mdash;</b><span>Humidity</span></div></div>
-        </div>
-        <p class="weather-note" id="weather-note">&nbsp;</p>
+      </div>
+      <p class="hero-note" id="hero-note">&nbsp;</p>
+      <div class="weather-stats">
+        <div><b class="tabular" id="wstat-feels">&mdash;</b><span>Feels like</span></div>
+        <div><b class="tabular" id="wstat-wind">&mdash;</b><span>Wind</span></div>
+        <div><b class="tabular" id="wstat-humidity">&mdash;</b><span>Humidity</span></div>
+      </div>
 
-        <div class="clothing-head">
-          <div class="icon-badge soft sm"><div class="blob blob-c"></div><svg class="icon"><use id="clothing-icon-use" href="#i-jacket"></use></svg></div>
-          <div>
-            <h3 id="clothing-headline">&nbsp;</h3>
-            <p class="clothing-sub" id="clothing-sub">&nbsp;</p>
-          </div>
+      <div class="clothing-head">
+        <div class="icon-badge soft sm"><div class="blob blob-c"></div><svg class="icon"><use id="clothing-icon-use" href="#i-jacket"></use></svg></div>
+        <div>
+          <h3 id="clothing-headline">&nbsp;</h3>
+          <p class="clothing-sub" id="clothing-sub">&nbsp;</p>
         </div>
         <div class="clothing-chips" id="clothing-chips"></div>
       </div>
-
-      <div class="card news-card reveal">
-        <div class="news-head">
-          <div class="ttl"><div class="icon-badge sm yellow"><div class="blob blob-d"></div><svg class="icon"><use href="#i-feed"></use></svg></div><h3>News</h3></div>
-          <span class="count">Updates hourly</span>
-        </div>
-        <div class="feed" id="feed-news"></div>
-      </div>
     </div>
-  </section>
 
-  <section aria-labelledby="h-system">
-    <div class="section-head reveal">
-      <div class="icon-badge"><div class="blob blob-c"></div><svg class="icon"><use href="#i-server"></use></svg></div>
-      <h2 id="h-system">Server &amp; system status</h2>
+    <div class="card news-card reveal">
+      <div class="news-head">
+        <div class="ttl"><div class="icon-badge sm yellow"><div class="blob blob-d"></div><svg class="icon"><use href="#i-feed"></use></svg></div><h3>News</h3></div>
+        <span class="count">Updates hourly</span>
+      </div>
+      <div class="feed" id="feed-news"></div>
     </div>
-    <div class="bento">
+  </div>
 
-      <div class="card tile hoverable reveal">
-        <div class="tile-head"><div class="icon-badge sm"><div class="blob blob-a"></div><svg class="icon"><use href="#i-server"></use></svg></div><h3>Services</h3></div>
-        <div class="svc-row">
-          <span class="svc-id"><svg class="icon" style="color:var(--khione-deep)"><use href="#i-play"></use></svg>Plex</span>
-          <span class="svc-status" id="svc-plex-status"><span class="status-dot"></span>&nbsp;</span>
-        </div>
-        <div class="svc-row">
-          <span class="svc-id"><svg class="icon" style="color:var(--khione-deep)"><use href="#i-toggle"></use></svg>Cockpit</span>
-          <span class="svc-status" id="svc-cockpit-status"><span class="status-dot"></span>&nbsp;</span>
-        </div>
-      </div>
+  <div class="card rail-card reveal">
+    <h2>Server &amp; system status</h2>
+    <div class="rail-groups">
 
-      <div class="card tile hoverable reveal">
-        <div class="tile-head"><div class="icon-badge sm soft"><div class="blob blob-b"></div><svg class="icon"><use href="#i-chip"></use></svg></div><h3>CPU &amp; memory</h3></div>
-        <div class="stat-block">
-          <div class="stat-row"><span>CPU</span><b class="tabular" id="cpu-pct">&mdash;</b></div>
-          <div class="bar"><span id="cpu-bar" style="width:0%"></span></div>
-        </div>
-        <div class="stat-block">
-          <div class="stat-row"><span>Memory</span><b class="tabular" id="mem-pct">&mdash;</b></div>
-          <div class="bar warm"><span id="mem-bar" style="width:0%"></span></div>
-        </div>
-      </div>
-
-      <div class="card tile hoverable reveal">
-        <div class="tile-head"><div class="icon-badge sm yellow"><div class="blob blob-d"></div><svg class="icon"><use href="#i-refresh"></use></svg></div><h3>System</h3></div>
-        <span class="sys-badge" id="sys-badge"><svg class="icon" style="width:.9em;height:.9em"><use href="#i-refresh"></use></svg><span id="sys-updates">&nbsp;</span></span>
-        <p class="sys-security-detail" id="sys-security-detail" hidden></p>
-        <div class="sys-line"><svg class="icon" style="color:var(--khione-deep)"><use href="#i-clock"></use></svg>Uptime &middot; <b class="tabular" id="sys-uptime">&mdash;</b></div>
-        <div class="sys-line"><svg class="icon" style="color:var(--khione-deep)"><use href="#i-terminal"></use></svg>Kernel &middot; <b class="tabular" id="sys-kernel">&mdash;</b></div>
-      </div>
-
-      <div class="card tile hoverable reveal">
-        <div class="tile-head"><div class="icon-badge sm purple"><div class="blob blob-c"></div><svg class="icon"><use href="#i-shield"></use></svg></div><h3>Security</h3></div>
-        <span class="sys-badge" id="sec-badge"><svg class="icon" style="width:.9em;height:.9em"><use href="#i-shield"></use></svg><span id="sec-headline">&nbsp;</span></span>
-        <p class="sys-security-detail" id="sec-detail" hidden></p>
-        <div class="sys-line"><svg class="icon" style="color:var(--khione-deep)"><use href="#i-toggle"></use></svg>Blocked &middot; <b class="tabular" id="sec-blocked">&mdash;</b></div>
-        <div class="sys-line"><svg class="icon" style="color:var(--khione-deep)"><use href="#i-disk"></use></svg>Integrity &middot; <b class="tabular" id="sec-aide">&mdash;</b></div>
-        <div class="sys-line"><svg class="icon" style="color:var(--khione-deep)"><use href="#i-terminal"></use></svg>Auditing &middot; <b class="tabular" id="sec-auditd">&mdash;</b></div>
-        <div class="sys-line"><svg class="icon" style="color:var(--khione-deep)"><use href="#i-gauge"></use></svg>Outbound &middot; <b class="tabular" id="sec-outbound">&mdash;</b></div>
-      </div>
-
-      <div class="card tile wide hoverable reveal">
-        <div class="tile-head"><div class="icon-badge sm"><div class="blob blob-a"></div><svg class="icon"><use href="#i-disk"></use></svg></div><h3>Disks</h3></div>
-        <div id="disks-rows"></div>
-      </div>
-
-      <div class="card tile narrow hoverable reveal">
-        <div class="tile-head"><div class="icon-badge sm blue"><div class="blob blob-c"></div><svg class="icon"><use href="#i-gauge"></use></svg></div><h3>Internet speed</h3></div>
-        <div class="speed-grid">
-          <div class="speed-cell"><span class="lbl">Download</span><span><span class="val" id="speed-download">&mdash;</span><span class="unit">Mbps</span></span></div>
-          <div class="speed-cell"><span class="lbl">Upload</span><span><span class="val" id="speed-upload">&mdash;</span><span class="unit">Mbps</span></span></div>
-          <div class="speed-cell"><span class="lbl">Ping</span><span><span class="val" id="speed-ping">&mdash;</span><span class="unit">ms</span></span></div>
+      <div class="rail-group services">
+        <div class="icon-badge xs"><div class="blob blob-a"></div><svg class="icon"><use href="#i-server"></use></svg></div>
+        <div class="rail-group-body">
+          <div class="rail-group-head">SERVICES</div>
+          <div class="mini-stats">
+            <div class="svc-mini">
+              <span class="status-dot" id="svc-plex-dot"></span>
+              <div><b>Plex</b><div class="svc-mini-status" id="svc-plex-status">&mdash;</div></div>
+            </div>
+            <div class="svc-mini">
+              <span class="status-dot" id="svc-cockpit-dot"></span>
+              <div><b>Cockpit</b><div class="svc-mini-status" id="svc-cockpit-status">&mdash;</div></div>
+            </div>
+            <!-- Home Assistant: no sensor needed -- this page only renders
+                 at all because HA is up and serving it, so hardcoding
+                 "online" here is accurate by construction, not a guess. -->
+            <div class="svc-mini">
+              <span class="status-dot"></span>
+              <div><b>Home Assistant</b><div class="svc-mini-status">ONLINE</div></div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="card tile narrow hoverable reveal">
-        <div class="tile-head"><div class="icon-badge sm soft"><div class="blob blob-d"></div><svg class="icon"><use href="#i-thermo"></use></svg></div><h3>Temperatures</h3></div>
-        <div id="temps-rows"></div>
+      <div class="rail-group system">
+        <div class="icon-badge xs yellow"><div class="blob blob-d"></div><svg class="icon"><use href="#i-refresh"></use></svg></div>
+        <div class="rail-group-body">
+          <div class="rail-group-head">SYSTEM</div>
+          <div class="rail-bar-row"><span>CPU</span><b class="tabular" id="cpu-pct">&mdash;</b></div>
+          <div class="rail-bar"><span id="cpu-bar" style="width:0%"></span></div>
+          <div class="rail-bar-row"><span>Memory</span><b class="tabular" id="mem-pct">&mdash;</b></div>
+          <div class="rail-bar warm"><span id="mem-bar" style="width:0%"></span></div>
+          <div class="mini-stats">
+            <div class="mini-stat"><b class="tabular" id="sys-load">&mdash;</b><span id="sys-load-caption">load avg</span></div>
+            <div class="mini-stat"><b class="tabular" id="sys-swap">&mdash;</b><span id="sys-swap-caption">swap</span></div>
+          </div>
+          <div class="rail-group-top" style="margin-bottom:0;">
+            <span style="font-size:.78rem;color:var(--muted);" id="sys-uptime-kernel">&mdash;</span>
+            <span class="sys-badge" id="sys-badge"><svg class="icon" style="width:.9em;height:.9em"><use href="#i-refresh"></use></svg><span id="sys-updates">&nbsp;</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rail-group security">
+        <div class="icon-badge xs purple"><div class="blob blob-c"></div><svg class="icon"><use href="#i-shield"></use></svg></div>
+        <div class="rail-group-body">
+          <div class="rail-group-top">
+            <div class="rail-group-head">SECURITY</div>
+            <span class="sys-badge" id="sec-badge"><span id="sec-headline">&nbsp;</span></span>
+          </div>
+          <div class="mini-stats">
+            <div class="mini-stat"><b class="tabular" id="sec-fail2ban">&mdash;</b><span>fail2ban bans</span></div>
+            <div class="mini-stat"><b class="tabular" id="sec-crowdsec">&mdash;</b><span>CrowdSec blocks</span></div>
+            <div class="mini-stat"><b class="tabular" id="sec-ufw">&mdash;</b><span>ufw rules active</span></div>
+          </div>
+          <div class="mini-stats">
+            <div class="mini-stat" id="sec-auditd-stat"><b class="tabular" id="sec-auditd">&mdash;</b><span>auditd ruleset</span></div>
+            <div class="mini-stat" id="sec-outbound-stat"><b class="tabular" id="sec-outbound">&mdash;</b><span>outbound</span></div>
+            <div class="mini-stat" id="sec-aide-stat"><b class="tabular" id="sec-aide-next">&mdash;</b><span>AIDE next run</span></div>
+          </div>
+          <div class="mini-stats">
+            <div class="mini-stat" id="sec-quad9-stat"><b class="tabular" id="sec-quad9">&mdash;</b><span>DNS filtering</span></div>
+            <div class="mini-stat" id="sec-grub-stat"><b class="tabular" id="sec-grub">&mdash;</b><span>GRUB password</span></div>
+            <div class="mini-stat"><b class="tabular" id="sec-sessions">&mdash;</b><span>active sessions</span></div>
+          </div>
+          <p class="rail-history" id="sec-history">&nbsp;</p>
+        </div>
+      </div>
+
+      <div class="rail-group patching">
+        <div class="icon-badge xs yellow"><div class="blob blob-b"></div><svg class="icon"><use href="#i-refresh"></use></svg></div>
+        <div class="rail-group-body">
+          <div class="rail-group-head">PATCHING</div>
+          <div class="mini-stats">
+            <div class="mini-stat"><b class="tabular" id="pat-official">&mdash;</b><span>official updates</span></div>
+            <div class="mini-stat" id="pat-advisories-stat"><b class="tabular" id="pat-advisories">&mdash;</b><span>security advisories</span></div>
+            <div class="mini-stat" id="pat-aur-stat"><b class="tabular" id="pat-aur">&mdash;</b><span>Plex (AUR)</span></div>
+            <div class="mini-stat" id="pat-news-stat"><b class="tabular" id="pat-news">&mdash;</b><span>Arch News gate</span></div>
+          </div>
+          <p class="sys-security-detail" id="pat-detail" hidden></p>
+          <p class="rail-history" id="pat-history">&nbsp;</p>
+        </div>
+      </div>
+
+      <div class="rail-group disks">
+        <div class="icon-badge xs soft"><div class="blob blob-a"></div><svg class="icon"><use href="#i-disk"></use></svg></div>
+        <div class="rail-group-body">
+          <div class="rail-group-head">DISKS</div>
+          <div id="disk-rail-rows"></div>
+        </div>
+      </div>
+
+      <div class="rail-group network">
+        <div class="icon-badge xs blue"><div class="blob blob-c"></div><svg class="icon"><use href="#i-chip"></use></svg></div>
+        <div class="rail-group-body">
+          <div class="rail-group-head">NETWORK &amp; TEMPS</div>
+          <div class="mini-stats">
+            <div class="mini-stat"><b class="tabular" id="net-download">&mdash;</b><span>Mbps down</span></div>
+            <div class="mini-stat"><b class="tabular" id="net-upload">&mdash;</b><span>Mbps up</span></div>
+            <div class="mini-stat"><b class="tabular" id="net-ping">&mdash;</b><span>ms ping</span></div>
+          </div>
+          <div class="temp-mini-wrap" id="temp-mini-rows"></div>
+        </div>
       </div>
 
     </div>
-  </section>
+  </div>
 
 </main>
 
@@ -647,6 +596,32 @@ function timeAgo(dateStr) {
   return Math.round(diffH / 24) + "d ago";
 }
 
+// Collector-supplied timestamps are Unix epoch SECONDS, not an
+// ISO/RFC date string -- they come from systemd's own timestamp text
+// ("Tue 2026-11-17 00:38:34 GMT") converted with `date -d ... +%s` on
+// the collector side, because confirmed live that Date.parse can't
+// read systemd's format directly. null/undefined means "never happened
+// yet", not "unknown" -- every caller here treats them differently.
+function fmtAgo(epochSeconds) {
+  if (epochSeconds == null) return null;
+  const diffMin = Math.max(0, Math.round((Date.now() - epochSeconds * 1000) / 60000));
+  if (diffMin < 1) return "just now";
+  if (diffMin < 60) return diffMin + "m ago";
+  const diffH = Math.round(diffMin / 60);
+  if (diffH < 24) return diffH + "h ago";
+  return Math.round(diffH / 24) + "d ago";
+}
+
+function fmtUntil(epochSeconds) {
+  if (epochSeconds == null) return null;
+  const diffMin = Math.max(0, Math.round((epochSeconds * 1000 - Date.now()) / 60000));
+  if (diffMin < 1) return "due now";
+  if (diffMin < 60) return "in " + diffMin + "m";
+  const diffH = Math.round(diffMin / 60);
+  if (diffH < 24) return "in " + diffH + "h";
+  return "in " + Math.round(diffH / 24) + "d";
+}
+
 // Extracts the short headline portion of a clothing-recommendation sentence
 // — the template sensor's possible phrases (see configuration-snippet.yaml)
 // always put the qualifying detail after "(" or "—", e.g.
@@ -674,9 +649,9 @@ function clothingChips(state) {
   return chips;
 }
 
-// name-keyword heuristic onto the 3 hand-drawn icons the mockup already
-// used for its example temp rows (CPU/NVMe/Motherboard) — no new icons
-// needed since sensor.khione_temps gives only {name, c, hot}, not an icon.
+// name-keyword heuristic onto the 3 hand-drawn icons already available
+// (CPU/NVMe/Motherboard) -- no new icons needed since sensor.khione_temps
+// gives only {name, c, hot}, not an icon.
 function tempIconId(name) {
   const n = (name || "").toLowerCase();
   if (n.includes("cpu")) return "i-chip";
@@ -705,11 +680,8 @@ function buildFeedHtml(articles) {
 }
 
 // shortcut: caps the merged feed at this many items so the card doesn't
-// grow unbounded if a source sensor returns a long article list -- kept
-// deliberately low now that it's one feed covering 3 sources (it used to
-// be 6 per feed across 2 separate cards), since this page needs to fit
-// one screen without scrolling.
-const NEWS_LIMIT = 4;
+// grow unbounded if a source sensor returns a long article list.
+const NEWS_LIMIT = 6;
 
 function sortByPubDateDesc(articles) {
   return articles.slice().sort((a, b) => (Date.parse(b.pubDate) || 0) - (Date.parse(a.pubDate) || 0));
@@ -796,17 +768,7 @@ class KhioneHomePanel extends HTMLElement {
     clockEl.textContent =
       String(now.getHours()).padStart(2, "0") +
       ":" +
-      String(now.getMinutes()).padStart(2, "0") +
-      ":" +
-      String(now.getSeconds()).padStart(2, "0");
-    const dateEl = root.getElementById("date-line");
-    if (dateEl) {
-      try {
-        dateEl.textContent = now.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" });
-      } catch (e) {
-        dateEl.textContent = "—";
-      }
-    }
+      String(now.getMinutes()).padStart(2, "0");
   }
 
   // Maps every live hass value onto the shell painted above. Every
@@ -840,8 +802,11 @@ class KhioneHomePanel extends HTMLElement {
     const ping = hass.states["sensor.speedtest_ping"];
     const temps = hass.states["sensor.khione_temps"];
     const system = hass.states["sensor.khione_system"];
+    const security = hass.states["sensor.khione_security"];
+    const netwatch = hass.states["sensor.khione_netwatch"];
+    const patching = hass.states["sensor.khione_patching"];
 
-    // ---- hero + weather & clothing ----
+    // ---- hero: weather & clothing ----
     const wAttrs = (weather && weather.attributes) || {};
     const condition = weather ? weather.state : null;
     const temp = wAttrs.temperature ?? null;
@@ -853,9 +818,6 @@ class KhioneHomePanel extends HTMLElement {
       ? greetingPrefix(new Date()) + " — " + conditionLabel(condition) + ", " + fmtTemp(temp) + "."
       : greetingPrefix(new Date()) + " — weather data unavailable.";
 
-    root.getElementById("hero-chip-cond").textContent = fmtTemp(temp) + " · " + conditionLabel(condition);
-    root.getElementById("hero-chip-feels-loc").textContent = "Feels like " + fmtTemp(temp) + " · " + placeName;
-
     root.getElementById("weather-temp").textContent = fmtTemp(temp);
     root.getElementById("weather-cond").textContent = conditionLabel(condition);
     root.getElementById("weather-loc").textContent = placeName + (wAttrs.attribution ? " · " + wAttrs.attribution : "");
@@ -866,7 +828,6 @@ class KhioneHomePanel extends HTMLElement {
     const windUnit = wAttrs.wind_speed_unit || "km/h";
     root.getElementById("wstat-wind").textContent = wAttrs.wind_speed != null ? Math.round(wAttrs.wind_speed) + " " + windUnit : "—";
     root.getElementById("wstat-humidity").textContent = wAttrs.humidity != null ? Math.round(wAttrs.humidity) + "%" : "—";
-    root.getElementById("weather-note").textContent = clothingState ?? "—";
 
     const clothingIconUse = root.getElementById("clothing-icon-use");
     if (clothingIconUse) {
@@ -883,9 +844,6 @@ class KhioneHomePanel extends HTMLElement {
       : '<span class="chip">—</span>';
 
     // ---- news ----
-    // One merged, tagged feed instead of 2 separate cards (BBC/Derbyshire
-    // + Arch) -- same total card chrome either way, but half the vertical
-    // space on this page specifically, which needs to fit one screen.
     const bbcArticles = ((rssBbc && rssBbc.attributes && rssBbc.attributes.articles) || []).map((a) => ({
       title: a && a.title, pubDate: a && a.pubDate, chipText: "National", chipCls: "soft",
     }));
@@ -899,23 +857,26 @@ class KhioneHomePanel extends HTMLElement {
     root.getElementById("feed-news").innerHTML = buildFeedHtml(newsFeed);
 
     // ---- services ----
-    const renderServiceStatus = (el, state) => {
-      if (!el) return;
+    const renderServiceStatus = (dotEl, textEl, state) => {
+      if (!dotEl || !textEl) return;
       if (state == null) {
-        el.className = "svc-status off";
-        el.innerHTML = '<span class="status-dot"></span>Unknown';
+        dotEl.className = "status-dot off";
+        textEl.className = "svc-mini-status off";
+        textEl.textContent = "UNKNOWN";
       } else if (state === "on") {
-        el.className = "svc-status";
-        el.innerHTML = '<span class="status-dot"></span>Online';
+        dotEl.className = "status-dot";
+        textEl.className = "svc-mini-status";
+        textEl.textContent = "ONLINE";
       } else {
-        el.className = "svc-status off";
-        el.innerHTML = '<span class="status-dot"></span>Offline';
+        dotEl.className = "status-dot off";
+        textEl.className = "svc-mini-status off";
+        textEl.textContent = "OFFLINE";
       }
     };
-    renderServiceStatus(root.getElementById("svc-plex-status"), plex ? plex.state : null);
-    renderServiceStatus(root.getElementById("svc-cockpit-status"), cockpit ? cockpit.state : null);
+    renderServiceStatus(root.getElementById("svc-plex-dot"), root.getElementById("svc-plex-status"), plex ? plex.state : null);
+    renderServiceStatus(root.getElementById("svc-cockpit-dot"), root.getElementById("svc-cockpit-status"), cockpit ? cockpit.state : null);
 
-    // ---- CPU & memory ----
+    // ---- system ----
     const cpuNum = cpu && cpu.state != null ? parseFloat(cpu.state) : NaN;
     const memNum = mem && mem.state != null ? parseFloat(mem.state) : NaN;
     root.getElementById("cpu-pct").textContent = isNaN(cpuNum) ? "—" : Math.round(clampPct(cpuNum)) + "%";
@@ -923,38 +884,28 @@ class KhioneHomePanel extends HTMLElement {
     root.getElementById("mem-pct").textContent = isNaN(memNum) ? "—" : Math.round(clampPct(memNum)) + "%";
     root.getElementById("mem-bar").style.width = clampPct(memNum) + "%";
 
-    // ---- system ----
     const sysAttrs = (system && system.attributes) || {};
+    root.getElementById("sys-load").textContent = sysAttrs.load1 != null ? sysAttrs.load1.toFixed(2) : "—";
+    root.getElementById("sys-load-caption").textContent =
+      sysAttrs.load5 != null && sysAttrs.load15 != null
+        ? "load 1m · " + sysAttrs.load5.toFixed(2) + "/" + sysAttrs.load15.toFixed(2) + " (5/15m)"
+        : "load avg";
+    const swapTotal = Number(sysAttrs.swap_total_gb) || 0;
+    const swapUsed = Number(sysAttrs.swap_used_gb) || 0;
+    root.getElementById("sys-swap").textContent = swapTotal > 0 ? Math.round((swapUsed / swapTotal) * 100) + "%" : "—";
+    root.getElementById("sys-swap-caption").textContent =
+      swapTotal > 0 ? "swap · " + fmtGB(swapUsed, false) + " / " + fmtGB(swapTotal, false) : "no swap";
+
     const securityCount = Number(sysAttrs.security_updates) || 0;
     const securityDetail = Array.isArray(sysAttrs.security_detail) ? sysAttrs.security_detail : [];
-    const sysBadge = root.getElementById("sys-badge");
-    const securityEl = root.getElementById("sys-security-detail");
-    if (securityCount > 0) {
-      sysBadge.classList.add("urgent");
-      root.getElementById("sys-updates").textContent =
-        securityCount + (securityCount === 1 ? " security update — update now" : " security updates — update now");
-      const first = securityDetail[0];
-      securityEl.hidden = false;
-      securityEl.textContent = first
-        ? first.package + ": " + (first.severity || "High") + " risk" + (first.cve ? " (" + first.cve + ")" : "") +
-          (securityCount > 1 ? " — +" + (securityCount - 1) + " more" : "")
-        : "Run pacman to apply a known security fix.";
-    } else {
-      sysBadge.classList.remove("urgent");
-      root.getElementById("sys-updates").textContent = (system && system.state != null ? system.state : "—") + " updates pending";
-      securityEl.hidden = true;
-    }
-    root.getElementById("sys-uptime").textContent = sysAttrs.uptime ?? "—";
-    root.getElementById("sys-kernel").textContent = sysAttrs.kernel ?? "—";
+    root.getElementById("sys-uptime-kernel").textContent = (sysAttrs.uptime ?? "—") + " · " + (sysAttrs.kernel ?? "—");
+    root.getElementById("sys-updates").textContent = (system && system.state != null ? system.state : "—") + " updates";
 
     // ---- security ----
-    const security = hass.states["sensor.khione_security"];
-    const netwatch = hass.states["sensor.khione_netwatch"];
     const secAttrs = (security && security.attributes) || {};
     const netAttrs = (netwatch && netwatch.attributes) || {};
     const bannedIps = Number(secAttrs.banned_ips) || 0;
     const csDecisions = Number(secAttrs.crowdsec_decisions) || 0;
-    const totalBlocked = bannedIps + csDecisions;
     const aideStatus = secAttrs.aide_status || "unknown";
     const auditdActive = secAttrs.auditd_active === true;
     const auditdImmutable = secAttrs.auditd_immutable === true;
@@ -962,7 +913,6 @@ class KhioneHomePanel extends HTMLElement {
     const unusualDetail = Array.isArray(netAttrs.unusual_detail) ? netAttrs.unusual_detail : [];
 
     const secBadge = root.getElementById("sec-badge");
-    const secDetailEl = root.getElementById("sec-detail");
     // "Urgent" here means something fail2ban/CrowdSec's own network-layer
     // view can't catch on its own: unexpected outbound traffic, unexpected
     // file changes, or the file/process watchers themselves being down.
@@ -972,44 +922,95 @@ class KhioneHomePanel extends HTMLElement {
     if (secUrgent) {
       secBadge.classList.add("urgent");
       const reasons = [];
-      if (unusualOutbound > 0) reasons.push(unusualOutbound + " unusual outbound connection" + (unusualOutbound === 1 ? "" : "s"));
-      if (aideStatus === "changes_detected") reasons.push("file changes detected");
-      if (!auditdActive) reasons.push("auditd not running");
+      if (unusualOutbound > 0) reasons.push(unusualOutbound + " unusual outbound");
+      if (aideStatus === "changes_detected") reasons.push("file changes");
+      if (!auditdActive) reasons.push("auditd down");
       root.getElementById("sec-headline").textContent = reasons.join(", ");
-      const firstUnusual = unusualDetail[0];
-      secDetailEl.hidden = !firstUnusual;
-      if (firstUnusual) {
-        secDetailEl.textContent = firstUnusual.process + " → " + firstUnusual.remote_ip + ":" + firstUnusual.remote_port;
-      }
     } else {
       secBadge.classList.remove("urgent");
+      const totalBlocked = bannedIps + csDecisions;
       root.getElementById("sec-headline").textContent = totalBlocked > 0
         ? totalBlocked + " threat" + (totalBlocked === 1 ? "" : "s") + " blocked"
         : "All clear";
-      secDetailEl.hidden = true;
     }
-    root.getElementById("sec-blocked").textContent = totalBlocked;
-    root.getElementById("sec-aide").textContent =
-      aideStatus === "clean" ? "OK" :
-      aideStatus === "changes_detected" ? "Changes detected" :
-      aideStatus === "not_yet_run" ? "Not yet run" : "Unknown";
-    root.getElementById("sec-auditd").textContent =
-      (auditdActive ? "Active" : "Inactive") + (auditdImmutable ? " · locked" : "");
-    root.getElementById("sec-outbound").textContent = unusualOutbound > 0 ? unusualOutbound + " unusual" : "Normal";
+    root.getElementById("sec-fail2ban").textContent = bannedIps;
+    root.getElementById("sec-crowdsec").textContent = csDecisions;
+    root.getElementById("sec-ufw").textContent = secAttrs.ufw_rules ?? "—";
+    root.getElementById("sec-auditd").textContent = auditdActive ? (auditdImmutable ? "locked" : "active") : "down";
+    root.getElementById("sec-auditd-stat").className = "mini-stat" + (auditdActive ? "" : " warn");
+    root.getElementById("sec-outbound").textContent = unusualOutbound > 0 ? unusualOutbound + " unusual" : "normal";
+    root.getElementById("sec-outbound-stat").className = "mini-stat" + (unusualOutbound > 0 ? " warn" : "");
+    const aideNextText = aideStatus === "changes_detected" ? "review" : (fmtUntil(secAttrs.aide_next_run) || "—");
+    root.getElementById("sec-aide-next").textContent = aideNextText;
+    root.getElementById("sec-aide-stat").className = "mini-stat" + (aideStatus === "changes_detected" ? " warn" : "");
+    root.getElementById("sec-quad9").textContent = secAttrs.quad9_active === true ? "Quad9" : "off";
+    root.getElementById("sec-quad9-stat").className = "mini-stat" + (secAttrs.quad9_active === true ? "" : " warn");
+    root.getElementById("sec-grub").textContent = secAttrs.grub_locked === true ? "set" : "unset";
+    root.getElementById("sec-grub-stat").className = "mini-stat" + (secAttrs.grub_locked === true ? "" : " warn");
+    root.getElementById("sec-sessions").textContent = secAttrs.active_sessions ?? "—";
+
+    const secHistoryEl = root.getElementById("sec-history");
+    if (secAttrs.last_ban_jail && secAttrs.last_ban_time != null) {
+      secHistoryEl.innerHTML = "Last ban: <b>" + escapeHtml(secAttrs.last_ban_jail) + " jail</b>, " + fmtAgo(secAttrs.last_ban_time);
+    } else if (unusualDetail[0]) {
+      const first = unusualDetail[0];
+      secHistoryEl.textContent = "Unusual: " + first.process + " → " + first.remote_ip + ":" + first.remote_port;
+    } else {
+      secHistoryEl.textContent = "No bans recorded yet.";
+    }
+
+    // ---- patching ----
+    const patAttrs = (patching && patching.attributes) || {};
+    root.getElementById("pat-official").textContent = sysAttrs.updates ?? "—";
+    root.getElementById("pat-advisories").textContent = securityCount;
+    const patAdvisoriesStat = root.getElementById("pat-advisories-stat");
+    const patDetailEl = root.getElementById("pat-detail");
+    if (securityCount > 0) {
+      patAdvisoriesStat.className = "mini-stat warn";
+      const first = securityDetail[0];
+      patDetailEl.hidden = false;
+      patDetailEl.textContent = first
+        ? first.package + ": " + (first.severity || "High") + " risk" + (first.cve ? " (" + first.cve + ")" : "") +
+          (securityCount > 1 ? " — +" + (securityCount - 1) + " more" : "")
+        : "Run pacman to apply a known security fix.";
+    } else {
+      patAdvisoriesStat.className = "mini-stat";
+      patDetailEl.hidden = true;
+    }
+    const aurUpdate = patAttrs.aur_update_available === true;
+    root.getElementById("pat-aur").textContent = aurUpdate ? "update" : "current";
+    root.getElementById("pat-aur-stat").className = "mini-stat" + (aurUpdate ? " warn" : "");
+    const newsUnread = Number(patAttrs.news_unread) || 0;
+    root.getElementById("pat-news").textContent = newsUnread > 0 ? newsUnread + " unread" : "read";
+    root.getElementById("pat-news-stat").className = "mini-stat" + (newsUnread > 0 ? " warn" : "");
+
+    const patHistoryEl = root.getElementById("pat-history");
+    const lastSyncText = fmtAgo(patAttrs.last_sync);
+    const nextRunText = fmtUntil(patAttrs.next_run);
+    patHistoryEl.innerHTML =
+      "Last sync: <b>" + (lastSyncText || "never") + "</b>" + (nextRunText ? " · next " + nextRunText : "");
 
     // ---- disks ----
     const diskRows = (disks && disks.attributes && disks.attributes.disks) || [];
-    root.getElementById("disks-rows").innerHTML = diskRows.length
+    root.getElementById("disk-rail-rows").innerHTML = diskRows.length
       ? diskRows
           .map((d) => {
             const pct = clampPct(d && d.percent);
             const useTb = (d && d.total_gb) >= 1000;
             const pctText = d && d.percent != null ? Math.round(d.percent) : "—";
+            const smart = d && d.smart;
+            let smartHtml = "";
+            if (smart && smart.healthy === true) {
+              smartHtml = '<span class="smart-pill">SMART OK</span>';
+            } else if (smart && smart.healthy === false) {
+              smartHtml = '<span class="smart-pill fail">' + smart.healthy_count + "/" + smart.disk_count + ' SMART OK</span>';
+            }
+            const warm = pct >= 90 ? " warm" : "";
             return (
-              '<div class="disk-row">' +
-              '<div class="disk-top"><span class="path">' + escapeHtml((d && d.path) || "—") + "</span>" +
-              '<span class="nums">' + fmtGB(d && d.used_gb, useTb) + " / " + fmtGB(d && d.total_gb, useTb) + " · " + pctText + "%</span></div>" +
-              '<div class="bar"><span style="width:' + pct + '%"></span></div>' +
+              '<div class="disk-rail-row">' +
+              '<div class="disk-rail-top"><span class="path">' + escapeHtml((d && d.path) || "—") + "</span>" +
+              '<span class="nums">' + fmtGB(d && d.used_gb, useTb) + " / " + fmtGB(d && d.total_gb, useTb) + " · " + pctText + "%" + smartHtml + "</span></div>" +
+              '<div class="rail-bar' + warm + '"><span style="width:' + pct + '%"></span></div>' +
               "</div>"
             );
           })
@@ -1017,23 +1018,22 @@ class KhioneHomePanel extends HTMLElement {
       : '<p style="color:var(--muted);font-size:.85rem;">No disk data available.</p>';
 
     // ---- internet speed ----
-    root.getElementById("speed-download").textContent = (dlSpeed && dlSpeed.state) ?? "—";
-    root.getElementById("speed-upload").textContent = (ulSpeed && ulSpeed.state) ?? "—";
-    root.getElementById("speed-ping").textContent = (ping && ping.state) ?? "—";
+    root.getElementById("net-download").textContent = (dlSpeed && dlSpeed.state) ?? "—";
+    root.getElementById("net-upload").textContent = (ulSpeed && ulSpeed.state) ?? "—";
+    root.getElementById("net-ping").textContent = (ping && ping.state) ?? "—";
 
     // ---- temperatures ----
     const tempRows = (temps && temps.attributes && temps.attributes.temps) || [];
-    root.getElementById("temps-rows").innerHTML = tempRows.length
+    root.getElementById("temp-mini-rows").innerHTML = tempRows.length
       ? tempRows
           .map((t) => {
-            const hotClass = t && t.hot ? " hot" : "";
             const iconId = tempIconId(t && t.name);
             const cText = t && t.c != null ? Math.round(t.c) + "°C" : "—";
+            const hot = t && t.hot;
             return (
-              '<div class="temp-row' + hotClass + '">' +
-              '<span class="temp-id"><svg class="icon" style="width:1em;height:1em;color:var(--khione-deep)"><use href="#' + iconId + '"></use></svg>' +
-              escapeHtml((t && t.name) || "—") + "</span>" +
-              '<span class="temp-val tabular">' + cText + "</span>" +
+              '<div class="mini-stat' + (hot ? " warn" : "") + '">' +
+              '<b class="tabular"><svg class="icon" style="width:.8em;height:.8em;vertical-align:-1px"><use href="#' + iconId + '"></use></svg> ' + cText + "</b>" +
+              "<span>" + escapeHtml((t && t.name) || "—") + "</span>" +
               "</div>"
             );
           })

@@ -2,9 +2,76 @@
 """Write disk usage JSON for the HA dashboard's Disks card."""
 import json
 import os
+import re
 import shutil
+import subprocess
 
 OUT = "/var/lib/hass/snapshots/disks.json"
+
+# Cache per base disk within this one run -- several mountpoints often
+# share a physical disk (e.g. / and /boot both on nvme0n1), and a RAID
+# array's mountpoint resolves to several disks at once, so this avoids
+# running smartctl on the same disk twice in one pass.
+_smart_cache = {}
+
+
+def smart_health(disk):
+    if disk not in _smart_cache:
+        try:
+            r = subprocess.run(
+                ["smartctl", "-H", "/dev/" + disk],
+                capture_output=True, text=True, timeout=5,
+            )
+            _smart_cache[disk] = "PASSED" in r.stdout or "OK" in r.stdout
+        except Exception:
+            _smart_cache[disk] = None
+    return _smart_cache[disk]
+
+
+_LSBLK_PAIR = re.compile(r'NAME="([^"]*)".*TYPE="([^"]*)"')
+
+
+def smart_status_for_mount(mountpoint):
+    """healthy=None means "couldn't determine" (no smartctl, virtual
+    device, permission issue) -- distinct from a real failure."""
+    try:
+        src = subprocess.run(
+            ["findmnt", "-no", "SOURCE", mountpoint],
+            capture_output=True, text=True, timeout=3,
+        ).stdout.strip()
+        if not src:
+            return None
+        # lsblk -s walks DOWN the dependency chain (partition -> its
+        # physical disk, or a RAID device -> every member disk) --
+        # confirmed live this resolves a 4-disk RAID10 mountpoint to all
+        # 4 underlying physical disks, not just the virtual md device.
+        # Pairs mode (-P) specifically, not the default tree view -- the
+        # tree view glues Unicode box-drawing characters (e.g. "└─sda")
+        # onto the NAME field itself, confirmed live this corrupts the
+        # device name for any entry not at tree depth zero.
+        out = subprocess.run(
+            ["lsblk", "-P", "-o", "NAME,TYPE", "-s", src],
+            capture_output=True, text=True, timeout=3,
+        ).stdout
+        disks = []
+        for line in out.splitlines():
+            m = _LSBLK_PAIR.match(line)
+            if m and m.group(2) == "disk":
+                disks.append(m.group(1))
+        if not disks:
+            return None
+        results = [smart_health(d) for d in disks]
+        results = [r for r in results if r is not None]
+        if not results:
+            return None
+        return {
+            "healthy": all(results),
+            "disk_count": len(disks),
+            "healthy_count": sum(1 for r in results if r),
+        }
+    except Exception:
+        return None
+
 
 disks = []
 seen_devices = set()
@@ -24,6 +91,7 @@ with open("/proc/mounts") as f:
             "used_gb": usage.used / 1e9,
             "total_gb": usage.total / 1e9,
             "percent": round(usage.used / usage.total * 100),
+            "smart": smart_status_for_mount(mountpoint),
         })
 
 disks.sort(key=lambda d: d["path"])

@@ -500,6 +500,18 @@ update="\$(sudo -u $user yay -Qua 2>/dev/null | grep "^$package " || true)"
 if [[ -n "\$update" ]]; then
   echo "$label AUR update available (never auto-applied): \$update" | systemd-cat -t khione-aur-check -p warning
 fi
+# Persisted for the dashboard (journal entries above aren't readable
+# from there) -- written every run so "no update" also overwrites a
+# stale "update available" from the last check.
+out="/var/lib/hass/snapshots/aur-$package.json"
+mkdir -p "\$(dirname "\$out")"
+if [[ -n "\$update" ]]; then
+  detail="\$(echo "\$update" | sed 's/\\\\/\\\\\\\\/g; s/"/\\\\"/g')"
+  printf '{"package": "$package", "update_available": true, "detail": "%s"}' "\$detail" > "\$out.tmp"
+else
+  printf '{"package": "$package", "update_available": false, "detail": null}' > "\$out.tmp"
+fi
+mv "\$out.tmp" "\$out"
 EOF
   local svc="khione-aur-check-$package"
   sudo tee "/etc/systemd/system/$svc.service" >/dev/null <<EOF

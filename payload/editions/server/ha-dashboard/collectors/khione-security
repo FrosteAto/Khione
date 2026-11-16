@@ -68,16 +68,75 @@ if command -v auditctl &>/dev/null; then
   fi
 fi
 
-python3 - "$f2b_banned" "$cs_decisions" "$aide_status" "$aide_last_run" "$auditd_active" "$auditd_immutable" <<'PYEOF' > "$out.tmp"
+# ufw: count of active numbered rules (both v4 and v6 lines) -- a quick
+# "is the firewall actually doing anything" sanity figure, not meant to
+# match FIREWALL_RULES exactly (ufw also doubles every rule for IPv6).
+ufw_rules=0
+if command -v ufw &>/dev/null; then
+  ufw_rules="$(ufw status numbered 2>/dev/null | grep -c '^\[' || true)"
+fi
+
+# Active logged-in sessions (console/SSH with a real tty) -- `who`, not
+# `w`, since it's simpler and this only needs a count.
+active_sessions="$(who 2>/dev/null | wc -l)"
+
+# Converted to epoch seconds here, not left as systemd's own timestamp
+# text -- confirmed live that format ("Tue 2026-11-17 00:38:34 GMT")
+# isn't something JS Date.parse reads correctly, and that `date -d ""`
+# on an empty/not-yet-triggered value silently defaults to "now" rather
+# than failing, so the empty check has to happen BEFORE the conversion.
+aide_next_run=""
+if systemctl list-unit-files aidecheck.timer &>/dev/null; then
+  raw_next="$(systemctl show aidecheck.timer -p NextElapseUSecRealtime --value 2>/dev/null || true)"
+  [[ -n "$raw_next" ]] && aide_next_run="$(date -d "$raw_next" +%s 2>/dev/null || true)"
+fi
+
+# Most recent ban fail2ban has ever recorded, regardless of whether it's
+# still active -- confirmed live fail2ban keeps this in its own sqlite
+# db (bans table: jail, ip, timeofban) even after a ban expires, so
+# "currently 0 banned" doesn't have to mean "nothing to report."
+last_ban_jail=""
+last_ban_time=""
+if [[ -r /var/lib/fail2ban/fail2ban.sqlite3 ]] && command -v sqlite3 &>/dev/null; then
+  last_ban_row="$(sqlite3 -separator '|' /var/lib/fail2ban/fail2ban.sqlite3 \
+    "SELECT jail, timeofban FROM bans ORDER BY timeofban DESC LIMIT 1;" 2>/dev/null || true)"
+  if [[ -n "$last_ban_row" ]]; then
+    last_ban_jail="${last_ban_row%%|*}"
+    last_ban_time="${last_ban_row##*|}"
+  fi
+fi
+
+# Quad9 DNS and the GRUB password are both one-time installer config,
+# not something HA has a sensor for -- confirmed live rather than
+# assumed, in case either was ever hand-reverted after install.
+quad9_active=false
+if grep -q "nameserver 9\.9\.9\.9" /etc/resolv.conf 2>/dev/null; then
+  quad9_active=true
+fi
+grub_locked=false
+if [[ -f /etc/grub.d/40_custom ]] && grep -q "^set superusers" /etc/grub.d/40_custom 2>/dev/null; then
+  grub_locked=true
+fi
+
+python3 - "$f2b_banned" "$cs_decisions" "$aide_status" "$aide_last_run" "$auditd_active" "$auditd_immutable" \
+  "$ufw_rules" "$active_sessions" "$aide_next_run" "$last_ban_jail" "$last_ban_time" "$quad9_active" "$grub_locked" <<'PYEOF' > "$out.tmp"
 import json, sys
-f2b_banned, cs_decisions, aide_status, aide_last_run, auditd_active, auditd_immutable = sys.argv[1:7]
+(f2b_banned, cs_decisions, aide_status, aide_last_run, auditd_active, auditd_immutable,
+ ufw_rules, active_sessions, aide_next_run, last_ban_jail, last_ban_time, quad9_active, grub_locked) = sys.argv[1:14]
 print(json.dumps({
     "banned_ips": int(f2b_banned),
     "crowdsec_decisions": int(cs_decisions),
     "aide_status": aide_status,
     "aide_last_run": aide_last_run,
+    "aide_next_run": int(aide_next_run) if aide_next_run else None,
     "auditd_active": auditd_active == "true",
     "auditd_immutable": auditd_immutable == "true",
+    "ufw_rules": int(ufw_rules),
+    "active_sessions": int(active_sessions),
+    "last_ban_jail": last_ban_jail or None,
+    "last_ban_time": int(last_ban_time) if last_ban_time else None,
+    "quad9_active": quad9_active == "true",
+    "grub_locked": grub_locked == "true",
 }))
 PYEOF
 mv "$out.tmp" "$out"

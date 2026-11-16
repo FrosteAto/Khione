@@ -31,11 +31,17 @@ days=$((uptime_s / 86400))
 hours=$(((uptime_s % 86400) / 3600))
 mins=$(((uptime_s % 3600) / 60))
 
-python3 - "$updates" "$audit_json" "${days}d ${hours}h ${mins}m" "$(uname -r)" <<'PYEOF' > "$out.tmp"
+read -r load1 load5 load15 _ < /proc/loadavg
+
+swap_total_kb=$(awk '/^SwapTotal:/{print $2}' /proc/meminfo)
+swap_free_kb=$(awk '/^SwapFree:/{print $2}' /proc/meminfo)
+swap_used_kb=$((swap_total_kb - swap_free_kb))
+
+python3 - "$updates" "$audit_json" "${days}d ${hours}h ${mins}m" "$(uname -r)" "$load1" "$load5" "$load15" "$swap_used_kb" "$swap_total_kb" <<'PYEOF' > "$out.tmp"
 import json
 import sys
 
-updates, audit_json, uptime, kernel = sys.argv[1:5]
+updates, audit_json, uptime, kernel, load1, load5, load15, swap_used_kb, swap_total_kb = sys.argv[1:10]
 entries = json.loads(audit_json) if audit_json else []
 urgent = [
     e for e in entries
@@ -59,6 +65,11 @@ print(json.dumps({
     "security_detail": security_detail,
     "uptime": uptime,
     "kernel": kernel,
+    "load1": float(load1),
+    "load5": float(load5),
+    "load15": float(load15),
+    "swap_used_gb": int(swap_used_kb) * 1024 / 1e9,
+    "swap_total_gb": int(swap_total_kb) * 1024 / 1e9,
 }))
 PYEOF
 mv "$out.tmp" "$out"

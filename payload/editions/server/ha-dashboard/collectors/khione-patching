@@ -1,0 +1,57 @@
+#!/bin/bash
+set -euo pipefail
+
+out=/var/lib/hass/snapshots/patching.json
+mkdir -p "$(dirname "$out")"
+
+# Converted to epoch seconds, not left as systemd's own timestamp text --
+# see khione-security for why (Date.parse can't read that format, and
+# `date -d ""` on an empty/never-triggered value silently defaults to
+# "now" instead of failing, so empty has to be checked first).
+last_sync=""
+next_run=""
+if systemctl list-unit-files khione-auto-update.timer &>/dev/null; then
+  raw_last="$(systemctl show khione-auto-update.timer -p LastTriggerUSec --value 2>/dev/null || true)"
+  raw_next="$(systemctl show khione-auto-update.timer -p NextElapseUSecRealtime --value 2>/dev/null || true)"
+  [[ -n "$raw_last" ]] && last_sync="$(date -d "$raw_last" +%s 2>/dev/null || true)"
+  [[ -n "$raw_next" ]] && next_run="$(date -d "$raw_next" +%s 2>/dev/null || true)"
+fi
+
+# `informant list --unread` only lists -- confirmed live against
+# informant's own help text that only `check` and `read` mark items as
+# read, so this is safe to poll on a timer without ever silently
+# clearing news the admin hasn't actually seen yet (unlike `check`,
+# which marks a SINGLE unread item as read as a side effect of running
+# it at all).
+# shortcut: informant's own output has ANSI color codes prefixing every
+# line ("\e[1m0: Title..."), confirmed live -- a plain `grep -c
+# '^[0-9]+:'` never matches at all (always 0) until those are stripped
+# first. informant ignores NO_COLOR.
+news_unread=0
+if command -v informant &>/dev/null; then
+  news_unread="$(informant list --unread 2>/dev/null | sed -E 's/\x1b\[[0-9;]*m//g' | grep -c '^[0-9]\+:' || true)"
+fi
+
+# Written by configure_aur_update_check's generated script (security.sh)
+# each time it runs -- this collector just reads the latest snapshot,
+# hardcoded to Plex since that's the only AUR package tracked today.
+aur_update_available=false
+if [[ -f /var/lib/hass/snapshots/aur-plex-media-server.json ]]; then
+  aur_update_available="$(python3 -c "
+import json
+d = json.load(open('/var/lib/hass/snapshots/aur-plex-media-server.json'))
+print(d.get('update_available', False))
+" 2>/dev/null || echo False)"
+fi
+
+python3 - "$last_sync" "$next_run" "$news_unread" "$aur_update_available" <<'PYEOF' > "$out.tmp"
+import json, sys
+last_sync, next_run, news_unread, aur_update = sys.argv[1:5]
+print(json.dumps({
+    "last_sync": int(last_sync) if last_sync else None,
+    "next_run": int(next_run) if next_run else None,
+    "news_unread": int(news_unread),
+    "aur_update_available": aur_update.strip() == "True",
+}))
+PYEOF
+mv "$out.tmp" "$out"

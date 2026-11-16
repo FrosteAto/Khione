@@ -1,0 +1,11 @@
+[Unit]
+Description=Collect update/patching status for the HA dashboard
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/khione-patching
+
+[Install]
+WantedBy=multi-user.target

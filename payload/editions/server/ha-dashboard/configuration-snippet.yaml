@@ -47,6 +47,11 @@ command_line:
         - security_detail
         - uptime
         - kernel
+        - load1
+        - load5
+        - load15
+        - swap_used_gb
+        - swap_total_gb
       scan_interval: 60
   - sensor:
       name: Khione Disks
@@ -77,8 +82,15 @@ command_line:
         - crowdsec_decisions
         - aide_status
         - aide_last_run
+        - aide_next_run
         - auditd_active
         - auditd_immutable
+        - ufw_rules
+        - active_sessions
+        - last_ban_jail
+        - last_ban_time
+        - quad9_active
+        - grub_locked
       scan_interval: 60
   - sensor:
       name: Khione Netwatch
@@ -89,6 +101,18 @@ command_line:
       json_attributes:
         - unusual_outbound
         - unusual_detail
+      scan_interval: 60
+  - sensor:
+      name: Khione Patching
+      unique_id: khione_patching
+      command: "cat /config/snapshots/patching.json"
+      value_template: "{{ value_json.news_unread }}"
+      unit_of_measurement: unread
+      json_attributes:
+        - last_sync
+        - next_run
+        - news_unread
+        - aur_update_available
       scan_interval: 60
   - binary_sensor:
       name: Khione Plex

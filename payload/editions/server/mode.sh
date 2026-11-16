@@ -17,6 +17,7 @@ OFFICIAL_PACKAGES=(
   arch-audit          # feeds khione-system's security_updates/security_detail attributes AND the daily CVE-check timer
   docker              # runs the Home Assistant container
   fail2ban audit informant
+  sqlite              # sqlite3 CLI -- khione-security reads fail2ban's own ban-history db with it
 )
 
 AUR_PACKAGES=(
@@ -45,6 +46,7 @@ SERVICES_ENABLE=(
   khione-temps.timer khione-temps.service
   khione-security.timer khione-security.service
   khione-netwatch.timer khione-netwatch.service
+  khione-patching.timer khione-patching.service
   docker.service
   home-assistant.service
 )
