@@ -105,10 +105,13 @@ command_line:
       # "ArchLinux" (one word) deliberately, not "Arch Linux" -- HA
       # auto-slugs the entity_id from this display name, and a two-word
       # name produces sensor.khione_rss_arch_linux (extra underscore),
-      # not sensor.khione_rss_archlinux, which is what home-view.yaml and
+      # not sensor.khione_rss_archlinux, which is what home.js and
       # unique_id both already assume. Confirmed live: BBC/Derbyshire's
       # single-word tails happened to slug correctly by coincidence; this
-      # one didn't.
+      # one didn't. Note this only gets a fresh install the right slug --
+      # HA never re-slugs an already-registered entity_id from a later
+      # config edit, so an existing install can still be stuck on the old
+      # two-word slug (confirmed live); home.js reads both as a fallback.
       name: Khione RSS ArchLinux
       unique_id: khione_rss_archlinux
       command: "cat /config/snapshots/rss_archlinux.json"

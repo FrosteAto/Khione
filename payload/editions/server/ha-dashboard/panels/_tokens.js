@@ -58,14 +58,27 @@ export const SHARED_TOKENS_CSS = `
 * { box-sizing: border-box; }
 `;
 
-// Shadow DOM supports a plain <link rel="stylesheet"> element placed
-// directly inside the shadow root in every evergreen browser — each page
-// appends this once, in its one-time render branch, alongside its own
-// <style>. Keeping it as one shared constant means the exact Google Fonts
-// URL (and its two font families) only has to be right in one place.
-export const GOOGLE_FONTS_LINK_HTML =
-  '<link rel="preconnect" href="https://fonts.googleapis.com">' +
-  '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Satisfy&display=swap">';
+// shortcut: a <link rel="stylesheet"> placed INSIDE a shadow root parses
+// fine, but Chromium never registers the @font-face rules it pulls in
+// against document.fonts -- so font-family inside that shadow tree
+// silently falls back to the generic (verified live: a shadow-root-only
+// link renders Satisfy text at the exact same width as plain CSS
+// `cursive`, while the identical link in the real <head> renders at the
+// correct, narrower Satisfy width). CSS font resolution is document-wide
+// regardless of shadow boundaries, so the fix is to load the fonts once
+// into the real document <head> instead of into each panel's shadow root.
+export function ensureGoogleFontsLoaded() {
+  if (document.head.querySelector("[data-khione-fonts]")) return;
+  const preconnect = document.createElement("link");
+  preconnect.rel = "preconnect";
+  preconnect.href = "https://fonts.googleapis.com";
+  preconnect.setAttribute("data-khione-fonts", "");
+  document.head.appendChild(preconnect);
+  const sheet = document.createElement("link");
+  sheet.rel = "stylesheet";
+  sheet.href = "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Satisfy&display=swap";
+  document.head.appendChild(sheet);
+}
 
 // Reads/writes the same localStorage key every panel's theme toggle uses,
 // so a choice made on one page is remembered on the others too (same
@@ -92,4 +105,36 @@ export function toggleTheme(hostEl) {
   hostEl.setAttribute("data-theme", next);
   try { localStorage.setItem("khione-dash-theme", next); } catch (e) {}
   return next;
+}
+
+// panel_custom pages get none of HA's own toolbar, so on a narrow
+// viewport (phone, the companion app) there is otherwise no way back to
+// the sidebar once you're on one of these pages -- it's a hidden drawer
+// with nothing left on-page to open it. Call ensureMobileMenuButton once
+// per panel (its one-time render branch) and setMobileMenuButtonVisible
+// from `set narrow` to show/hide it.
+const MENU_BUTTON_ID = "khione-mobile-menu-btn";
+
+export function ensureMobileMenuButton(hostEl) {
+  const root = hostEl.shadowRoot;
+  if (root.getElementById(MENU_BUTTON_ID)) return;
+  const btn = document.createElement("button");
+  btn.id = MENU_BUTTON_ID;
+  btn.type = "button";
+  btn.setAttribute("aria-label", "Open menu");
+  btn.textContent = "☰";
+  btn.style.cssText =
+    "display:none;position:fixed;top:12px;left:12px;z-index:1000;" +
+    "width:40px;height:40px;border-radius:50%;border:none;" +
+    "background:var(--card-bg);color:var(--ink);font-size:20px;" +
+    "line-height:40px;padding:0;box-shadow:0 2px 6px rgba(0,0,0,.25);cursor:pointer;";
+  btn.addEventListener("click", () => {
+    hostEl.dispatchEvent(new Event("hass-toggle-menu", { bubbles: true, composed: true }));
+  });
+  root.appendChild(btn);
+}
+
+export function setMobileMenuButtonVisible(hostEl, narrow) {
+  const btn = hostEl.shadowRoot && hostEl.shadowRoot.getElementById(MENU_BUTTON_ID);
+  if (btn) btn.style.display = narrow ? "block" : "none";
 }

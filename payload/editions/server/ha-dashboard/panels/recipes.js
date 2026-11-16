@@ -12,8 +12,9 @@
 //    submit/delete handlers that only ever mutated that in-memory array)
 //    is dropped. The library grid is now built from the real
 //    sensor.khione_meals_recipes_{breakfast,lunch,snacks,dinner} sensors
-//    (same sensors/attribute shape meals.js's recipe library and
-//    recipes-view.yaml's Jinja already read), and Save/Delete go through
+//    (same sensors/attribute shape meals.js's recipe library reads, and
+//    the now-retired recipes-view.yaml's Jinja used to read), and
+//    Save/Delete go through
 //    real hass.callService calls to Task 5's
 //    khione_meals_save_recipe/delete_recipe.
 // 2. Each sensor's `recipes` attribute gives {id, name, detail,
@@ -51,8 +52,9 @@
 //    So the mockup's own client-side slugify/duplicate-id-check logic
 //    (which existed only to manage its fake local array) is dropped
 //    entirely; the form's Recipe ID field is sent through verbatim, same
-//    as recipes-view.yaml's own note: "Leave Recipe ID blank to create a
-//    new recipe, or paste an existing one's ID to edit it."
+//    as the now-retired recipes-view.yaml's own note said: "Leave Recipe
+//    ID blank to create a new recipe, or paste an existing one's ID to
+//    edit it."
 // 6. A `.theme-toggle` button (+ a new ic-moon icon; every other mockup
 //    icon is kept byte-for-byte) is added inside a new `.hero-row`
 //    wrapper — the mockup had no toggle markup at all, same gap every
@@ -72,7 +74,7 @@
 //    rebuilding them can't silently discard anything a user was
 //    interacting with. The active tab filter is kept in `this._filter`
 //    (a plain instance field, not DOM state) and reapplied each rebuild.
-import { SHARED_TOKENS_CSS, GOOGLE_FONTS_LINK_HTML, initTheme, toggleTheme } from "./_tokens.js";
+import { SHARED_TOKENS_CSS, ensureGoogleFontsLoaded, initTheme, toggleTheme, ensureMobileMenuButton, setMobileMenuButtonVisible } from "./_tokens.js";
 
 // ---------------------------------------------------------------------------
 // PAGE_CSS — ported from the mockup's main <style> block. `:root{...}` /
@@ -472,7 +474,7 @@ const PAGE_SHELL_HTML = `
           <legend><div class="icon-badge badge-4"><span class="blob"></span><svg class="icon"><use href="#ic-scale"/></svg></div>Cooking logistics</legend>
           <div class="field">
             <label for="f-batch">Batch size (portions made at once)</label>
-            <input type="number" id="f-batch" name="batch" min="1" value="1">
+            <input type="number" id="f-batch" name="batch" min="0" value="1">
           </div>
           <div class="toggle-row">
             <div class="lbl"><span class="t">Cooked fresh</span><span class="d">Off = batch-cooked and stored</span></div>
@@ -615,6 +617,7 @@ function loadRecipesFromHass(hass) {
         proteinMin: macros.proteinMin, proteinMax: macros.proteinMax,
         batch: Number(r.batch) || 0, cookedFresh: !!r.fresh,
         ingredients: r.ingredients || "", instructions: r.instructions || "",
+        inUse: !!r.in_use,
       });
     }
   }
@@ -636,6 +639,7 @@ class KhioneRecipesPanel extends HTMLElement {
   }
   set narrow(narrow) {
     this._narrow = narrow;
+    setMobileMenuButtonVisible(this, narrow);
   }
   set route(route) {
     this._route = route;
@@ -647,8 +651,11 @@ class KhioneRecipesPanel extends HTMLElement {
   _render() {
     if (!this._hass) return;
     if (!this._rendered) {
-      this._root.innerHTML = `${GOOGLE_FONTS_LINK_HTML}<style>${SHARED_TOKENS_CSS}${PAGE_CSS}</style>${PAGE_SHELL_HTML}`;
+      ensureGoogleFontsLoaded();
+      this._root.innerHTML = `<style>${SHARED_TOKENS_CSS}${PAGE_CSS}</style>${PAGE_SHELL_HTML}`;
       initTheme(this);
+      ensureMobileMenuButton(this);
+      setMobileMenuButtonVisible(this, this._narrow);
       this._bindStaticHandlers();
       this._rendered = true;
     }
@@ -743,7 +750,7 @@ class KhioneRecipesPanel extends HTMLElement {
       fKcalMax.value = r.kcalMax;
       fProMin.value = r.proteinMin;
       fProMax.value = r.proteinMax;
-      fBatch.value = r.batch || 1;
+      fBatch.value = r.batch ?? 0;
       fCookedFresh.checked = !!r.cookedFresh;
       fIngredients.value = r.ingredients;
       fInstructions.value = r.instructions;
@@ -813,6 +820,15 @@ class KhioneRecipesPanel extends HTMLElement {
       const id = fId.value.trim();
       const r = this._recipes.find((x) => x.id === id);
       if (!r) { setStatus("Enter or choose a Recipe ID that already exists to delete it.", "err"); return; }
+      // khione_meals_delete_recipe refuses in-use recipes with a silent
+      // log.error + return (same convention as its other validation),
+      // so the service call would still resolve -- check client-side
+      // first so Delete can't report a false "Deleted" when nothing
+      // happened.
+      if (r.inUse) {
+        setStatus("“" + r.name + "” is still used in the meal plan — remove it from the plan before deleting.", "err");
+        return;
+      }
       confirmName.textContent = r.name;
       confirmRow.hidden = false;
     });

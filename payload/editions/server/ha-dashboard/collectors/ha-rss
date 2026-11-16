@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-"""Fetch RSS feeds into the JSON shape the HA dashboard's rss-news-card
-expects on a backing command_line sensor: {"articles": [{"title", "link",
-"pubDate"}, ...]} as the sensor's "articles" json_attribute. Confirmed live
-against the card's own source (rss-news-card.js's _getArticles/setConfig) --
-it reads per-feed sensors, not RSS URLs directly."""
+"""Fetch RSS feeds into the JSON shape the Home panel's news section
+(home.js) expects on a backing command_line sensor: {"articles":
+[{"title", "link", "pubDate"}, ...]} as the sensor's "articles"
+json_attribute. home.js reads these sensors directly, not RSS URLs."""
 import json
 import os
 import urllib.request

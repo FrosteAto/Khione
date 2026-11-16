@@ -3,7 +3,7 @@
 // approved mockup scratchpad/mockups/weather-redesign-washi-ghibli-brand.html
 // — this file is a data-wiring change onto that approved design, not a
 // redesign. See _tokens.js for the shared brand tokens/theme toggle.
-import { SHARED_TOKENS_CSS, GOOGLE_FONTS_LINK_HTML, initTheme, toggleTheme } from "./_tokens.js";
+import { SHARED_TOKENS_CSS, ensureGoogleFontsLoaded, initTheme, toggleTheme, ensureMobileMenuButton, setMobileMenuButtonVisible } from "./_tokens.js";
 
 // ---------------------------------------------------------------------------
 // PAGE_CSS — verbatim from the mockup's main <style> block, with two
@@ -1375,12 +1375,30 @@ class KhioneWeatherPanel extends HTMLElement {
   }
   set narrow(narrow) {
     this._narrow = narrow;
+    setMobileMenuButtonVisible(this, narrow);
   }
   set route(route) {
     this._route = route;
   }
   set panel(panel) {
     this._panel = panel;
+  }
+
+  // HA's panel resolver detaches a panel element (and runs
+  // disconnectedCallback below) after its tab has been hidden for a
+  // while, then re-attaches the SAME element when it becomes visible
+  // again -- confirmed as the real cause of a stale, frozen radar on a
+  // long-left-open Weather tab (the forecast subscriptions already
+  // recover on their own because _forecastSubscribed is reset and
+  // _maybeSubscribeForecasts() runs on every set hass; the radar's
+  // interval timers had no equivalent restart path). Only acts once the
+  // radar has actually been built once already (_radarInitialized) --
+  // on the very first connect there's nothing yet to restart.
+  connectedCallback() {
+    if (this._radarInitialized && this._radarRefreshFrames && !this._radarRefreshInterval) {
+      this._radarRefreshFrames().then(() => this._radarStartLoop());
+      this._radarRefreshInterval = setInterval(this._radarRefreshFrames, 10 * 60 * 1000);
+    }
   }
 
   disconnectedCallback() {
@@ -1406,8 +1424,11 @@ class KhioneWeatherPanel extends HTMLElement {
   _render() {
     if (!this._hass) return;
     if (!this._rendered) {
-      this._root.innerHTML = `${GOOGLE_FONTS_LINK_HTML}<style>${SHARED_TOKENS_CSS}${PAGE_CSS}${LEAFLET_CSS}</style>${PAGE_SHELL_HTML}`;
+      ensureGoogleFontsLoaded();
+      this._root.innerHTML = `<style>${SHARED_TOKENS_CSS}${PAGE_CSS}${LEAFLET_CSS}</style>${PAGE_SHELL_HTML}`;
       initTheme(this);
+      ensureMobileMenuButton(this);
+      setMobileMenuButtonVisible(this, this._narrow);
       this._bindStaticHandlers();
       this._loadLeaflet();
       this._rendered = true;
@@ -1623,6 +1644,12 @@ class KhioneWeatherPanel extends HTMLElement {
           if (foot) foot.style.display = "none";
         });
     }
+
+    // Stashed on the instance (not just these closures) so
+    // connectedCallback can restart the loop after a detach/reattach --
+    // see the comment there for why that's needed at all.
+    self._radarRefreshFrames = refreshFrames;
+    self._radarStartLoop = startLoop;
 
     refreshFrames().then(() => startLoop());
     this._radarRefreshInterval = setInterval(refreshFrames, 10 * 60 * 1000);

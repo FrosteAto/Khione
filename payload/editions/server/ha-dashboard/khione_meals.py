@@ -601,6 +601,13 @@ def _recompute_today():
                 "id": r["id"], "name": r["name"],
                 "detail": macro_detail(r), "ingredients": r["ingredients"],
                 "instructions": r["instructions"], "batch": r["batch"], "fresh": r["fresh"],
+                # khione_meals_delete_recipe refuses (silent log.error +
+                # return, no exception -- same convention as every other
+                # service in this file) to delete a recipe still used in
+                # the plan. Expose that here so the Recipes panel can
+                # block Delete client-side instead of showing a false
+                # "Deleted" success.
+                "in_use": recipe_in_use(r["id"], plan),
             } for r in matching]
         })
 

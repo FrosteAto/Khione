@@ -1,5 +1,5 @@
 [Unit]
-Description=Fetch RSS feeds for the HA dashboard's rss-news-card
+Description=Fetch RSS feeds for the HA dashboard's Home panel
 Wants=network-online.target
 After=network-online.target
 

@@ -14,16 +14,17 @@
 //    the week number cyclically with `% total_weeks`, so there is no real
 //    edge to disable at — that logic is dropped. "Today"'s aria-pressed and
 //    the whole week table/shopping list are driven by live
-//    sensor.khione_meals_preview attributes instead (same shape
-//    meals-view.yaml already templates from it).
+//    sensor.khione_meals_preview attributes instead (same shape the
+//    now-retired meals-view.yaml used to template from it).
 // 2. The mockup's hero "today's note: tuna & potato night" names a specific
 //    meal that would be wrong on any other day — dropped rather than
 //    faked, along with its now-unused `.hero .note` CSS rule.
 // 3. The mockup drew recipe ingredients/method as hand-typed `<ul><li>`
 //    lists. The real `recipes_{slot}` sensors give `ingredients`/
 //    `instructions` as single prose strings (same shape
-//    khione_meals.py's SEED_RECIPES and meals-view.yaml's markdown cards
-//    use), so each renders as one `<p class="instr">` (a style the mockup
+//    khione_meals.py's SEED_RECIPES uses, and the now-retired
+//    meals-view.yaml's markdown cards used), so each renders as one
+//    `<p class="instr">` (a style the mockup
 //    already used for the one dinner recipe it gave full method text to)
 //    instead of a fabricated bullet list.
 // 4. Recipe chips (`Batch N` / `Cook fresh`) only ever appeared on the
@@ -52,7 +53,7 @@
 //    promise (re-enabling in a `.finally`) so a fast double-click/double-tap
 //    on Prev/Next can't fire two preview-week shifts before pyscript
 //    recomputes between them.
-import { SHARED_TOKENS_CSS, GOOGLE_FONTS_LINK_HTML, initTheme, toggleTheme } from "./_tokens.js";
+import { SHARED_TOKENS_CSS, ensureGoogleFontsLoaded, initTheme, toggleTheme, ensureMobileMenuButton, setMobileMenuButtonVisible } from "./_tokens.js";
 
 // Same defaults khione_meals.py's DEFAULT_PROFILE/START_KG use, so an
 // unconfigured profile/weight form shows the same numbers the backend
@@ -753,6 +754,7 @@ class KhioneMealsPanel extends HTMLElement {
   }
   set narrow(narrow) {
     this._narrow = narrow;
+    setMobileMenuButtonVisible(this, narrow);
   }
   set route(route) {
     this._route = route;
@@ -764,8 +766,11 @@ class KhioneMealsPanel extends HTMLElement {
   _render() {
     if (!this._hass) return;
     if (!this._rendered) {
-      this._root.innerHTML = `${GOOGLE_FONTS_LINK_HTML}<style>${SHARED_TOKENS_CSS}${PAGE_CSS}</style>${PAGE_SHELL_HTML}`;
+      ensureGoogleFontsLoaded();
+      this._root.innerHTML = `<style>${SHARED_TOKENS_CSS}${PAGE_CSS}</style>${PAGE_SHELL_HTML}`;
       initTheme(this);
+      ensureMobileMenuButton(this);
+      setMobileMenuButtonVisible(this, this._narrow);
       this._bindStaticHandlers();
       this._initFormDefaults();
       this._renderRecipes();
@@ -818,7 +823,13 @@ class KhioneMealsPanel extends HTMLElement {
       btnEl.addEventListener("click", () => {
         if (btnEl.disabled) return;
         btnEl.disabled = true;
-        Promise.resolve(fn()).finally(() => { btnEl.disabled = false; });
+        // Promise.resolve().then(fn), not Promise.resolve(fn()): if fn
+        // throws synchronously, calling it eagerly as an argument would
+        // throw before .finally() is ever attached, leaving the button
+        // disabled forever. Deferring the call into .then() turns a
+        // synchronous throw into an ordinary rejection .finally() still
+        // observes.
+        Promise.resolve().then(fn).finally(() => { btnEl.disabled = false; });
       });
     };
 
@@ -850,6 +861,19 @@ class KhioneMealsPanel extends HTMLElement {
       const activity = root.getElementById("profile-activity").value;
       if (Number.isNaN(age) || Number.isNaN(height_cm)) {
         showConfirm(msg, "Enter a valid age and height first.");
+        return;
+      }
+      // Mirrors khione_meals_save_profile's own bounds exactly: it
+      // rejects out-of-range values with a silent log.error + return
+      // (no exception), so the call would still resolve and this would
+      // show "Profile saved." with nothing written -- same false-success
+      // class a review already fixed once for Recipes' Save.
+      if (!(10 <= age && age <= 120)) {
+        showConfirm(msg, "Age must be between 10 and 120.");
+        return;
+      }
+      if (!(100 <= height_cm && height_cm <= 250)) {
+        showConfirm(msg, "Height must be between 100 and 250cm.");
         return;
       }
       return this._hass.callService("pyscript", "khione_meals_save_profile", { age, height_cm, sex, activity }).then(

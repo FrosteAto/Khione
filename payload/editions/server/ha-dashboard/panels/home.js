@@ -4,7 +4,7 @@
 // change onto that approved design, not a redesign. See _tokens.js for the
 // shared brand tokens/theme toggle, and weather.js for the sibling panel
 // this follows the same wrapper mechanics as.
-import { SHARED_TOKENS_CSS, GOOGLE_FONTS_LINK_HTML, initTheme, toggleTheme } from "./_tokens.js";
+import { SHARED_TOKENS_CSS, ensureGoogleFontsLoaded, initTheme, toggleTheme, ensureMobileMenuButton, setMobileMenuButtonVisible } from "./_tokens.js";
 
 // ---------------------------------------------------------------------------
 // PAGE_CSS — ported from the mockup's main <style> block. Three kinds of
@@ -703,6 +703,7 @@ class KhioneHomePanel extends HTMLElement {
   }
   set narrow(narrow) {
     this._narrow = narrow;
+    setMobileMenuButtonVisible(this, narrow);
   }
   set route(route) {
     this._route = route;
@@ -726,8 +727,11 @@ class KhioneHomePanel extends HTMLElement {
   _render() {
     if (!this._hass) return;
     if (!this._rendered) {
-      this._root.innerHTML = `${GOOGLE_FONTS_LINK_HTML}<style>${SHARED_TOKENS_CSS}${PAGE_CSS}</style>${PAGE_SHELL_HTML}`;
+      ensureGoogleFontsLoaded();
+      this._root.innerHTML = `<style>${SHARED_TOKENS_CSS}${PAGE_CSS}</style>${PAGE_SHELL_HTML}`;
       initTheme(this);
+      ensureMobileMenuButton(this);
+      setMobileMenuButtonVisible(this, this._narrow);
       this._bindStaticHandlers();
       this._rendered = true;
     }
@@ -792,7 +796,14 @@ class KhioneHomePanel extends HTMLElement {
     const clothing = hass.states["sensor.khione_clothing_recommendation"];
     const rssBbc = hass.states["sensor.khione_rss_bbc"];
     const rssDerbyshire = hass.states["sensor.khione_rss_derbyshire"];
-    const rssArch = hass.states["sensor.khione_rss_archlinux"];
+    // HA fixes an entity_id at first registration and never re-slugs it
+    // from a later config edit -- an install from before
+    // configuration-snippet.yaml's one-word "ArchLinux" naming fix is
+    // stuck on the old two-word slug forever unless manually renamed.
+    // Confirmed live: this server's real entity is still
+    // sensor.khione_rss_arch_linux. Try both so this works whether the
+    // install predates that fix or not.
+    const rssArch = hass.states["sensor.khione_rss_archlinux"] || hass.states["sensor.khione_rss_arch_linux"];
     const plex = hass.states["binary_sensor.khione_plex"];
     const cockpit = hass.states["binary_sensor.khione_cockpit"];
     const cpu = hass.states["sensor.system_monitor_processor_use"];

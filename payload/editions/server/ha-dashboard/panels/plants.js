@@ -13,7 +13,7 @@
 // add/remove click handlers) are dropped entirely, and the `button.ctl`
 // CSS that only styled them goes with them. The live "Showing N plants"
 // counter stays (now computed from the real discovered count).
-import { SHARED_TOKENS_CSS, GOOGLE_FONTS_LINK_HTML, initTheme, toggleTheme } from "./_tokens.js";
+import { SHARED_TOKENS_CSS, ensureGoogleFontsLoaded, initTheme, toggleTheme, ensureMobileMenuButton, setMobileMenuButtonVisible } from "./_tokens.js";
 
 // ---------------------------------------------------------------------------
 // PAGE_CSS — ported from the mockup's main <style> block, with the same
@@ -336,6 +336,7 @@ class KhionePlantsPanel extends HTMLElement {
   }
   set narrow(narrow) {
     this._narrow = narrow;
+    setMobileMenuButtonVisible(this, narrow);
   }
   set route(route) {
     this._route = route;
@@ -347,8 +348,11 @@ class KhionePlantsPanel extends HTMLElement {
   _render() {
     if (!this._hass) return;
     if (!this._rendered) {
-      this._root.innerHTML = `${GOOGLE_FONTS_LINK_HTML}<style>${SHARED_TOKENS_CSS}${PAGE_CSS}</style>${PAGE_SHELL_HTML}`;
+      ensureGoogleFontsLoaded();
+      this._root.innerHTML = `<style>${SHARED_TOKENS_CSS}${PAGE_CSS}</style>${PAGE_SHELL_HTML}`;
       initTheme(this);
+      ensureMobileMenuButton(this);
+      setMobileMenuButtonVisible(this, this._narrow);
       this._bindStaticHandlers();
       this._rendered = true;
     }
