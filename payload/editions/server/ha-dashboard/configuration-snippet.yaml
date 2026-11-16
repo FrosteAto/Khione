@@ -21,6 +21,12 @@ panel_custom:
     url_path: khione-plants
     module_url: /local/panels/plants.js
     embed_iframe: false
+  - name: khione-meals-panel
+    sidebar_title: Meals
+    sidebar_icon: mdi:food
+    url_path: khione-meals
+    module_url: /local/panels/meals.js
+    embed_iframe: false
 
 command_line:
   - sensor:
@@ -171,12 +177,6 @@ lovelace:
     - url: /local/community/rss-news-card/rss-news-card.js
       type: module
   dashboards:
-    khione-meals:
-      mode: yaml
-      filename: dashboards/meals-view.yaml
-      title: Meals
-      icon: mdi:food
-      show_in_sidebar: true
     khione-recipes:
       mode: yaml
       filename: dashboards/recipes-view.yaml
