@@ -172,6 +172,7 @@ main{ flex:1 1 auto; display:grid; grid-template-columns: 1.65fr 1fr; gap: 1.4re
   border-top: 1px dashed rgba(var(--ink-rgb),.18);
   transition: padding-left .2s ease, background .2s ease;
   border-radius: 10px;
+  text-decoration:none; color:inherit; cursor:pointer;
 }
 .feed-item:first-child{ border-top:none; }
 .feed-item:hover{ padding-left:.4rem; background: color-mix(in srgb, var(--khione-green) 8%, transparent); }
@@ -668,21 +669,26 @@ function buildFeedHtml(articles) {
     .map((a) => {
       const purple = a.tag === "purple" ? " purple" : "";
       const chip = a.chipText ? '<span class="chip ' + a.chipCls + '">' + escapeHtml(a.chipText) + "</span>" : "";
+      const tag = a.link ? "a" : "div";
+      const hrefAttrs = a.link ? ' href="' + escapeHtml(a.link) + '" target="_blank" rel="noopener noreferrer"' : "";
       return (
-        '<div class="feed-item' + purple + '">' +
+        "<" + tag + ' class="feed-item' + purple + '"' + hrefAttrs + ">" +
         '<span class="feed-dot"></span>' +
         '<div class="feed-body">' +
         '<p class="feed-headline">' + escapeHtml(a.title || "Untitled") + "</p>" +
         '<div class="feed-meta">' + chip + "<time>" + timeAgo(a.pubDate) + "</time></div>" +
-        "</div></div>"
+        "</div></" + tag + ">"
       );
     })
     .join("");
 }
 
-// shortcut: caps the merged feed at this many items so the card doesn't
-// grow unbounded if a source sensor returns a long article list.
-const NEWS_LIMIT = 6;
+// Each source feed caps at 10 (see collectors/ha-rss), so up to 30 are
+// genuinely available across the 3 feeds -- capped well above what
+// any one screen shows, not at a small fixed count, so the card always
+// has enough real headlines to fill its height; .feed's own
+// overflow:auto handles the rest as a scroll, not an overflow bug.
+const NEWS_LIMIT = 20;
 
 function sortByPubDateDesc(articles) {
   return articles.slice().sort((a, b) => (Date.parse(b.pubDate) || 0) - (Date.parse(a.pubDate) || 0));
@@ -846,13 +852,13 @@ class KhioneHomePanel extends HTMLElement {
 
     // ---- news ----
     const bbcArticles = ((rssBbc && rssBbc.attributes && rssBbc.attributes.articles) || []).map((a) => ({
-      title: a && a.title, pubDate: a && a.pubDate, chipText: "National", chipCls: "soft",
+      title: a && a.title, pubDate: a && a.pubDate, link: a && a.link, chipText: "National", chipCls: "soft",
     }));
     const derbyArticles = ((rssDerbyshire && rssDerbyshire.attributes && rssDerbyshire.attributes.articles) || []).map((a) => ({
-      title: a && a.title, pubDate: a && a.pubDate, chipText: "Local", chipCls: "soft",
+      title: a && a.title, pubDate: a && a.pubDate, link: a && a.link, chipText: "Local", chipCls: "soft",
     }));
     const archArticles = ((rssArch && rssArch.attributes && rssArch.attributes.articles) || []).map((a) => ({
-      title: a && a.title, pubDate: a && a.pubDate, chipText: "Arch", chipCls: "purple", tag: "purple",
+      title: a && a.title, pubDate: a && a.pubDate, link: a && a.link, chipText: "Arch", chipCls: "purple", tag: "purple",
     }));
     const newsFeed = sortByPubDateDesc(bbcArticles.concat(derbyArticles, archArticles)).slice(0, NEWS_LIMIT);
     root.getElementById("feed-news").innerHTML = buildFeedHtml(newsFeed);
