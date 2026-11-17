@@ -150,6 +150,38 @@ main{ flex:1 1 auto; display:grid; grid-template-columns: 1.65fr 1fr; gap: 1.4re
 .weather-stats > div > b{ font-size:1.1rem; }
 .weather-stats > div > span{ display:block; font-size:.7rem; color: var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-top:.15rem; }
 
+/* Ambient particles -- a condition-keyed field of small animated motes
+   (rain/snow/sun-dust/stars) behind the card's real content. Only the
+   conditions in PARTICLE_RECIPE below get any; others (cloudy, fog,
+   partly-cloudy...) stay exactly as blank as today. Content siblings get
+   position+z-index so they paint above the particle layer -- an
+   absolutely-positioned element paints above static siblings by default
+   regardless of DOM order, so without this the particles would sit on
+   top of the text instead of behind it. */
+.weather-particles{ position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0; }
+.weather-particles .p{ position:absolute; top:-8%; opacity:0; }
+.weather-particles .p.rain{ width:2px; height:14px; border-radius:1px; background:linear-gradient(to bottom, transparent, rgba(64,196,219,.55)); animation-name:p-fall; animation-timing-function:linear; animation-iteration-count:infinite; }
+.weather-particles .p.snow{ width:5px; height:5px; border-radius:50%; background:rgba(255,255,255,.8); animation-name:p-drift; animation-timing-function:linear; animation-iteration-count:infinite; }
+.weather-particles .p.mote{ width:3px; height:3px; border-radius:50%; background:rgba(255,196,110,.55); animation-name:p-rise; animation-timing-function:linear; animation-iteration-count:infinite; }
+.weather-particles .p.star{ width:2px; height:2px; border-radius:50%; background:rgba(255,255,255,.85); animation-name:p-twinkle; animation-timing-function:ease-in-out; animation-iteration-count:infinite; }
+@keyframes p-fall{ 0%{ transform:translateY(0); opacity:0; } 8%{ opacity:1; } 100%{ transform:translateY(120vh); opacity:.2; } }
+@keyframes p-drift{ 0%{ transform:translate(0,0); opacity:0; } 10%{ opacity:.85; } 100%{ transform:translate(10px,120vh); opacity:.3; } }
+@keyframes p-rise{ 0%{ transform:translate(0,0); opacity:0; } 15%{ opacity:.65; } 100%{ transform:translate(8px,-130%); opacity:0; } }
+@keyframes p-twinkle{ 0%,100%{ opacity:.15; } 50%{ opacity:.9; } }
+@media (prefers-reduced-motion: reduce){ .weather-particles .p{ animation:none; opacity:.4; } }
+.hero-corner, .weather-main, .hero-note, .weather-stats, .clothing-head{ position:relative; z-index:1; }
+
+/* Wind compass -- a small dial next to the wind reading, needle rotated
+   to the real wind_bearing attribute (confirmed present on this HA
+   instance's weather entity, unlike a forecast attribute). */
+.wind-stat{ display:flex; align-items:center; gap:.6rem; }
+.wind-compass{ width:30px; height:30px; flex:none; }
+.wc-ring{ fill:none; stroke:rgba(var(--ink-rgb),.25); stroke-width:1; }
+.wc-n{ font-size:6px; fill:var(--muted); text-anchor:middle; }
+#wind-needle{ transform-origin:16px 16px; transition:transform .5s ease; }
+.wc-needle{ fill:var(--khione-deep); }
+.wind-dir{ font-size:.68rem; color:var(--muted); }
+
 .clothing-head{ display:flex; align-items:center; gap:1rem; margin-top:1.4rem; padding-top:1.3rem; border-top:1px dashed rgba(var(--ink-rgb),.18); flex-wrap:wrap; }
 .clothing-head h3{ font-size:1.15rem; }
 .clothing-sub{ color: var(--muted); font-size:.82rem; margin-top:.15rem; }
@@ -369,6 +401,7 @@ const PAGE_SHELL_HTML = `
 
   <div class="hero-col">
     <div class="card hero-weather-card hoverable reveal">
+      <div class="weather-particles" id="weather-particles" aria-hidden="true"></div>
       <div class="hero-corner">
         <span class="hero-clock tabular" id="clock">&nbsp;</span>
         <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle light/dark theme" title="Toggle light/dark theme">
@@ -386,7 +419,15 @@ const PAGE_SHELL_HTML = `
       <p class="hero-note" id="hero-note">&nbsp;</p>
       <div class="weather-stats">
         <div><b class="tabular" id="wstat-feels">&mdash;</b><span>Feels like</span></div>
-        <div><b class="tabular" id="wstat-wind">&mdash;</b><span>Wind</span></div>
+        <div class="wind-stat">
+          <div><b class="tabular" id="wstat-wind">&mdash;</b><span>Wind</span></div>
+          <svg class="wind-compass" viewBox="0 0 32 32" aria-hidden="true">
+            <circle class="wc-ring" cx="16" cy="16" r="13.5"/>
+            <text class="wc-n" x="16" y="6.5">N</text>
+            <g id="wind-needle"><path class="wc-needle" d="M16 5 L19 17 L16 14.5 L13 17 Z"/></g>
+          </svg>
+          <span class="wind-dir" id="wind-dir"></span>
+        </div>
         <div><b class="tabular" id="wstat-humidity">&mdash;</b><span>Humidity</span></div>
       </div>
 
@@ -555,6 +596,36 @@ function conditionLabel(condition) {
   if (!condition) return "—";
   return CONDITION_LABEL[condition] || condition.charAt(0).toUpperCase() + condition.slice(1);
 }
+
+// Which particle, and how many, per condition. A condition not listed
+// here gets no particles (cloudy, partlycloudy, fog, ...) -- the card
+// just looks like it always has.
+const PARTICLE_RECIPE = {
+  rainy: { cls: "rain", count: 26 },
+  pouring: { cls: "rain", count: 40 },
+  "lightning-rainy": { cls: "rain", count: 34 },
+  snowy: { cls: "snow", count: 22 },
+  "snowy-rainy": { cls: "snow", count: 18 },
+  hail: { cls: "snow", count: 30 },
+  sunny: { cls: "mote", count: 14 },
+  "clear-night": { cls: "star", count: 30 },
+};
+
+function particlesHtml(condition) {
+  const recipe = PARTICLE_RECIPE[condition];
+  if (!recipe) return "";
+  let out = "";
+  for (let i = 0; i < recipe.count; i++) {
+    const left = (Math.random() * 100).toFixed(1);
+    const delay = (Math.random() * 6).toFixed(2);
+    const dur = (3 + Math.random() * 4).toFixed(2);
+    out += '<span class="p ' + recipe.cls + '" style="left:' + left + '%;animation-delay:-' + delay + 's;animation-duration:' + dur + 's;"></span>';
+  }
+  return out;
+}
+
+// Cardinal direction labels for the wind compass, 16 points at 22.5° each.
+const CARDINALS = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
 
 function fmtTemp(value) {
   return value == null || isNaN(value) ? "—" : Math.round(value) + "°C";
@@ -820,6 +891,15 @@ class KhioneHomePanel extends HTMLElement {
     const placeName = (zone && zone.attributes && zone.attributes.friendly_name) ?? "—";
     const clothingState = (clothing && clothing.state) || null;
 
+    // Only rebuild the particle field when the condition actually changes
+    // -- this runs on every hass update (every few seconds), and
+    // re-randomizing on each tick would make them jump.
+    if (condition !== this._lastParticleCond) {
+      this._lastParticleCond = condition;
+      const particleField = root.getElementById("weather-particles");
+      if (particleField) particleField.innerHTML = particlesHtml(condition);
+    }
+
     const haveWeather = condition != null && temp != null;
     root.getElementById("hero-note").textContent = haveWeather
       ? greetingPrefix(new Date()) + " — " + conditionLabel(condition) + ", " + fmtTemp(temp) + "."
@@ -835,6 +915,14 @@ class KhioneHomePanel extends HTMLElement {
     const windUnit = wAttrs.wind_speed_unit || "km/h";
     root.getElementById("wstat-wind").textContent = wAttrs.wind_speed != null ? Math.round(wAttrs.wind_speed) + " " + windUnit : "—";
     root.getElementById("wstat-humidity").textContent = wAttrs.humidity != null ? Math.round(wAttrs.humidity) + "%" : "—";
+    // Point the compass needle at the real wind_bearing attribute
+    // (degrees, 0 = N) -- confirmed present on this HA instance's weather
+    // entity, unlike `forecast`.
+    const windNeedle = root.getElementById("wind-needle");
+    if (windNeedle) {
+      windNeedle.style.transform = wAttrs.wind_bearing != null ? "rotate(" + wAttrs.wind_bearing + "deg)" : "rotate(0deg)";
+    }
+    root.getElementById("wind-dir").textContent = wAttrs.wind_bearing != null ? CARDINALS[Math.round(wAttrs.wind_bearing / 22.5) % 16] : "";
 
     const clothingIconUse = root.getElementById("clothing-icon-use");
     if (clothingIconUse) {
