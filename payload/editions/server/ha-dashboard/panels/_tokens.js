@@ -80,22 +80,43 @@ export function ensureGoogleFontsLoaded() {
   document.head.appendChild(sheet);
 }
 
-// Reads/writes the same localStorage key every panel's theme toggle uses,
-// so a choice made on one page is remembered on the others too (same
-// origin inside the HA frontend, unlike the standalone mockup artifacts).
-//
+// Day/night schedule: light from 6am up to (not including) 5pm, dark the
+// rest of the time. The schedule is authoritative -- it re-asserts itself
+// every minute on every panel currently on screen, so a manual toggle
+// (see toggleTheme below) only ever holds for under a minute. That's a
+// deliberate choice for an unattended wall dashboard: no stale theme left
+// over from a one-off manual flip days ago.
+function scheduledTheme() {
+  const hour = new Date().getHours();
+  return hour >= 6 && hour < 17 ? "light" : "dark";
+}
+
+// One interval for the whole page, however many panels import this module
+// -- ES modules are evaluated once per page load, so this state is shared
+// across every panel instance rather than duplicated per panel.
+const scheduledHosts = new Set();
+let schedulerStarted = false;
+
+function applyScheduleToHosts() {
+  const theme = scheduledTheme();
+  for (const hostEl of scheduledHosts) {
+    if (hostEl.isConnected) hostEl.setAttribute("data-theme", theme);
+    else scheduledHosts.delete(hostEl);
+  }
+}
+
 // hostEl must be the custom element itself (pass `this` from inside a
 // panel class), NOT its shadow root (`this._root`) — a ShadowRoot is a
 // DocumentFragment and has no setAttribute/getAttribute at all, and the
 // CSS above keys off :host([data-theme=...]), which reads the attribute
 // from the host element, not the shadow tree.
 export function initTheme(hostEl) {
-  try {
-    const saved = localStorage.getItem("khione-dash-theme");
-    if (saved === "light" || saved === "dark") {
-      hostEl.setAttribute("data-theme", saved);
-    }
-  } catch (e) { /* localStorage unavailable, fall back to system preference */ }
+  hostEl.setAttribute("data-theme", scheduledTheme());
+  scheduledHosts.add(hostEl);
+  if (!schedulerStarted) {
+    schedulerStarted = true;
+    setInterval(applyScheduleToHosts, 60000);
+  }
 }
 
 export function toggleTheme(hostEl) {
