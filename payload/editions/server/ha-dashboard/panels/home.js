@@ -596,6 +596,7 @@ const CONDITION_LABEL = {
 // file for the full explanation. Keep both bodies byte-identical.
 function computeCritical(secAttrs, sysAttrs, patAttrs, netAttrs) {
   const reasons = [];
+  if (secAttrs.auditd_active === undefined) reasons.push("security data unavailable");
   if (secAttrs.aide_status === "changes_detected") reasons.push("AIDE detected file changes");
   if (secAttrs.auditd_active === false) reasons.push("auditd is down");
   if (secAttrs.fail2ban_active === false) reasons.push("fail2ban is down");
