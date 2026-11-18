@@ -109,6 +109,15 @@ Server Edition opts into a full hardening pass: a default-deny firewall scoped t
 <h3 align="center">Server Architecture Overview</h3>
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {
+  "fontFamily": "Helvetica Neue, Helvetica, Arial, sans-serif",
+  "primaryColor": "#f5eed8",
+  "primaryTextColor": "#283618",
+  "primaryBorderColor": "#8bb862",
+  "lineColor": "#606c38",
+  "secondaryColor": "#f5eed8",
+  "tertiaryColor": "#fefae0"
+}}}%%
 flowchart TD
     INTERNET(("Internet"))
     ROUTER["Home Router<br/>192.168.1.0/24 LAN"]
@@ -163,6 +172,19 @@ flowchart TD
     PLEX -. watched by .-> AUDITD
     PACTIMER --> INFORMANT
     ARCHAUDIT --> DASH
+
+    %% Khione palette, reusing the real dashboard's own category colours
+    %% (network=blue, security/hardening=purple, services=green, patching=yellow)
+    classDef external fill:#f5eed8,stroke:#704d2c,color:#704d2c,stroke-width:1px,stroke-dasharray: 4 3;
+    classDef edgeNode fill:#d8f0f5,stroke:#40c4db,color:#1c5a66,stroke-width:1.5px;
+    classDef hostNode fill:#e6defa,stroke:#5d4799,color:#3d2e63,stroke-width:1.5px;
+    classDef servicesNode fill:#e1f0d2,stroke:#8bb862,color:#3c5424,stroke-width:1.5px;
+    classDef watchNode fill:#f6e6b8,stroke:#c9a23d,color:#6b5420,stroke-width:1.5px;
+    class INTERNET,ROUTER,QUAD9,CS_CLOUD external
+    class UFW,F2B,CSBOUNCER edgeNode
+    class SSHD,PAM,SYSCTL,GRUB,DOCKERD hostNode
+    class PLEX,HA,SAMBA,COCKPIT,DASH servicesNode
+    class AIDE,AUDITD,PACTIMER,INFORMANT,ARCHAUDIT watchNode
 ```
 
 > Not pictured: AppArmor was evaluated and deliberately left disabled - it broke boot on this specific GRUB + `linux-lts` setup, with no Secure Boot involved. The root cause wasn't pinned down, so it stays off rather than risk round two.
