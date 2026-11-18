@@ -84,6 +84,8 @@ p{ margin:0; }
 .action-btn:disabled{ opacity:.6; cursor:default; }
 .action-status{ font-size:.78rem; color:var(--muted); margin-top:.5rem; min-height: 1.2em; }
 
+.noise-filter{ display:flex; align-items:center; gap:.4rem; font-size:.78rem; color:var(--muted); margin-bottom:.5rem; cursor:pointer; }
+.noise-filter input{ cursor:pointer; }
 .noise-list{ display:flex; flex-direction:column; gap:.35rem; max-height: 260px; overflow:auto; font-size:.78rem; }
 .noise-row{ display:flex; gap:.6rem; align-items:baseline; }
 .noise-row .t{ color:var(--muted); flex:none; width:4.2em; }
@@ -165,6 +167,7 @@ const PAGE_SHELL_HTML = `
     <div class="card" style="grid-column: 1 / -1;">
       <h2>Recent blocked connections</h2>
       <p style="color:var(--muted);font-size:.78rem;margin-bottom:.6rem;">Real data from ufw's block log, labelled with CrowdSec's own classification when it has one. The "guess" column is always a guess, never a fact — marked low-confidence unless CrowdSec itself made the classification.</p>
+      <label class="noise-filter"><input type="checkbox" id="noise-hide-local">Hide local network traffic</label>
       <div class="noise-list" id="noise-list"></div>
     </div>
   </div>
@@ -175,6 +178,13 @@ function escapeHtml(s) {
   return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
   }[c]));
+}
+
+// Same RFC1918 check as khione-netnoise's own is_private() -- kept in
+// sync with that definition rather than inferring "local" from the
+// guess text, since the guess is free-form and not meant to be parsed.
+function isPrivateIp(ip) {
+  return !!ip && /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(ip);
 }
 
 function fmtAgo(epochSeconds) {
@@ -253,6 +263,14 @@ class KhioneSecurityPanel extends HTMLElement {
       btn.addEventListener("click", () => {
         const next = toggleTheme(this);
         paintIcon(next);
+      });
+    }
+
+    const hideLocalCheckbox = this._root.getElementById("noise-hide-local");
+    if (hideLocalCheckbox) {
+      hideLocalCheckbox.addEventListener("change", () => {
+        this._hideLocalNoise = hideLocalCheckbox.checked;
+        this._renderLiveData();
       });
     }
   }
@@ -402,7 +420,8 @@ class KhioneSecurityPanel extends HTMLElement {
 
     // ---- noise stream ----
     const netnoise = hass.states["sensor.khione_netnoise"];
-    const noiseEvents = (netnoise && netnoise.attributes && netnoise.attributes.events) || [];
+    const allNoiseEvents = (netnoise && netnoise.attributes && netnoise.attributes.events) || [];
+    const noiseEvents = this._hideLocalNoise ? allNoiseEvents.filter((e) => !isPrivateIp(e.src_ip)) : allNoiseEvents;
     const noiseListEl = root.getElementById("noise-list");
     noiseListEl.innerHTML = noiseEvents.length
       ? noiseEvents
@@ -410,11 +429,13 @@ class KhioneSecurityPanel extends HTMLElement {
           .map((e) => {
             const t = e.time ? new Date(e.time * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—";
             const portText = e.dst_port != null ? ":" + e.dst_port : "";
+            const origin = isPrivateIp(e.src_ip) ? "LOCAL" : "EXTERNAL";
+            const message = e.guess + (e.guess_confidence === "crowdsec" ? "" : " (guess)");
             return (
               '<div class="noise-row">' +
               '<span class="t tabular">' + t + "</span>" +
               '<span class="ip tabular">' + escapeHtml((e.src_ip || "—") + portText) + "</span>" +
-              '<span class="guess">' + escapeHtml(e.guess) + (e.guess_confidence === "crowdsec" ? "" : " (guess)") + "</span>" +
+              '<span class="guess">' + escapeHtml(origin + ": " + message) + "</span>" +
               "</div>"
             );
           })
