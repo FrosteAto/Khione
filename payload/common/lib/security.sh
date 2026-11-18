@@ -559,6 +559,13 @@ set -uo pipefail
 
 trigger=/var/lib/hass/triggers/update-aur.trigger
 out=/var/lib/hass/snapshots/khione_actions.json
+
+# A stale trigger (e.g. one written while this .path unit was disabled --
+# see Fix 1) must never fire the action once the unit is finally enabled.
+if [[ ! -f "\$trigger" ]] || [[ -z "\$(find "\$trigger" -mmin -2 2>/dev/null)" ]]; then
+  rm -f "\$trigger"
+  exit 0
+fi
 rm -f "\$trigger"
 
 started="\$(date +%s)"

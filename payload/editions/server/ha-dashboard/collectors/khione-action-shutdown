@@ -2,6 +2,13 @@
 set -uo pipefail
 
 trigger=/var/lib/hass/triggers/shutdown.trigger
+
+# A stale trigger (e.g. one written while this .path unit was disabled --
+# see Fix 1) must never fire the action once the unit is finally enabled.
+if [[ ! -f "$trigger" ]] || [[ -z "$(find "$trigger" -mmin -2 2>/dev/null)" ]]; then
+  rm -f "$trigger"
+  exit 0
+fi
 rm -f "$trigger"
 # No result file: the host is going down, there is no "after" to report
 # into. The frontend's own confirm dialog is the only feedback loop for
