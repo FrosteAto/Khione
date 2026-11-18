@@ -79,7 +79,7 @@ if systemctl list-unit-files aidecheck.service &>/dev/null; then
     aide_status="changes_detected"
     aide_start="$(systemctl show aidecheck.service -p ExecMainStartTimestamp --value 2>/dev/null || true)"
     if [[ -n "$aide_start" ]]; then
-      aide_diff_raw="$(journalctl -u aidecheck.service --since="$aide_start" --no-pager -o cat 2>/dev/null | grep -v '^$' | tail -n 60 || true)"
+      aide_diff_raw="$(journalctl -u aidecheck.service --since="$aide_start" --no-pager -o cat 2>/dev/null | grep -v '^$' | head -n 60 || true)"
     fi
   fi
 fi

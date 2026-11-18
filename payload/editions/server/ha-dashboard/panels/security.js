@@ -400,11 +400,6 @@ class KhioneSecurityPanel extends HTMLElement {
       ? updateRows.join("")
       : '<p class="detail-empty">Nothing outstanding.</p>';
 
-    // ---- action buttons (wired in Task 5) ----
-    root.getElementById("btn-update-official").disabled = false;
-    root.getElementById("btn-update-aur").disabled = false;
-    root.getElementById("btn-shutdown").disabled = false;
-
     // ---- noise stream ----
     const netnoise = hass.states["sensor.khione_netnoise"];
     const noiseEvents = (netnoise && netnoise.attributes && netnoise.attributes.events) || [];
