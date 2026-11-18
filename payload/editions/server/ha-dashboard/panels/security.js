@@ -6,7 +6,7 @@
 // for the sibling panel this borrows its card/badge CSS language from
 // (each panel duplicates its own CSS -- no shared stylesheet beyond
 // _tokens.js, matching every other panel in this directory).
-import { SHARED_TOKENS_CSS, ensureGoogleFontsLoaded, initTheme, toggleTheme } from "./_tokens.js";
+import { SHARED_TOKENS_CSS, ensureGoogleFontsLoaded, initTheme, toggleTheme, ensureMobileMenuButton, setMobileMenuButtonVisible } from "./_tokens.js";
 
 const PAGE_CSS = `
 :host{
@@ -218,7 +218,10 @@ class KhioneSecurityPanel extends HTMLElement {
     this._hass = hass;
     this._render();
   }
-  set narrow(n) {}
+  set narrow(narrow) {
+    this._narrow = narrow;
+    setMobileMenuButtonVisible(this, narrow);
+  }
   set route(r) {}
   set panel(p) {}
 
@@ -228,6 +231,8 @@ class KhioneSecurityPanel extends HTMLElement {
       ensureGoogleFontsLoaded();
       this._root.innerHTML = `<style>${SHARED_TOKENS_CSS}${PAGE_CSS}</style>${PAGE_SHELL_HTML}`;
       initTheme(this);
+      ensureMobileMenuButton(this);
+      setMobileMenuButtonVisible(this, this._narrow);
       this._bindStaticHandlers();
       this._rendered = true;
     }
