@@ -234,6 +234,7 @@ class KhioneSecurityPanel extends HTMLElement {
       ensureMobileMenuButton(this);
       setMobileMenuButtonVisible(this, this._narrow);
       this._bindStaticHandlers();
+      this._bindActionButtons();
       this._rendered = true;
     }
     this._renderLiveData();
@@ -253,6 +254,61 @@ class KhioneSecurityPanel extends HTMLElement {
         paintIcon(next);
       });
     }
+  }
+
+  _bindActionButtons() {
+    const root = this._root;
+    const fire = (btn, statusEl, serviceName, confirmText, expectedAction) => {
+      btn.addEventListener("click", () => {
+        if (!window.confirm(confirmText)) return;
+        btn.disabled = true;
+        statusEl.textContent = "Running…";
+        // Baseline: a result from an earlier run must not count as this run's.
+        const before = ((this._hass.states["sensor.khione_actions"] || {}).attributes || {}).started_at;
+        this._hass.callService("shell_command", serviceName);
+        if (!expectedAction) return; // shutdown: no result file will ever come back
+        let attempts = 0;
+        const poll = () => {
+          attempts += 1;
+          const actions = this._hass.states["sensor.khione_actions"];
+          const attrs = (actions && actions.attributes) || {};
+          if (attrs.action === expectedAction && attrs.started_at && attrs.started_at !== before) {
+            statusEl.textContent = attrs.success ? "Done." : "Failed: " + (attrs.output_tail || "").slice(-200);
+            btn.disabled = false;
+            return;
+          }
+          if (attempts > 24) { // ~2 minutes at 5s apart
+            statusEl.textContent = "Still running, or no result yet — check the dashboard again shortly.";
+            btn.disabled = false;
+            return;
+          }
+          setTimeout(poll, 5000);
+        };
+        setTimeout(poll, 5000);
+      });
+    };
+
+    fire(
+      root.getElementById("btn-update-official"),
+      root.getElementById("update-action-status"),
+      "khione_update_official",
+      "Apply pending official updates now?",
+      "update_official",
+    );
+    fire(
+      root.getElementById("btn-update-aur"),
+      root.getElementById("update-action-status"),
+      "khione_update_aur",
+      "Apply pending AUR updates now? AUR packages are unreviewed source — this is a real step up in trust from the notify-only check.",
+      "update_aur",
+    );
+    fire(
+      root.getElementById("btn-shutdown"),
+      root.getElementById("shutdown-action-status"),
+      "khione_shutdown",
+      "Shut down the server now? This cannot be undone remotely.",
+      null,
+    );
   }
 
   _renderLiveData() {
