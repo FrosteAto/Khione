@@ -404,7 +404,26 @@ class KhioneSecurityPanel extends HTMLElement {
     root.getElementById("btn-update-aur").disabled = false;
     root.getElementById("btn-shutdown").disabled = false;
 
-    // ---- noise stream (wired in Task 6) ----
+    // ---- noise stream ----
+    const netnoise = hass.states["sensor.khione_netnoise"];
+    const noiseEvents = (netnoise && netnoise.attributes && netnoise.attributes.events) || [];
+    const noiseListEl = root.getElementById("noise-list");
+    noiseListEl.innerHTML = noiseEvents.length
+      ? noiseEvents
+          .slice(0, 50)
+          .map((e) => {
+            const t = e.time ? new Date(e.time * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—";
+            const portText = e.dst_port != null ? ":" + e.dst_port : "";
+            return (
+              '<div class="noise-row">' +
+              '<span class="t tabular">' + t + "</span>" +
+              '<span class="ip tabular">' + escapeHtml((e.src_ip || "—") + portText) + "</span>" +
+              '<span class="guess">' + escapeHtml(e.guess) + (e.guess_confidence === "crowdsec" ? "" : " (guess)") + "</span>" +
+              "</div>"
+            );
+          })
+          .join("")
+      : '<p class="detail-empty">No recent activity.</p>';
   }
 }
 
