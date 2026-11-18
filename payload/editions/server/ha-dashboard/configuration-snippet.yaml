@@ -91,6 +91,12 @@ command_line:
         - last_ban_time
         - quad9_active
         - grub_locked
+        - fail2ban_active
+        - crowdsec_active
+        - ban_list
+        - crowdsec_decision_log
+        - aide_diff
+        - auditd_recent
       scan_interval: 60
   - sensor:
       name: Khione Netwatch
