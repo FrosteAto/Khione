@@ -61,8 +61,11 @@ FIREWALL_RULES=( 22/tcp 1900/udp 5353/udp )
 # Scoped to the LAN subnet instead of the whole internet -- Plex was
 # reachable from anywhere when this project's Nov 2026 incident happened,
 # and Cockpit/HA/Samba have no legitimate reason to be internet-facing
-# either. If Remote Access ever gets re-enabled on Plex by mistake, this
-# is the safety net that still blocks it from outside the LAN.
+# either. Plex's Remote Access is meant to come back on deliberately once
+# upstream ships a fix for the vulnerability that caused the incident --
+# this rule is what makes that safe to do: it holds regardless of Plex's
+# own Remote Access setting, so re-enabling it there doesn't reopen the
+# server to the internet the way it did before.
 FIREWALL_RULES_LAN=(
   32400/tcp       # Plex
   9090/tcp        # Cockpit web UI
