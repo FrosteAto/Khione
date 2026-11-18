@@ -1,0 +1,14 @@
+[Unit]
+# Deliberately much faster than this dashboard's other collectors
+# (khione-security/khione-netwatch run every 10/15 minutes) -- this one
+# backs a "streaming" visual on the Security page, where a 10-minute
+# lag would read as broken rather than live. journalctl --since queries
+# are cheap, so there's no real cost to checking this often.
+Description=Check for new blocked connection attempts every minute
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=1min
+
+[Install]
+WantedBy=timers.target

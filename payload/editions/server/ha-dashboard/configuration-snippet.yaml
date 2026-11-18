@@ -120,6 +120,15 @@ command_line:
         - news_unread
         - aur_update_available
       scan_interval: 60
+  - sensor:
+      name: Khione Netnoise
+      unique_id: khione_netnoise
+      command: "cat /config/snapshots/netnoise.json"
+      value_template: "{{ value_json.events | length }}"
+      unit_of_measurement: events
+      json_attributes:
+        - events
+      scan_interval: 15
   - binary_sensor:
       name: Khione Plex
       unique_id: khione_plex

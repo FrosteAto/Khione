@@ -1,0 +1,122 @@
+#!/bin/bash
+set -euo pipefail
+
+out=/var/lib/hass/snapshots/netnoise.json
+state=/var/lib/hass/snapshots/.netnoise_last_run
+mkdir -p "$(dirname "$out")"
+
+now_epoch=$(date +%s)
+since_epoch="$(cat "$state" 2>/dev/null || echo $((now_epoch - 60)))"
+
+# CrowdSec's own decisions, for cross-referencing a blocked IP against a
+# named scenario (e.g. "crowdsecurity/ssh-bf") when one exists -- a plain
+# ufw deny has no scenario of its own; CrowdSec is the only thing here
+# that classifies WHY an IP got blocked, so its classification always
+# wins over the port-based guess below when both are available.
+cs_json="[]"
+if command -v cscli &>/dev/null; then
+  cs_json="$(cscli decisions list -o json 2>/dev/null || echo '[]')"
+fi
+
+# `-g`/`--grep` filters server-side so only matching journal entries are
+# read at all; `-o json` gives one JSON object per line (NDJSON), the
+# only journalctl output mode that keeps the real timestamp attached to
+# its message without a separate text-column-splitting step.
+new_events_json="$(journalctl -k -g 'UFW BLOCK' --since="@$since_epoch" -o json --no-pager 2>/dev/null || echo '')"
+
+echo "$now_epoch" > "$state"
+
+python3 - "$new_events_json" "$cs_json" <<'PYEOF' > "$out.tmp"
+import json, re, sys
+
+new_events_json, cs_json = sys.argv[1], sys.argv[2]
+
+try:
+    cs_decisions = json.loads(cs_json)
+    if not isinstance(cs_decisions, list):
+        cs_decisions = []
+except ValueError:
+    cs_decisions = []
+scenario_by_ip = {}
+for d in cs_decisions:
+    # cscli's real top-level alert object has no "value" field -- it's
+    # nested under source.ip/source.value or decisions[0].value.
+    # Confirmed live by adding+removing a real test decision against
+    # this exact collector's output (see Task 1's own crowdsec_decision_log
+    # fix, which hit the identical bug): a flat d.get("value") always
+    # returns None against real cscli output.
+    source = d.get("source") or {}
+    decisions_list = d.get("decisions") or []
+    first_decision = decisions_list[0] if decisions_list else {}
+    ip = source.get("ip") or source.get("value") or first_decision.get("value")
+    if ip:
+        scenario_by_ip[ip] = d.get("scenario")
+
+# Plain-English guesses, clearly labeled as such via guess_confidence --
+# never presented as fact. CrowdSec's own scenario name wins when present
+# (it's a real classification, not a guess); otherwise falls back to a
+# port-based heuristic. RFC1918/loopback sources are usually the LAN's
+# own broadcast traffic (SSDP/mDNS/IGMP from the router), not external
+# scanning -- confirmed live against this server's real log, where a
+# recent sample of UFW BLOCK lines was dominated by SRC=192.168.1.1 (the
+# router) on port 1900/UDP (SSDP). A separate full-history check on the
+# same server also found genuine external source IPs in the retained
+# journal, so real external events do reach this collector too.
+SCENARIO_GUESS = {
+    "crowdsecurity/ssh-bf": "SSH brute-force attempt",
+    "crowdsecurity/http-probing": "web server probing",
+}
+PORT_GUESS = {
+    22: "SSH scan", 23: "old Telnet/IoT-worm pattern", 445: "SMB probe, EternalBlue-style",
+    3389: "RDP brute-force scan", 1900: "UPnP/SSDP discovery (usually your own router)",
+    5353: "mDNS discovery (usually local network)",
+}
+
+def is_private(ip):
+    return bool(ip) and bool(re.match(r"^(10\.|127\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)", ip))
+
+events = []
+for line in new_events_json.splitlines():
+    if not line.strip():
+        continue
+    try:
+        entry = json.loads(line)
+    except ValueError:
+        continue
+    msg = entry.get("MESSAGE", "")
+
+    def field(name):
+        m = re.search(name + r"=(\S+)", msg)
+        return m.group(1) if m else None
+
+    src = field("SRC")
+    dst_port_raw = field("DPT")
+    proto = field("PROTO")
+    scenario = scenario_by_ip.get(src)
+    if scenario:
+        guess = SCENARIO_GUESS.get(scenario, scenario + " (CrowdSec-classified)")
+        confidence = "crowdsec"
+    elif is_private(src):
+        guess = "local network broadcast, not a threat"
+        confidence = "low"
+    elif dst_port_raw and dst_port_raw.isdigit() and int(dst_port_raw) in PORT_GUESS:
+        guess = PORT_GUESS[int(dst_port_raw)]
+        confidence = "low"
+    else:
+        guess = "unclassified probe"
+        confidence = "low"
+    ts_us = entry.get("__REALTIME_TIMESTAMP")
+    events.append({
+        "time": int(int(ts_us) / 1_000_000) if ts_us else None,
+        "src_ip": src,
+        "dst_port": int(dst_port_raw) if dst_port_raw and dst_port_raw.isdigit() else None,
+        "proto": proto,
+        "scenario": scenario,
+        "guess": guess,
+        "guess_confidence": confidence,
+    })
+
+events.sort(key=lambda e: e["time"] or 0, reverse=True)
+print(json.dumps({"events": events[:200]}))
+PYEOF
+mv "$out.tmp" "$out"

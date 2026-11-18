@@ -1,0 +1,7 @@
+[Unit]
+Description=Collect recently blocked connection attempts for the Security dashboard
+ConditionPathExists=/var/lib/hass/snapshots
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/khione-netnoise

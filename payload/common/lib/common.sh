@@ -346,6 +346,7 @@ configure_home_assistant_dashboard() {
   # only ever reads this directory.
   sudo install -d -m755 /var/lib/hass/snapshots
   sudo install -d -m755 /var/lib/hass/themes
+  sudo install -d -m755 /var/lib/hass/triggers
 
   sudo install -Dm644 "$dashboard_dir/khione-theme.yaml" /var/lib/hass/themes/khione.yaml
 
