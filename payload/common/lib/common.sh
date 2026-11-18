@@ -347,7 +347,7 @@ configure_home_assistant_dashboard() {
   sudo install -d -m755 /var/lib/hass/snapshots
   sudo install -d -m755 /var/lib/hass/themes
   sudo install -d -m755 /var/lib/hass/triggers
-  [[ -f /var/lib/hass/snapshots/khione_actions.json ]] || echo '{}' | sudo tee /var/lib/hass/snapshots/khione_actions.json >/dev/null
+  [[ -f /var/lib/hass/snapshots/khione_actions.json ]] || echo '{"action": null}' | sudo tee /var/lib/hass/snapshots/khione_actions.json >/dev/null
 
   sudo install -Dm644 "$dashboard_dir/khione-theme.yaml" /var/lib/hass/themes/khione.yaml
 

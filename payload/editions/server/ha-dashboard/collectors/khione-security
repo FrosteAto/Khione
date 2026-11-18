@@ -42,20 +42,11 @@ ban_list_raw="$(printf '%s\n' "${ban_entries[@]}")"
 # isn't itself a sign anything happened on this box). Keeps the raw JSON
 # too, for the Security page's full decision log, and tracks service
 # health the same way as fail2ban above.
-cs_decisions=0
 crowdsec_active=false
 cs_json="[]"
 if command -v cscli &>/dev/null; then
   systemctl is-active --quiet crowdsec.service && crowdsec_active=true
   cs_json="$(cscli decisions list -o json 2>/dev/null || echo '[]')"
-  cs_decisions="$(python3 -c "
-import json, sys
-try:
-    d = json.loads(sys.argv[1])
-except ValueError:
-    d = []
-print(len(d) if isinstance(d, list) else 0)
-" "$cs_json" 2>/dev/null || echo 0)"
 fi
 
 # AIDE: result of its last daily run. AIDE's exit code is a bitmask of
@@ -160,13 +151,13 @@ tmpdir="$(mktemp -d)"
 trap 'rm -rf "$tmpdir"' EXIT
 printf '%s' "$cs_json" > "$tmpdir/cs.json"
 
-python3 - "$f2b_banned" "$cs_decisions" "$aide_status" "$aide_last_run" "$auditd_active" "$auditd_immutable" \
+python3 - "$f2b_banned" "$aide_status" "$aide_last_run" "$auditd_active" "$auditd_immutable" \
   "$ufw_rules" "$active_sessions" "$aide_next_run" "$last_ban_jail" "$last_ban_time" "$quad9_active" "$grub_locked" \
   "$fail2ban_active" "$crowdsec_active" "$ban_list_raw" "$tmpdir/cs.json" "$aide_diff_raw" "$auditd_recent_raw" <<'PYEOF' > "$out.tmp"
 import json, sys
-(f2b_banned, cs_decisions, aide_status, aide_last_run, auditd_active, auditd_immutable,
+(f2b_banned, aide_status, aide_last_run, auditd_active, auditd_immutable,
  ufw_rules, active_sessions, aide_next_run, last_ban_jail, last_ban_time, quad9_active, grub_locked,
- fail2ban_active, crowdsec_active, ban_list_raw, cs_json_path, aide_diff_raw, auditd_recent_raw) = sys.argv[1:20]
+ fail2ban_active, crowdsec_active, ban_list_raw, cs_json_path, aide_diff_raw, auditd_recent_raw) = sys.argv[1:19]
 with open(cs_json_path) as f:
     cs_json = f.read()
 
@@ -196,7 +187,7 @@ auditd_recent = [line for line in auditd_recent_raw.splitlines() if line.strip()
 
 print(json.dumps({
     "banned_ips": int(f2b_banned),
-    "crowdsec_decisions": int(cs_decisions),
+    "crowdsec_decisions": len(cs_raw if isinstance(cs_raw, list) else []),
     "aide_status": aide_status,
     "aide_last_run": aide_last_run,
     "aide_next_run": int(aide_next_run) if aide_next_run else None,
