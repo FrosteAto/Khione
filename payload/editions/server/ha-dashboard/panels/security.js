@@ -164,7 +164,7 @@ const PAGE_SHELL_HTML = `
 
     <div class="card" style="grid-column: 1 / -1;">
       <h2>Recent blocked connections</h2>
-      <p style="color:var(--muted);font-size:.78rem;margin-bottom:.6rem;">Real data from ufw + CrowdSec. The "guess" column is always a guess, never a fact — marked low-confidence unless CrowdSec itself made the classification.</p>
+      <p style="color:var(--muted);font-size:.78rem;margin-bottom:.6rem;">Real data from ufw's block log, labelled with CrowdSec's own classification when it has one. The "guess" column is always a guess, never a fact — marked low-confidence unless CrowdSec itself made the classification.</p>
       <div class="noise-list" id="noise-list"></div>
     </div>
   </div>
