@@ -592,6 +592,23 @@ const CONDITION_LABEL = {
   "windy-variant": "Windy",
 };
 
+// Shared with security.js's own copy of this exact function -- see that
+// file for the full explanation. Keep both bodies byte-identical.
+function computeCritical(secAttrs, sysAttrs, patAttrs, netAttrs) {
+  const reasons = [];
+  if (secAttrs.aide_status === "changes_detected") reasons.push("AIDE detected file changes");
+  if (secAttrs.auditd_active === false) reasons.push("auditd is down");
+  if (secAttrs.fail2ban_active === false) reasons.push("fail2ban is down");
+  if (secAttrs.crowdsec_active === false) reasons.push("CrowdSec is down");
+  const unusualOutbound = Number(netAttrs.unusual_outbound) || 0;
+  if (unusualOutbound > 0) reasons.push(unusualOutbound + " unusual outbound connection" + (unusualOutbound === 1 ? "" : "s"));
+  const secUpdates = Number(sysAttrs.security_updates) || 0;
+  if (secUpdates > 0) reasons.push(secUpdates + " known CVE" + (secUpdates === 1 ? "" : "s") + " on installed packages");
+  const newsUnread = Number(patAttrs.news_unread) || 0;
+  if (newsUnread > 0) reasons.push(newsUnread + " unread Arch News item" + (newsUnread === 1 ? "" : "s") + " blocking auto-updates");
+  return { critical: reasons.length > 0, reason: reasons.join("; ") };
+}
+
 function conditionLabel(condition) {
   if (!condition) return "—";
   return CONDITION_LABEL[condition] || condition.charAt(0).toUpperCase() + condition.slice(1);
@@ -998,6 +1015,8 @@ class KhioneHomePanel extends HTMLElement {
 
     // ---- security ----
     const secAttrs = (security && security.attributes) || {};
+    const sysAttrs2 = (system && system.attributes) || {};
+    const patAttrs2 = (patching && patching.attributes) || {};
     const netAttrs = (netwatch && netwatch.attributes) || {};
     const bannedIps = Number(secAttrs.banned_ips) || 0;
     const csDecisions = Number(secAttrs.crowdsec_decisions) || 0;
@@ -1008,19 +1027,15 @@ class KhioneHomePanel extends HTMLElement {
     const unusualDetail = Array.isArray(netAttrs.unusual_detail) ? netAttrs.unusual_detail : [];
 
     const secBadge = root.getElementById("sec-badge");
-    // "Urgent" here means something fail2ban/CrowdSec's own network-layer
-    // view can't catch on its own: unexpected outbound traffic, unexpected
-    // file changes, or the file/process watchers themselves being down.
-    // Active bans/decisions mean the defenses are doing their job, not
-    // that something got through -- that's reported but not urgent.
-    const secUrgent = aideStatus === "changes_detected" || !auditdActive || unusualOutbound > 0;
+    // Shared with security.js's own copy of this exact function (no
+    // shared JS module beyond _tokens.js in this codebase's convention --
+    // keep both bodies byte-identical on any future change). "Critical"
+    // means something needs a human to act, not "the defenses did their
+    // job" -- an active ban/decision is reported but not urgent.
+    const { critical: secUrgent, reason: secUrgentReason } = computeCritical(secAttrs, sysAttrs2, patAttrs2, netAttrs);
     if (secUrgent) {
       secBadge.classList.add("urgent");
-      const reasons = [];
-      if (unusualOutbound > 0) reasons.push(unusualOutbound + " unusual outbound");
-      if (aideStatus === "changes_detected") reasons.push("file changes");
-      if (!auditdActive) reasons.push("auditd down");
-      root.getElementById("sec-headline").textContent = reasons.join(", ");
+      root.getElementById("sec-headline").textContent = secUrgentReason;
     } else {
       secBadge.classList.remove("urgent");
       const totalBlocked = bannedIps + csDecisions;
