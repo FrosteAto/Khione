@@ -33,6 +33,12 @@ panel_custom:
     url_path: khione-recipes
     module_url: /local/panels/recipes.js
     embed_iframe: false
+  - name: khione-security-panel
+    sidebar_title: Security
+    sidebar_icon: mdi:shield-lock
+    url_path: khione-security
+    module_url: /local/panels/security.js
+    embed_iframe: false
 
 shell_command:
   khione_update_official: "touch /config/triggers/update-official.trigger"
