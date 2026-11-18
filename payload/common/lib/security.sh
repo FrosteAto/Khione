@@ -552,6 +552,12 @@ configure_aur_update_action() {
     echo "yay not installed, skipping the AUR-update action script."
     return 0
   fi
+  echo "Granting $user permanent passwordless pacman access for the AUR-update action..."
+  local sudoers_file=/etc/sudoers.d/90-khione-aur-pacman
+  printf '%s\n' "$user ALL=(ALL) NOPASSWD: /usr/bin/pacman" | sudo tee "$sudoers_file" >/dev/null
+  sudo chmod 440 "$sudoers_file"
+  sudo visudo -cf "$sudoers_file"
+
   echo "Setting up the AUR-update action script..."
   sudo install -Dm755 /dev/stdin /usr/local/bin/khione-action-update-aur <<EOF
 #!/bin/bash
