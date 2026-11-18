@@ -24,12 +24,23 @@ fi
 # its message without a separate text-column-splitting step.
 new_events_json="$(journalctl -k -g 'UFW BLOCK' --since="@$since_epoch" -o json --no-pager 2>/dev/null || echo '')"
 
-echo "$now_epoch" > "$state"
+# Both blobs go to a temp file rather than argv -- Linux caps a single
+# argv element at MAX_ARG_STRLEN (128KB); a burst of blocked connections
+# or CrowdSec decisions in one window can exceed that and crash this
+# script with E2BIG under `set -e`.
+tmpdir="$(mktemp -d)"
+trap 'rm -rf "$tmpdir"' EXIT
+printf '%s' "$new_events_json" > "$tmpdir/events.ndjson"
+printf '%s' "$cs_json" > "$tmpdir/cs.json"
 
-python3 - "$new_events_json" "$cs_json" <<'PYEOF' > "$out.tmp"
+python3 - "$tmpdir/events.ndjson" "$tmpdir/cs.json" "$out" <<'PYEOF' > "$out.tmp"
 import json, re, sys
 
-new_events_json, cs_json = sys.argv[1], sys.argv[2]
+events_path, cs_path, out_path = sys.argv[1], sys.argv[2], sys.argv[3]
+with open(events_path) as f:
+    new_events_json = f.read()
+with open(cs_path) as f:
+    cs_json = f.read()
 
 try:
     cs_decisions = json.loads(cs_json)
@@ -116,7 +127,36 @@ for line in new_events_json.splitlines():
         "guess_confidence": confidence,
     })
 
-events.sort(key=lambda e: e["time"] or 0, reverse=True)
-print(json.dumps({"events": events[:200]}))
+# Rolling buffer: merge onto whatever's already on disk rather than
+# overwriting with only this run's events, so a quiet minute doesn't
+# erase real events from a minute ago. Dedup on (time, src_ip, dst_port)
+# -- the inclusive `--since` second can re-read the same journal line
+# across two runs.
+existing_events = []
+try:
+    with open(out_path) as f:
+        existing = json.load(f)
+    if isinstance(existing, dict) and isinstance(existing.get("events"), list):
+        existing_events = existing["events"]
+except (OSError, ValueError):
+    existing_events = []
+
+seen = set()
+merged = []
+for e in existing_events + events:
+    key = (e.get("time"), e.get("src_ip"), e.get("dst_port"))
+    if key in seen:
+        continue
+    seen.add(key)
+    merged.append(e)
+
+merged.sort(key=lambda e: e["time"] or 0, reverse=True)
+print(json.dumps({"events": merged[:200]}))
 PYEOF
 mv "$out.tmp" "$out"
+
+# State file is written LAST, only once the merge+write above has fully
+# succeeded -- a crash before this point (e.g. E2BIG, a python error)
+# leaves it unadvanced, so the next run safely re-covers the same
+# window (the dedup above makes re-covering overlapping windows safe).
+echo "$now_epoch" > "$state"

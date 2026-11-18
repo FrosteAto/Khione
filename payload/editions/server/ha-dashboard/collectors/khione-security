@@ -153,13 +153,22 @@ if [[ -f /etc/grub.d/40_custom ]] && grep -q "^set superusers" /etc/grub.d/40_cu
   grub_locked=true
 fi
 
+# cs_json can be large (a burst of CrowdSec decisions) -- Linux caps a
+# single argv element at MAX_ARG_STRLEN (128KB), so it goes through a
+# temp file instead of argv to avoid an E2BIG crash under `set -e`.
+tmpdir="$(mktemp -d)"
+trap 'rm -rf "$tmpdir"' EXIT
+printf '%s' "$cs_json" > "$tmpdir/cs.json"
+
 python3 - "$f2b_banned" "$cs_decisions" "$aide_status" "$aide_last_run" "$auditd_active" "$auditd_immutable" \
   "$ufw_rules" "$active_sessions" "$aide_next_run" "$last_ban_jail" "$last_ban_time" "$quad9_active" "$grub_locked" \
-  "$fail2ban_active" "$crowdsec_active" "$ban_list_raw" "$cs_json" "$aide_diff_raw" "$auditd_recent_raw" <<'PYEOF' > "$out.tmp"
+  "$fail2ban_active" "$crowdsec_active" "$ban_list_raw" "$tmpdir/cs.json" "$aide_diff_raw" "$auditd_recent_raw" <<'PYEOF' > "$out.tmp"
 import json, sys
 (f2b_banned, cs_decisions, aide_status, aide_last_run, auditd_active, auditd_immutable,
  ufw_rules, active_sessions, aide_next_run, last_ban_jail, last_ban_time, quad9_active, grub_locked,
- fail2ban_active, crowdsec_active, ban_list_raw, cs_json, aide_diff_raw, auditd_recent_raw) = sys.argv[1:20]
+ fail2ban_active, crowdsec_active, ban_list_raw, cs_json_path, aide_diff_raw, auditd_recent_raw) = sys.argv[1:20]
+with open(cs_json_path) as f:
+    cs_json = f.read()
 
 ban_list = [
     {"jail": line.split("|", 1)[0], "ip": line.split("|", 1)[1]}
