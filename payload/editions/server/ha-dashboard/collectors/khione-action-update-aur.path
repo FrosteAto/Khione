@@ -1,0 +1,8 @@
+[Unit]
+Description=Watch for the AUR-update action trigger from the Security dashboard
+
+[Path]
+PathExists=/var/lib/hass/triggers/update-aur.trigger
+
+[Install]
+WantedBy=multi-user.target

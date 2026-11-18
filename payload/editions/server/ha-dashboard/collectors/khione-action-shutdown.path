@@ -1,0 +1,8 @@
+[Unit]
+Description=Watch for the emergency-shutdown trigger from the Security dashboard
+
+[Path]
+PathExists=/var/lib/hass/triggers/shutdown.trigger
+
+[Install]
+WantedBy=multi-user.target

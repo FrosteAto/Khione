@@ -1,0 +1,35 @@
+#!/bin/bash
+# Deliberately not `set -e`: every branch below must still reach the
+# result-file write at the bottom, whether the update succeeded or not.
+set -uo pipefail
+
+trigger=/var/lib/hass/triggers/update-official.trigger
+out=/var/lib/hass/snapshots/khione_actions.json
+rm -f "$trigger"
+
+started="$(date +%s)"
+# Reuses khione-auto-update.service exactly -- not a parallel `pacman
+# -Syu` call -- so informant's news-gate hook still applies to this
+# button the same as the daily timer. --wait blocks until it finishes.
+output="$(systemctl start --wait khione-auto-update.service 2>&1; systemctl status khione-auto-update.service --no-pager -l 2>&1 | tail -n 15)"
+finished="$(date +%s)"
+
+# A oneshot service's ActiveState is always "inactive" right after it
+# runs, success or failure -- Result is the field that actually says
+# which one happened.
+result="$(systemctl show khione-auto-update.service -p Result --value 2>/dev/null || echo unknown)"
+if [[ "$result" == "success" ]]; then success=true; else success=false; fi
+
+mkdir -p "$(dirname "$out")"
+python3 - "update_official" "$started" "$finished" "$success" "$output" <<'PYEOF' > "$out.tmp"
+import json, sys
+action, started, finished, success, output = sys.argv[1:6]
+print(json.dumps({
+    "action": action,
+    "started_at": int(started),
+    "finished_at": int(finished),
+    "success": success == "true",
+    "output_tail": output[-2000:],
+}))
+PYEOF
+mv "$out.tmp" "$out"

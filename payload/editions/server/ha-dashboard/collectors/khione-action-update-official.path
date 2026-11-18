@@ -1,0 +1,8 @@
+[Unit]
+Description=Watch for the official-update action trigger from the Security dashboard
+
+[Path]
+PathExists=/var/lib/hass/triggers/update-official.trigger
+
+[Install]
+WantedBy=multi-user.target

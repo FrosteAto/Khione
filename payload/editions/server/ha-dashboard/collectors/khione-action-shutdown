@@ -1,0 +1,9 @@
+#!/bin/bash
+set -uo pipefail
+
+trigger=/var/lib/hass/triggers/shutdown.trigger
+rm -f "$trigger"
+# No result file: the host is going down, there is no "after" to report
+# into. The frontend's own confirm dialog is the only feedback loop for
+# this one.
+systemctl poweroff

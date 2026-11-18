@@ -34,6 +34,11 @@ panel_custom:
     module_url: /local/panels/recipes.js
     embed_iframe: false
 
+shell_command:
+  khione_update_official: "touch /config/triggers/update-official.trigger"
+  khione_update_aur: "touch /config/triggers/update-aur.trigger"
+  khione_shutdown: "touch /config/triggers/shutdown.trigger"
+
 command_line:
   - sensor:
       name: Khione System
@@ -129,6 +134,18 @@ command_line:
       json_attributes:
         - events
       scan_interval: 15
+  - sensor:
+      name: Khione Actions
+      unique_id: khione_actions
+      command: "cat /config/snapshots/khione_actions.json"
+      value_template: "{{ value_json.action }}"
+      json_attributes:
+        - action
+        - started_at
+        - finished_at
+        - success
+        - output_tail
+      scan_interval: 5
   - binary_sensor:
       name: Khione Plex
       unique_id: khione_plex
