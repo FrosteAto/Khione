@@ -116,7 +116,9 @@ Server Edition opts into a full hardening pass: a default-deny firewall scoped t
   "primaryBorderColor": "#8bb862",
   "lineColor": "#606c38",
   "secondaryColor": "#f5eed8",
-  "tertiaryColor": "#fefae0"
+  "tertiaryColor": "#fefae0",
+  "clusterBkg": "transparent",
+  "clusterBorder": "#d4a373"
 }}}%%
 flowchart TD
     INTERNET(("Internet"))
