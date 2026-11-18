@@ -170,15 +170,17 @@ try:
     cs_raw = json.loads(cs_json)
 except ValueError:
     cs_raw = []
-crowdsec_decision_log = [
-    {
-        "ip": d.get("value"),
+crowdsec_decision_log = []
+for d in (cs_raw if isinstance(cs_raw, list) else []):
+    source = d.get("source") or {}
+    decisions_list = d.get("decisions") or []
+    first_decision = decisions_list[0] if decisions_list else {}
+    crowdsec_decision_log.append({
+        "ip": source.get("ip") or source.get("value") or first_decision.get("value"),
         "scenario": d.get("scenario"),
-        "duration": d.get("duration"),
-        "scope": d.get("scope"),
-    }
-    for d in (cs_raw if isinstance(cs_raw, list) else [])
-]
+        "duration": first_decision.get("duration"),
+        "scope": source.get("scope") or first_decision.get("scope"),
+    })
 
 aide_diff = [line for line in aide_diff_raw.splitlines() if line.strip()]
 auditd_recent = [line for line in auditd_recent_raw.splitlines() if line.strip()]
