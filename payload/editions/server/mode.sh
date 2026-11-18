@@ -47,6 +47,10 @@ SERVICES_ENABLE=(
   khione-security.timer khione-security.service
   khione-netwatch.timer khione-netwatch.service
   khione-patching.timer khione-patching.service
+  khione-netnoise.timer khione-netnoise.service
+  khione-action-update-official.path
+  khione-action-update-aur.path
+  khione-action-shutdown.path
   docker.service
   home-assistant.service
 )
