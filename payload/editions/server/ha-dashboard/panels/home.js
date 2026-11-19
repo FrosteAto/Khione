@@ -151,23 +151,30 @@ main{ flex:1 1 auto; display:grid; grid-template-columns: 1.65fr 1fr; gap: 1.4re
 .weather-stats > div > span{ display:block; font-size:.7rem; color: var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-top:.15rem; }
 
 /* Ambient particles -- a condition-keyed field of small animated motes
-   (rain/snow/sun-dust/stars) behind the card's real content. Only the
-   conditions in PARTICLE_RECIPE below get any; others (cloudy, fog,
-   partly-cloudy...) stay exactly as blank as today. Content siblings get
-   position+z-index so they paint above the particle layer -- an
-   absolutely-positioned element paints above static siblings by default
-   regardless of DOM order, so without this the particles would sit on
-   top of the text instead of behind it. */
+   behind the card's real content. Every condition HA can report (see
+   CONDITION_LABEL below) gets one via PARTICLE_RECIPE -- nothing falls
+   through to a blank card. Content siblings get position+z-index so
+   they paint above the particle layer -- an absolutely-positioned
+   element paints above static siblings by default regardless of DOM
+   order, so without this the particles would sit on top of the text
+   instead of behind it. */
 .weather-particles{ position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:0; }
 .weather-particles .p{ position:absolute; top:-8%; opacity:0; }
 .weather-particles .p.rain{ width:2px; height:14px; border-radius:1px; background:linear-gradient(to bottom, transparent, rgba(64,196,219,.55)); animation-name:p-fall; animation-timing-function:linear; animation-iteration-count:infinite; }
 .weather-particles .p.snow{ width:5px; height:5px; border-radius:50%; background:rgba(255,255,255,.8); animation-name:p-drift; animation-timing-function:linear; animation-iteration-count:infinite; }
 .weather-particles .p.mote{ width:3px; height:3px; border-radius:50%; background:rgba(255,196,110,.55); animation-name:p-rise; animation-timing-function:linear; animation-iteration-count:infinite; }
 .weather-particles .p.star{ width:2px; height:2px; border-radius:50%; background:rgba(255,255,255,.85); animation-name:p-twinkle; animation-timing-function:ease-in-out; animation-iteration-count:infinite; }
+.weather-particles .p.puff{ width:16px; height:9px; border-radius:50%; background:rgba(224,224,230,.5); animation-name:p-puff; animation-timing-function:ease-in-out; animation-iteration-count:infinite; }
+.weather-particles .p.mist{ width:26px; height:14px; border-radius:50%; background:rgba(255,255,255,.3); filter:blur(2px); animation-name:p-puff; animation-timing-function:ease-in-out; animation-iteration-count:infinite; }
+.weather-particles .p.flash{ width:3px; height:3px; border-radius:50%; background:rgba(255,250,200,.95); box-shadow:0 0 12px 4px rgba(255,250,200,.55); animation-name:p-flash; animation-timing-function:ease-out; animation-iteration-count:infinite; }
+.weather-particles .p.gust{ width:22px; height:2px; border-radius:1px; background:linear-gradient(to right, transparent, rgba(180,210,225,.55)); animation-name:p-gust; animation-timing-function:ease-in; animation-iteration-count:infinite; }
 @keyframes p-fall{ 0%{ transform:translateY(0); opacity:0; } 8%{ opacity:1; } 100%{ transform:translateY(120vh); opacity:.2; } }
 @keyframes p-drift{ 0%{ transform:translate(0,0); opacity:0; } 10%{ opacity:.85; } 100%{ transform:translate(10px,120vh); opacity:.3; } }
 @keyframes p-rise{ 0%{ transform:translate(0,0); opacity:0; } 15%{ opacity:.65; } 100%{ transform:translate(8px,-130%); opacity:0; } }
 @keyframes p-twinkle{ 0%,100%{ opacity:.15; } 50%{ opacity:.9; } }
+@keyframes p-puff{ 0%{ transform:translateX(-20px); opacity:0; } 15%{ opacity:.55; } 85%{ opacity:.55; } 100%{ transform:translateX(40vw); opacity:0; } }
+@keyframes p-flash{ 0%,92%{ opacity:0; } 94%{ opacity:1; } 97%{ opacity:.2; } 100%{ opacity:0; } }
+@keyframes p-gust{ 0%{ transform:translate(-30px,0); opacity:0; } 10%{ opacity:.6; } 100%{ transform:translate(70vw,6px); opacity:0; } }
 @media (prefers-reduced-motion: reduce){ .weather-particles .p{ animation:none; opacity:.4; } }
 .hero-corner, .weather-main, .hero-note, .weather-stats, .clothing-head{ position:relative; z-index:1; }
 
@@ -615,9 +622,10 @@ function conditionLabel(condition) {
   return CONDITION_LABEL[condition] || condition.charAt(0).toUpperCase() + condition.slice(1);
 }
 
-// Which particle, and how many, per condition. A condition not listed
-// here gets no particles (cloudy, partlycloudy, fog, ...) -- the card
-// just looks like it always has.
+// Which particle, and how many, per condition. Covers every condition
+// CONDITION_LABEL above knows about, so nothing falls through to a
+// blank card -- cloudy/fog/lightning/windy all get their own treatment
+// now, not just the rain/snow/sun/clear-night set this started with.
 const PARTICLE_RECIPE = {
   rainy: { cls: "rain", count: 26 },
   pouring: { cls: "rain", count: 40 },
@@ -627,6 +635,13 @@ const PARTICLE_RECIPE = {
   hail: { cls: "snow", count: 30 },
   sunny: { cls: "mote", count: 14 },
   "clear-night": { cls: "star", count: 30 },
+  cloudy: { cls: "puff", count: 10 },
+  partlycloudy: { cls: "puff", count: 5 },
+  fog: { cls: "mist", count: 16 },
+  lightning: { cls: "flash", count: 6 },
+  exceptional: { cls: "flash", count: 8 },
+  windy: { cls: "gust", count: 20 },
+  "windy-variant": { cls: "gust", count: 20 },
 };
 
 function particlesHtml(condition) {
