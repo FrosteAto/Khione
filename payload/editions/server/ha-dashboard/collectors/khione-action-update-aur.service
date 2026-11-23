@@ -1,6 +1,0 @@
-[Unit]
-Description=Run the AUR-update action triggered from the Security dashboard
-
-[Service]
-Type=oneshot
-ExecStart=/usr/local/bin/khione-action-update-aur

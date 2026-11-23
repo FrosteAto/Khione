@@ -150,7 +150,6 @@ const PAGE_SHELL_HTML = `
       <div class="detail-list" id="updates-detail"></div>
       <div class="actions-row">
         <button class="action-btn" id="btn-update-official" type="button">Apply official updates</button>
-        <button class="action-btn" id="btn-update-aur" type="button">Apply AUR updates</button>
       </div>
       <p class="action-status" id="update-action-status"></p>
     </div>
@@ -313,13 +312,6 @@ class KhioneSecurityPanel extends HTMLElement {
       "khione_update_official",
       "Apply pending official updates now?",
       "update_official",
-    );
-    fire(
-      root.getElementById("btn-update-aur"),
-      root.getElementById("update-action-status"),
-      "khione_update_aur",
-      "Apply pending AUR updates now? AUR packages are unreviewed source — this is a real step up in trust from the notify-only check.",
-      "update_aur",
     );
     fire(
       root.getElementById("btn-shutdown"),

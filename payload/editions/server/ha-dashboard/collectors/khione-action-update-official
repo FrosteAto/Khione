@@ -3,16 +3,11 @@
 # result-file write at the bottom, whether the update succeeded or not.
 set -uo pipefail
 
+source /usr/local/bin/khione-action-common.sh
+
 trigger=/var/lib/hass/triggers/update-official.trigger
 out=/var/lib/hass/snapshots/khione_actions.json
-
-# A stale trigger (e.g. one written while this .path unit was disabled --
-# see Fix 1) must never fire the action once the unit is finally enabled.
-if [[ ! -f "$trigger" ]] || [[ -z "$(find "$trigger" -mmin -2 2>/dev/null)" ]]; then
-  rm -f "$trigger"
-  exit 0
-fi
-rm -f "$trigger"
+consume_trigger "$trigger" || exit 0
 
 started="$(date +%s)"
 # Reuses khione-auto-update.service exactly -- not a parallel `pacman

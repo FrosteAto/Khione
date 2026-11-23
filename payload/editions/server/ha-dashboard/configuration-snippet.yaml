@@ -48,7 +48,6 @@ panel_custom:
 
 shell_command:
   khione_update_official: "touch /config/triggers/update-official.trigger"
-  khione_update_aur: "touch /config/triggers/update-aur.trigger"
   khione_shutdown: "touch /config/triggers/shutdown.trigger"
 
 command_line:

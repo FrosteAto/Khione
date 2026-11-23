@@ -245,9 +245,6 @@ fi
 for pkg in "${AUR_UPDATE_CHECKS[@]}"; do
   configure_aur_update_check "$ARCH_USER" "$pkg"
 done
-if [[ "${#AUR_UPDATE_CHECKS[@]}" -gt 0 ]]; then
-  configure_aur_update_action "$ARCH_USER"
-fi
 
 section "Configuring greetd and PAM"
 configure_greetd "$GREETD_SESSION_CMD"

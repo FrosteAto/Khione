@@ -539,64 +539,6 @@ EOF
 }
 
 # ---------------------------------------------------------------------
-# Action-bridge script for the Security dashboard's "Update AUR
-# packages" button. Generated (not a static collectors/ file) for the
-# same reason configure_aur_update_check's per-package script is:
-# yay/makepkg refuse to run as root, and this script's own .service
-# unit runs as root by default, so $user has to be baked in at install
-# time via sudo -u, exactly mirroring that function's own pattern.
-# ---------------------------------------------------------------------
-configure_aur_update_action() {
-  local user="$1"
-  if ! command -v yay &>/dev/null; then
-    echo "yay not installed, skipping the AUR-update action script."
-    return 0
-  fi
-  echo "Granting $user permanent passwordless pacman access for the AUR-update action..."
-  local sudoers_file=/etc/sudoers.d/90-khione-aur-pacman
-  printf '%s\n' "$user ALL=(ALL) NOPASSWD: /usr/bin/pacman" | sudo tee "$sudoers_file" >/dev/null
-  sudo chmod 440 "$sudoers_file"
-  sudo visudo -cf "$sudoers_file"
-
-  echo "Setting up the AUR-update action script..."
-  sudo install -Dm755 /dev/stdin /usr/local/bin/khione-action-update-aur <<EOF
-#!/bin/bash
-set -uo pipefail
-
-trigger=/var/lib/hass/triggers/update-aur.trigger
-out=/var/lib/hass/snapshots/khione_actions.json
-
-# A stale trigger (e.g. one written while this .path unit was disabled --
-# see Fix 1) must never fire the action once the unit is finally enabled.
-if [[ ! -f "\$trigger" ]] || [[ -z "\$(find "\$trigger" -mmin -2 2>/dev/null)" ]]; then
-  rm -f "\$trigger"
-  exit 0
-fi
-rm -f "\$trigger"
-
-started="\$(date +%s)"
-output="\$(sudo -u $user yay -Syu --aur --noconfirm 2>&1)"
-rc=\$?
-finished="\$(date +%s)"
-if [[ \$rc -eq 0 ]]; then success=true; else success=false; fi
-
-mkdir -p "\$(dirname "\$out")"
-python3 - "update_aur" "\$started" "\$finished" "\$success" "\$output" <<'PYEOF' > "\$out.tmp"
-import json, sys
-action, started, finished, success, output = sys.argv[1:6]
-print(json.dumps({
-    "action": action,
-    "started_at": int(started),
-    "finished_at": int(finished),
-    "success": success == "true",
-    "output_tail": output[-2000:],
-}))
-PYEOF
-mv "\$out.tmp" "\$out"
-EOF
-}
-
-# ---------------------------------------------------------------------
 # Plex-specific systemd sandboxing, beyond whatever generic hardening is
 # already in place. Plex staff confirm it's meant to run unprivileged and
 # never needs root. Uses a drop-in, never the shipped unit file directly,
