@@ -183,7 +183,9 @@ configure_crowdsec() {
     if [[ -f "$bouncer_cfg" ]] && grep -q "^api_key: *$" "$bouncer_cfg" 2>/dev/null; then
       local key
       key="$(sudo cscli bouncers add khione-firewall-bouncer -o raw)"
-      sudo sed -i "s/^api_key: *$/api_key: $key/" "$bouncer_cfg"
+      # Piped through sed's stdin (-f /dev/stdin) rather than passed as a
+      # sed argument, so the key never appears in `ps` output.
+      printf 's/^api_key: *$/api_key: %s/\n' "$key" | sudo sed -i -f /dev/stdin "$bouncer_cfg"
     fi
     sudo systemctl enable --now crowdsec-firewall-bouncer.service
   fi
