@@ -46,7 +46,7 @@ configure_ssh_hardening() {
   } | sudo tee /etc/ssh/sshd_config.d/99-khione-hardening.conf >/dev/null
 
   if sudo sshd -t; then
-    sudo systemctl reload sshd 2>/dev/null || sudo systemctl restart sshd
+    sudo systemctl reload sshd 2>/dev/null || systemctl_live restart sshd
   else
     echo "WARNING: sshd -t rejected the new config -- reverting, nothing changed."
     sudo rm -f /etc/ssh/sshd_config.d/99-khione-hardening.conf
@@ -146,8 +146,8 @@ EOF
       fi
     done
   } | sudo tee /etc/fail2ban/jail.d/99-khione.conf >/dev/null
-  sudo systemctl enable --now fail2ban.service
-  sudo systemctl restart fail2ban.service
+  sudo systemctl enable fail2ban.service
+  systemctl_live restart fail2ban.service
 }
 
 # ---------------------------------------------------------------------
@@ -167,7 +167,7 @@ configure_crowdsec() {
     return 0
   fi
   echo "Configuring CrowdSec..."
-  sudo systemctl enable --now crowdsec.service
+  sudo systemctl enable crowdsec.service
 
   local collection
   for collection in crowdsecurity/sshd crowdsecurity/linux crowdsecurity/linux-lpe; do
@@ -187,7 +187,8 @@ configure_crowdsec() {
       # sed argument, so the key never appears in `ps` output.
       printf 's/^api_key: *$/api_key: %s/\n' "$key" | sudo sed -i -f /dev/stdin "$bouncer_cfg"
     fi
-    sudo systemctl enable --now crowdsec-firewall-bouncer.service
+    sudo systemctl enable crowdsec-firewall-bouncer.service
+    systemctl_live restart crowdsec-firewall-bouncer.service
   fi
 
   # Community blocklist. shortcut: `cscli capi register` alone enables
@@ -205,7 +206,7 @@ configure_crowdsec() {
     sudo sed -i "/credentials_path: \/etc\/crowdsec\/online_api_credentials.yaml/a\\      sharing: false" /etc/crowdsec/config.yaml
   fi
   sudo cscli console disable custom tainted 2>/dev/null || true
-  sudo systemctl restart crowdsec.service
+  systemctl_live restart crowdsec.service
 
   echo "CrowdSec configured, community blocklist consumed, nothing shared"
   echo "(verify any time: sudo cscli capi status). To also use the hosted"
@@ -265,7 +266,7 @@ configure_file_integrity_monitoring() {
   # The AUR aide package ships its own aidecheck.service/.timer (daily
   # 05:00, logs to /var/log/aide.log + `journalctl -abu aidecheck`) --
   # reusing it instead of rolling a duplicate unit.
-  sudo systemctl enable --now aidecheck.timer
+  sudo systemctl enable aidecheck.timer
 }
 
 # ---------------------------------------------------------------------
@@ -289,7 +290,7 @@ configure_auditd() {
     echo "-w /dev/shm -p x -k khione_exec_from_tmp"
   } | sudo tee /etc/audit/rules.d/99-khione.rules >/dev/null
 
-  sudo systemctl enable --now auditd.service
+  sudo systemctl enable auditd.service
   # shortcut: auditd's own unit refuses manual restart by design (its
   # audit-trail philosophy discourages casual restarts), confirmed live
   # -- `systemctl restart auditd.service` errors with "may be requested
@@ -350,7 +351,7 @@ ExecStart=/usr/local/bin/khione-audit-extra-watch
 [Install]
 WantedBy=multi-user.target
 EOF
-    sudo systemctl daemon-reload
+    systemctl_live daemon-reload
     sudo systemctl enable khione-audit-extra-watch.service
     sudo /usr/local/bin/khione-audit-extra-watch
   fi
@@ -473,11 +474,11 @@ Persistent=true
 [Install]
 WantedBy=timers.target
 EOF
-    sudo systemctl enable --now khione-arch-audit-check.timer
+    sudo systemctl enable khione-arch-audit-check.timer
   fi
 
-  sudo systemctl daemon-reload
-  sudo systemctl enable --now khione-auto-update.timer
+  systemctl_live daemon-reload
+  sudo systemctl enable khione-auto-update.timer
 }
 
 # ---------------------------------------------------------------------
@@ -536,8 +537,8 @@ Persistent=true
 [Install]
 WantedBy=timers.target
 EOF
-  sudo systemctl daemon-reload
-  sudo systemctl enable --now "$svc.timer"
+  systemctl_live daemon-reload
+  sudo systemctl enable "$svc.timer"
 }
 
 # ---------------------------------------------------------------------
@@ -581,8 +582,8 @@ ProtectKernelModules=true
 ProtectControlGroups=true
 ReadWritePaths=/var/lib/plex
 EOF
-  sudo systemctl daemon-reload
-  sudo systemctl restart plexmediaserver.service
+  systemctl_live daemon-reload
+  systemctl_live restart plexmediaserver.service
   echo "Sandboxed. Still worth a real playback/transcode check once --"
   echo "check with: systemd-analyze security plexmediaserver"
 }
@@ -615,7 +616,7 @@ d["log-opts"].setdefault("max-size", "10m")
 d["log-opts"].setdefault("max-file", "3")
 print(json.dumps(d, indent=2))
 ' | sudo tee "$conf" >/dev/null
-  sudo systemctl restart docker.service
+  systemctl_live restart docker.service
 }
 
 # ---------------------------------------------------------------------

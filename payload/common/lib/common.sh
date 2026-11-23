@@ -126,6 +126,27 @@ install_flatpak_packages() {
   done
 }
 
+# archinstall's custom_commands run install.sh via `arch-chroot -S`, which
+# uses systemd-run with MountAPIVFS=yes -- that gives /run a fresh, empty
+# mount with no systemd manager reachable from inside. `enable`/`disable`/
+# `mask` are pure filesystem operations and work fine there, but anything
+# needing a live manager (start/restart/reload/daemon-reload) cannot
+# connect. Units enabled during install still start normally on the real
+# first boot that follows this script's own final reboot.
+in_chroot() {
+  command -v systemd-detect-virt &>/dev/null && systemd-detect-virt --chroot --quiet
+}
+
+# Runs `systemctl "$@"` for real when a manager is reachable; inside the
+# install chroot, logs that it's deferred to first boot instead of failing.
+systemctl_live() {
+  if in_chroot; then
+    echo "Skipping 'systemctl $*' inside the install chroot -- it will apply on first boot."
+    return 0
+  fi
+  sudo systemctl "$@"
+}
+
 enable_services() {
   local -n svcs="$1"
   [ ${#svcs[@]} -eq 0 ] && return 0
@@ -146,7 +167,6 @@ configure_firewall() {
   local -n rules="$1"
   local -n lan_rules="$2"
   local kernel_release
-  local in_chroot=0
 
   echo "Configuring firewall..."
   sudo pacman -S --needed --noconfirm ufw
@@ -191,11 +211,7 @@ configure_firewall() {
     fi
   fi
 
-  if command -v systemd-detect-virt &>/dev/null && systemd-detect-virt --chroot --quiet; then
-    in_chroot=1
-  fi
-
-  if [[ "$in_chroot" -eq 1 ]]; then
+  if in_chroot; then
     echo "Skipping immediate UFW activation inside chroot."
     echo "UFW rules are configured and ufw.service will activate firewall on first boot."
     return 0
@@ -264,7 +280,7 @@ configure_host_collectors() {
         ;;
     esac
   done
-  sudo systemctl daemon-reload
+  systemctl_live daemon-reload
 }
 
 configure_home_assistant() {
@@ -288,7 +304,7 @@ configure_home_assistant() {
     /etc/udev/rules.d/99-hass-zigbee.rules
   sudo udevadm control --reload-rules
   sudo udevadm trigger --subsystem-match=tty
-  sudo systemctl daemon-reload
+  systemctl_live daemon-reload
 }
 
 merge_ha_configuration_snippet() {
