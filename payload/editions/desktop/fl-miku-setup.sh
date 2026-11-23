@@ -47,6 +47,11 @@ FL_MIKU_PREFIX="${FL_MIKU_PREFIX:-$HOME/.local/share/wineprefixes/fl-miku}"
 #   https://www.image-line.com/fl-studio/download
 # and save it to FL_INSTALLER_FILE.
 FL_INSTALLER_URL="${FL_INSTALLER_URL:-https://install.image-line.com/flstudio/flstudio_win64_25.2.5.5319.exe}"
+# SHA256 of the exact .exe at FL_INSTALLER_URL above -- must be updated together
+# with that URL whenever the pinned version changes (sha256sum the new file once
+# and paste it here). Only checked against installers this script downloads
+# itself; a manually-placed installer is trusted as-is.
+FL_INSTALLER_SHA256="${FL_INSTALLER_SHA256:-fd1f4492bbfaa00e8c53b445978df7f9b2173ffdf00efb4b01ffcaa140cec21d}"
 FL_INSTALLER_DIR="${FL_INSTALLER_DIR:-$HOME/Installers/Audio/FL}"
 FL_INSTALLER_FILE="$FL_INSTALLER_DIR/flstudio_installer.exe"
 
@@ -647,7 +652,7 @@ extract_miku_zip() {
   fi
 
   local -a zips
-  mapfile -t zips < <(find "$MIKU_INSTALLER_DIR" -maxdepth 1 -name "*.zip" 2>/dev/null)
+  mapfile -t zips < <(find "$MIKU_INSTALLER_DIR" -maxdepth 1 -iname "*.zip" 2>/dev/null)
 
   if [[ "${#zips[@]}" -eq 0 ]]; then
     # Check if the subfolders are already present from a prior extraction.
@@ -884,16 +889,27 @@ download_fl_installer() {
 
   log "Downloading from Image-Line..."
   log "URL: $FL_INSTALLER_URL"
-  if curl -L --progress-bar -o "$FL_INSTALLER_FILE" "$FL_INSTALLER_URL"; then
-    log "Download complete."
-    mark_step_done fl_installer_download
-  else
+  if ! curl -L --progress-bar -o "$FL_INSTALLER_FILE" "$FL_INSTALLER_URL"; then
     rm -f "$FL_INSTALLER_FILE"
     log "WARNING: Download failed (partial file removed)."
     log "Download the installer manually from: https://www.image-line.com/fl-studio/download"
     log "Save it to: $FL_INSTALLER_FILE"
     return 1
   fi
+
+  local actual_sha256
+  actual_sha256="$(sha256sum "$FL_INSTALLER_FILE" | awk '{print $1}')"
+  if [[ "$actual_sha256" != "$FL_INSTALLER_SHA256" ]]; then
+    rm -f "$FL_INSTALLER_FILE"
+    log "WARNING: Downloaded installer's checksum does not match the pinned one (file removed)."
+    log "Expected: $FL_INSTALLER_SHA256"
+    log "Got:      $actual_sha256"
+    log "If FL_INSTALLER_URL was intentionally bumped to a newer version, update FL_INSTALLER_SHA256 to match."
+    return 1
+  fi
+
+  log "Download complete, checksum verified."
+  mark_step_done fl_installer_download
 }
 
 run_fl_installer() {
