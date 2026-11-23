@@ -417,7 +417,7 @@ class KhioneSecurityPanel extends HTMLElement {
     const noiseListEl = root.getElementById("noise-list");
     noiseListEl.innerHTML = noiseEvents.length
       ? noiseEvents
-          .slice(0, 50)
+          .slice(0, 100)
           .map((e) => {
             const t = e.time ? new Date(e.time * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—";
             const portText = e.dst_port != null ? ":" + e.dst_port : "";

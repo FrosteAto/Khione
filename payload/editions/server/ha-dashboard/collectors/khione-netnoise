@@ -151,7 +151,18 @@ for e in existing_events + events:
     merged.append(e)
 
 merged.sort(key=lambda e: e["time"] or 0, reverse=True)
-print(json.dumps({"events": merged[:200]}))
+
+# Local broadcast noise (router SSDP/mDNS) can fire far more often than
+# real external probes. A single flat cap on the merged list lets that
+# local noise evict external events from the buffer entirely, so the
+# dashboard's "hide local" filter ends up with far fewer than 100 external
+# events even though plenty exist further back in the journal. Capping
+# each category independently guarantees up to 100 of each survive,
+# regardless of how lopsided the local/external ratio gets.
+non_local = [e for e in merged if not is_private(e.get("src_ip"))][:100]
+local = [e for e in merged if is_private(e.get("src_ip"))][:100]
+kept = sorted(non_local + local, key=lambda e: e["time"] or 0, reverse=True)
+print(json.dumps({"events": kept}))
 PYEOF
 mv "$out.tmp" "$out"
 
