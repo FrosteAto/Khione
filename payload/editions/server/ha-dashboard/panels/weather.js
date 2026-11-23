@@ -99,14 +99,12 @@ main{
 
 .room{position:relative;}
 
-/* ---------- hero: deliberately a single, fixed warm-dusk palette so its sky
-   art stays internally consistent regardless of the viewer's light/dark theme
-   (it depicts one real moment, like a photo would) ---------- */
+/* ---------- hero ---------- */
 .hero{
   border-radius:38px 46px 30px 50px;
   padding:clamp(1.6rem,4vw,3rem);
-  background:linear-gradient(165deg,#bfcb9a 0%,#d4a373 52%,#a9693a 100%);
-  color:#2a1c10;
+  background:var(--card-bg);
+  color:var(--ink);
   box-shadow:var(--shadow-soft);
   overflow:hidden;
   display:flex;
@@ -159,14 +157,18 @@ main{
 @media (max-width:900px){.top-row{grid-template-columns:1fr;}}
 
 .arc-wrap{position:relative;width:100%;}
-.arc-wrap svg{width:100%;height:auto;display:block;}
+/* overflow:visible -- the "now" label sits above the arc path near
+   solar noon, close enough to the viewBox's own top edge that SVG's
+   default clip-to-viewBox cut it off entirely once it had enough
+   clearance from the cloud art below not to overlap it. */
+.arc-wrap svg{width:100%;height:auto;display:block;overflow:visible;}
 .arc-endlabel{font-size:.78rem;color:var(--muted);}
 .arc-foot{display:flex;justify-content:space-between;margin-top:.3rem;font-size:.8rem;color:var(--muted);}
 .arc-now-label{font-size:.72rem;font-weight:600;fill:var(--ink);}
 
 /* ---------- live radar ---------- */
 .radar-wrap{position:relative;border-radius:26px 18px 26px 18px;overflow:hidden;border:1px solid var(--hairline);box-shadow:var(--shadow-tight);}
-.radar-map{width:100%;height:600px;background:var(--band-bg);}
+.radar-map{width:100%;height:380px;background:var(--band-bg);}
 .radar-map .leaflet-tile-pane{filter:sepia(.28) saturate(1.35) hue-rotate(-6deg) brightness(1.03) contrast(1.02);}
 .radar-map .leaflet-control-attribution{font-family:var(--font-body);font-size:.68rem;background:color-mix(in srgb, var(--card-bg) 80%, transparent);color:var(--muted);}
 .radar-map .leaflet-control-zoom a{font-family:var(--font-head);}
@@ -228,9 +230,14 @@ main{
 
 /* ---------- hourly strip ---------- */
 .hourly-scroll{overflow-x:auto;padding-bottom:.4rem;margin:0 -0.2rem;}
-.hourly-inner{min-width:760px;position:relative;padding:0 .2rem;}
+.hourly-inner{min-width:1520px;position:relative;padding:0 .2rem;}
 .hourly-chart{width:100%;height:60px;display:block;}
-.hourly-row{display:grid;grid-template-columns:repeat(12,1fr);text-align:center;margin-top:-6px;}
+/* left/right match .hourly-inner's own padding so these line up with
+   the chart underneath exactly, not just approximately. */
+.hourly-dots{position:absolute;left:.2rem;right:.2rem;top:0;height:60px;pointer-events:none;}
+.hour-dot{position:absolute;width:5.2px;height:5.2px;border-radius:50%;background:var(--accent);transform:translate(-50%,-50%);}
+.hour-dot.now{width:11px;height:11px;background:var(--khione-green);border:2px solid var(--card-bg);box-sizing:content-box;}
+.hourly-row{display:grid;grid-template-columns:repeat(24,1fr);text-align:center;margin-top:-6px;}
 .hour-chip{display:flex;flex-direction:column;align-items:center;gap:.25rem;padding:.3rem 0;}
 .hour-chip.now{position:relative;}
 .hour-chip.now::before{
@@ -243,7 +250,14 @@ main{
 .hour-temp{font-size:.88rem;font-weight:700;}
 
 /* ---------- 7-day ---------- */
-.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.7rem;}
+.week-scroll{overflow-x:auto;padding-bottom:.4rem;margin:0 -0.2rem;}
+/* grid-template-columns is overridden inline once real data loads (see
+   _renderLiveData) to match however many days the forecast actually has
+   -- met.no (this install's weather integration) often reports only 6,
+   not 7, and a hardcoded repeat(7,...) left the 6 real cards stretched
+   to fill 6 of 7 equal tracks with the 7th sitting empty. This is just
+   the pre-data fallback shape. */
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.7rem;padding:0 .2rem;}
 .day{
   background:color-mix(in srgb, var(--band-bg) 14%, var(--card-bg));
   border-radius:24px 16px 24px 16px;
@@ -265,8 +279,7 @@ main{
 /* ---------- responsive ---------- */
 @media (max-width:760px){
   .hero{flex-direction:column;align-items:flex-start;text-align:left;}
-  .week-grid{grid-template-columns:repeat(auto-fit,minmax(78px,1fr));}
-  .radar-map{height:420px;}
+  .radar-map{height:320px;}
 }
 @media (max-width:420px){
   .hero-temp{font-size:4rem;}
@@ -1073,34 +1086,6 @@ const PAGE_SHELL_HTML = `
   </section>
   </div>
 
-  <!-- LIVE RADAR -->
-  <section class="room card" aria-label="Live rain radar">
-    <div class="card-head">
-      <h2 class="card-title">Live radar</h2>
-      <span class="card-sub mono-num" id="radar-updated">loading latest frame&hellip;</span>
-    </div>
-    <div class="radar-wrap">
-      <div class="radar-map" id="radar-map"></div>
-      <div class="radar-overlay-ui">
-        <div class="radar-badge"><span class="radar-live-dot" aria-hidden="true"></span> Live &middot; RainViewer radar</div>
-        <button class="radar-play" id="radar-play" type="button" aria-pressed="true">
-          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" id="radar-play-icon"><rect x="1" y="1" width="3.2" height="10" rx="1" fill="currentColor"/><rect x="7.2" y="1" width="3.2" height="10" rx="1" fill="currentColor"/></svg>
-          <span id="radar-play-label">Pause</span>
-        </button>
-      </div>
-      <div class="radar-legend" aria-hidden="true">
-        <div class="radar-legend-row"><span class="radar-legend-swatch" style="background:#6fb7d9"></span> Light</div>
-        <div class="radar-legend-row"><span class="radar-legend-swatch" style="background:#3f8f5c"></span> Moderate</div>
-        <div class="radar-legend-row"><span class="radar-legend-swatch" style="background:#c9833d"></span> Heavy</div>
-      </div>
-    </div>
-    <div class="radar-foot">
-      <input type="range" class="radar-scrub" id="radar-scrub" min="0" max="0" value="0" step="1" aria-label="Scrub radar frame">
-      <span class="mono-num" id="radar-frame-label">&mdash;</span>
-    </div>
-    <div class="radar-note" id="radar-note">&nbsp;</div>
-  </section>
-
   <!-- METRICS -->
   <section class="room" aria-label="Supporting conditions">
     <div class="metrics-grid">
@@ -1140,7 +1125,7 @@ const PAGE_SHELL_HTML = `
   <!-- HOURLY -->
   <section class="room card" aria-label="Hourly forecast">
     <div class="card-head">
-      <h2 class="card-title">Next 12 hours</h2>
+      <h2 class="card-title">Next 24 hours</h2>
       <span class="card-sub mono-num" id="hourly-sub">&nbsp;</span>
     </div>
     <div class="hourly-scroll">
@@ -1154,7 +1139,37 @@ const PAGE_SHELL_HTML = `
       <h2 class="card-title">7-day outlook</h2>
       <span class="card-sub mono-num" id="week-sub">&nbsp;</span>
     </div>
-    <div class="week-grid" id="week-grid"></div>
+    <div class="week-scroll">
+      <div class="week-grid" id="week-grid"></div>
+    </div>
+  </section>
+
+  <!-- LIVE RADAR -->
+  <section class="room card" aria-label="Live rain radar">
+    <div class="card-head">
+      <h2 class="card-title">Live radar</h2>
+      <span class="card-sub mono-num" id="radar-updated">loading latest frame&hellip;</span>
+    </div>
+    <div class="radar-wrap">
+      <div class="radar-map" id="radar-map"></div>
+      <div class="radar-overlay-ui">
+        <div class="radar-badge"><span class="radar-live-dot" aria-hidden="true"></span> Live &middot; RainViewer radar</div>
+        <button class="radar-play" id="radar-play" type="button" aria-pressed="true">
+          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" id="radar-play-icon"><rect x="1" y="1" width="3.2" height="10" rx="1" fill="currentColor"/><rect x="7.2" y="1" width="3.2" height="10" rx="1" fill="currentColor"/></svg>
+          <span id="radar-play-label">Pause</span>
+        </button>
+      </div>
+      <div class="radar-legend" aria-hidden="true">
+        <div class="radar-legend-row"><span class="radar-legend-swatch" style="background:#6fb7d9"></span> Light</div>
+        <div class="radar-legend-row"><span class="radar-legend-swatch" style="background:#3f8f5c"></span> Moderate</div>
+        <div class="radar-legend-row"><span class="radar-legend-swatch" style="background:#c9833d"></span> Heavy</div>
+      </div>
+    </div>
+    <div class="radar-foot">
+      <input type="range" class="radar-scrub" id="radar-scrub" min="0" max="0" value="0" step="1" aria-label="Scrub radar frame">
+      <span class="mono-num" id="radar-frame-label">&mdash;</span>
+    </div>
+    <div class="radar-note" id="radar-note">&nbsp;</div>
   </section>
 
 </main>
@@ -1739,7 +1754,11 @@ class KhioneWeatherPanel extends HTMLElement {
       drop.setAttribute("y1", 0);
       drop.setAttribute("x2", 0);
       drop.setAttribute("y2", (100 - y).toFixed(1));
-      root.getElementById("arc-now-text").setAttribute("y", -22);
+      // -22 overlapped the arc stroke/cloud decoration at a typical
+      // rendered card width: the SVG's own viewBox scaling inflates this
+      // CSS-rem-sized label along with everything else, so it needs more
+      // clearance here than its literal font-size alone suggests.
+      root.getElementById("arc-now-text").setAttribute("y", -34);
       root.getElementById("arc-now-text").textContent = "now · " + fmtTime(now);
       root.getElementById("arc-now-icon").innerHTML = isDaytime
         ? '<use href="#i-sun-core" fill="var(--khione-yellow)"/>'
@@ -1760,8 +1779,8 @@ class KhioneWeatherPanel extends HTMLElement {
       metricVals[5].textContent = attrs.pressure != null ? Math.round(attrs.pressure) + " " + pressureUnit : "—";
     }
 
-    // ---- hourly strip (next 12 hourly forecast entries) ----
-    const hourly = (this._hourlyForecast || []).slice(0, 12).map((f) => {
+    // ---- hourly strip (next 24 hourly forecast entries) ----
+    const hourly = (this._hourlyForecast || []).slice(0, 24).map((f) => {
       const dt = new Date(f.datetime);
       const night = isNightAt(dt, sunriseMin, sunsetMin);
       return {
@@ -1787,7 +1806,7 @@ class KhioneWeatherPanel extends HTMLElement {
       const minT = temps.length ? Math.min.apply(null, temps) : 0;
       const maxT = temps.length ? Math.max.apply(null, temps) : 1;
       const span = maxT - minT || 1;
-      const colW = 600 / 12;
+      const colW = 600 / 24;
       const pts = hourly.map((h, i) => ({ x: colW * i + colW / 2, y: 60 - (((h.temp ?? minT) - minT) / span) * 50 }));
       const lineStr = pts.map((p) => p.x.toFixed(1) + "," + p.y.toFixed(1)).join(" ");
       const areaStr = "M" + pts.map((p) => p.x.toFixed(1) + "," + p.y.toFixed(1)).join(" L") + " L600,65 L0,65 Z";
@@ -1801,14 +1820,24 @@ class KhioneWeatherPanel extends HTMLElement {
         "</linearGradient></defs>" +
         '<path d="' + areaStr + '" fill="url(#hour-grad)" opacity=".14"/>' +
         '<polyline points="' + lineStr + '" fill="none" stroke="url(#hour-grad)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>' +
+        "</svg>";
+      // Point markers are real HTML circles, not SVG <circle> -- the
+      // viewBox above is deliberately stretched non-uniformly
+      // (preserveAspectRatio="none", width:100% against a fixed
+      // height:60px) to fill whatever width the card has, and an SVG
+      // circle's radius stretches with it on both axes independently,
+      // coming out as a flattened ellipse rather than a circle. A plain
+      // div sized in real px and positioned by percentage (each axis
+      // independent, same as the SVG's own stretch) stays round.
+      const dotsHTML =
+        '<div class="hourly-dots">' +
         pts
-          .map((p, i) =>
-            i === 0
-              ? '<circle cx="' + p.x + '" cy="' + p.y + '" r="5.5" fill="var(--khione-green)" stroke="var(--card-bg)" stroke-width="2"/>'
-              : '<circle cx="' + p.x + '" cy="' + p.y + '" r="2.6" fill="var(--accent)"/>'
+          .map(
+            (p, i) =>
+              '<div class="hour-dot' + (i === 0 ? " now" : "") + '" style="left:' + (p.x / 600 * 100).toFixed(2) + "%;top:" + (p.y / 68 * 100).toFixed(2) + '%"></div>'
           )
           .join("") +
-        "</svg>";
+        "</div>";
       const chipsHTML =
         '<div class="hourly-row">' +
         hourly
@@ -1828,7 +1857,7 @@ class KhioneWeatherPanel extends HTMLElement {
           )
           .join("") +
         "</div>";
-      hourlyInner.innerHTML = chartSVG + chipsHTML;
+      hourlyInner.innerHTML = chartSVG + dotsHTML + chipsHTML;
       hourlySub.textContent = fmtDeg(hourly[0].temp) + " now → " + fmtDeg(hourly[hourly.length - 1].temp) + " by " + hourly[hourly.length - 1].t;
     }
 
@@ -1846,6 +1875,12 @@ class KhioneWeatherPanel extends HTMLElement {
       weekGrid.innerHTML = "";
       weekSub.textContent = "—";
     } else {
+      // Match the column count to however many days actually came back
+      // (met.no commonly reports 6, not 7) so the real cards always
+      // stretch to fill the row exactly, with no dead trailing column.
+      // minmax keeps a sane per-card floor so this still scrolls instead
+      // of squeezing unreadable on a narrow viewport.
+      weekGrid.style.gridTemplateColumns = "repeat(" + week.length + ", minmax(92px, 1fr))";
       const los = week.map((d) => d.lo).filter((v) => v != null);
       const his = week.map((d) => d.hi).filter((v) => v != null);
       const weekMin = los.length ? Math.min.apply(null, los) : 0;
