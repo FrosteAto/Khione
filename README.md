@@ -84,7 +84,7 @@ Samba handles file sharing, with wsdd making the server show up properly in Wind
 
 **Dashboard**
 
-Glance runs on :8080 - weather, news, and server stats, but also a genuinely custom-built finances page with bank sync and budget tracking, plus meal-planning widgets, all driven by small systemd-timer scripts.
+Glance runs on :8080 - weather, news, and server stats, plus meal-planning widgets, all driven by small systemd-timer scripts.
 
 **Smart Home**
 
