@@ -176,7 +176,13 @@ main{ flex:1 1 auto; display:grid; grid-template-columns: 1.65fr 1fr; gap: 1.4re
 @keyframes p-flash{ 0%,92%{ opacity:0; } 94%{ opacity:1; } 97%{ opacity:.2; } 100%{ opacity:0; } }
 @keyframes p-gust{ 0%{ transform:translate(-30px,0); opacity:0; } 10%{ opacity:.6; } 100%{ transform:translate(70vw,6px); opacity:0; } }
 @media (prefers-reduced-motion: reduce){ .weather-particles .p{ animation:none; opacity:.4; } }
-.hero-corner, .weather-main, .hero-note, .weather-stats, .clothing-head{ position:relative; z-index:1; }
+/* .hero-corner excluded here on purpose: it already has its own
+   position:absolute + z-index:2 at the top of this file, which already
+   paints it above the particles. Including it in this list used to
+   override that position back to "relative" (same specificity, later in
+   the cascade), collapsing it into normal flex flow at the top-left of
+   the card instead of floating at the top-right. */
+.weather-main, .hero-note, .weather-stats, .clothing-head{ position:relative; z-index:1; }
 
 /* Wind compass -- a small dial next to the wind reading, needle rotated
    to the real wind_bearing attribute (confirmed present on this HA
@@ -290,6 +296,26 @@ main{ flex:1 1 auto; display:grid; grid-template-columns: 1.65fr 1fr; gap: 1.4re
 
 @media (max-width: 1100px){
   main{ grid-template-columns: 1fr; }
+  /* Stacked layout: the rail is no longer grid-matched to the hero
+     column's height, so .rail-groups's justify-content:space-between
+     has no extra space to spread across and the 6 groups cram together
+     at their bare .9rem gap. A bigger explicit gap is a floor
+     space-between still respects, giving the stacked rail reasonable
+     breathing room regardless of how tall the hero column ends up. */
+  .rail-groups{ gap: 1.8rem; }
+  /* Same root cause hits .hero-weather-card and .news-card even harder:
+     both have overflow:hidden (news-card also has an explicit
+     min-height:0), and a flex item with overflow != visible has an
+     automatic minimum size of 0 per spec -- so once the grid row no
+     longer forces a tall shared height, these two can get squeezed to
+     near nothing. .hero-weather-card's justify-content:center then
+     clips the result from BOTH ends at once (confirmed live: the
+     clothing section at the bottom and the top of the card's own text
+     both went invisible), and .news-card's overflow:auto feed just
+     shows an empty box. An explicit floor fixes both the same way the
+     rail-groups gap above does. */
+  .hero-weather-card{ min-height: 460px; }
+  .news-card{ min-height: 340px; }
 }
 @media (max-width: 500px){
   .hero-weather-card{ padding: 1.4rem 1.5rem; }
@@ -822,15 +848,27 @@ class KhioneHomePanel extends HTMLElement {
   }
 
   connectedCallback() {
-    this._renderClock();
-    this._clockInterval = setInterval(() => this._renderClock(), 1000);
+    this._scheduleClockTick();
   }
 
   disconnectedCallback() {
-    if (this._clockInterval) {
-      clearInterval(this._clockInterval);
-      this._clockInterval = null;
+    if (this._clockTimeout) {
+      clearTimeout(this._clockTimeout);
+      this._clockTimeout = null;
     }
+  }
+
+  // A plain setInterval(fn, 1000) drifts under this panel's own load --
+  // every hass push re-renders news/disks/temps/etc (real DOM work), and
+  // whatever that steals from the "1000ms" budget each tick accumulates,
+  // so the clock visibly stutters/skips rather than ticking evenly.
+  // Recomputing the delay to the next real second boundary on every
+  // tick (instead of trusting a fixed interval to stay in sync) self-
+  // corrects instead of drifting.
+  _scheduleClockTick() {
+    this._renderClock();
+    const msToNextSecond = 1000 - new Date().getMilliseconds();
+    this._clockTimeout = setTimeout(() => this._scheduleClockTick(), msToNextSecond);
   }
 
   _render() {
@@ -843,8 +881,8 @@ class KhioneHomePanel extends HTMLElement {
       setMobileMenuButtonVisible(this, this._narrow);
       this._bindStaticHandlers();
       this._rendered = true;
+      this._renderClock();
     }
-    this._renderClock();
     this._renderLiveData();
   }
 
@@ -868,8 +906,9 @@ class KhioneHomePanel extends HTMLElement {
   }
 
   // The `hass` setter alone won't tick a clock (it only fires on entity
-  // state changes), so this is driven by connectedCallback's setInterval
-  // instead. Independent of hass entirely — safe to call before the shell
+  // state changes), so this is driven by _scheduleClockTick's self-
+  // correcting timeout loop instead. Independent of hass entirely — safe
+  // to call before the shell
   // has even been painted (guarded by the element lookups below).
   _renderClock() {
     const root = this._root;
@@ -879,7 +918,9 @@ class KhioneHomePanel extends HTMLElement {
     clockEl.textContent =
       String(now.getHours()).padStart(2, "0") +
       ":" +
-      String(now.getMinutes()).padStart(2, "0");
+      String(now.getMinutes()).padStart(2, "0") +
+      ":" +
+      String(now.getSeconds()).padStart(2, "0");
   }
 
   // Maps every live hass value onto the shell painted above. Every
