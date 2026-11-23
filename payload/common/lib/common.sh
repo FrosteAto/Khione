@@ -1405,9 +1405,13 @@ configure_spicetify() {
 
   # /opt/spotify ships root-owned, mode 755, from the spotify AUR package --
   # Spicetify needs to write into it to patch the UI. This is Spicetify's
-  # own documented fix for this exact Arch packaging situation.
-  sudo chmod a+rw /opt/spotify
-  sudo chmod -R a+rw /opt/spotify/Apps
+  # own documented fix for this exact Arch packaging situation, scoped to
+  # this user's own group instead of "everyone" so other local accounts
+  # (if any ever exist on this box) can't tamper with the Spotify binary.
+  sudo chgrp "$arch_user" /opt/spotify
+  sudo chmod g+rw,o-rwx /opt/spotify
+  sudo chgrp -R "$arch_user" /opt/spotify/Apps
+  sudo chmod -R g+rw,o-rwx /opt/spotify/Apps
 
   # Marketplace (custom app) + startup-page (extension): best-effort, network
   # dependent. A GitHub hiccup here must not abort the whole install.
