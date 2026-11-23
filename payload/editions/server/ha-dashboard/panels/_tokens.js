@@ -124,7 +124,6 @@ export function toggleTheme(hostEl) {
     (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
   const next = current === "dark" ? "light" : "dark";
   hostEl.setAttribute("data-theme", next);
-  try { localStorage.setItem("khione-dash-theme", next); } catch (e) {}
   return next;
 }
 
