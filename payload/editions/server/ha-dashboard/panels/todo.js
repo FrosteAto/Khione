@@ -54,7 +54,9 @@ h1{ font-family: var(--font-display); font-weight: 800; margin:0; text-wrap: bal
 
 .empty-state{ color:var(--muted); font-size:.9rem; padding:2rem 0; text-align:center; }
 
-.todo-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:1.1rem; align-items:start; }
+.todo-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap:1.1rem; align-items:start; }
+@media (max-width: 900px){ .todo-grid{ grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 500px){ .todo-grid{ grid-template-columns: 1fr; } }
 
 .note-card{
   position:relative;
@@ -62,7 +64,7 @@ h1{ font-family: var(--font-display); font-weight: 800; margin:0; text-wrap: bal
   border-radius: 6px;
   padding: 1rem 1.1rem 1.2rem;
   box-shadow: 0 4px 10px rgba(var(--shadow-c),.22);
-  min-height: 160px;
+  min-height: 280px;
   display:flex; flex-direction:column; gap:.6rem;
 }
 .note-card::after{
@@ -91,7 +93,7 @@ h1{ font-family: var(--font-display); font-weight: 800; margin:0; text-wrap: bal
 .note-body-view h1,.note-body-view h2,.note-body-view h3{ font-size:1em; margin:.4em 0 .2em; }
 .note-body-view:empty::before{ content:"Click to write..."; color: color-mix(in srgb, currentColor 55%, transparent); font-style:italic; }
 .note-body-edit{
-  width:100%; min-height:6em; resize:vertical; border:none; outline:none;
+  width:100%; min-height:10em; resize:vertical; border:none; outline:none;
   background: color-mix(in srgb, var(--note-ink) 6%, transparent);
   color:inherit; font-family: var(--font-body); font-size:.85rem; line-height:1.5;
   padding:.4em; border-radius:3px;
@@ -233,8 +235,18 @@ class KhioneTodoPanel extends HTMLElement {
   _renderLiveData() {
     if (!this._hass) return;
     const root = this._root;
-    const cards = this._cardsFromHass();
     const grid = root.getElementById("todo-grid");
+
+    // hass pushes a new object on basically every entity change system-
+    // wide, not just this panel's own sensor -- rebuilding the grid's
+    // innerHTML on every single one wiped out whatever title/body text
+    // was mid-typing (confirmed live: unusable, reload every ~1s).
+    // Skip the rebuild entirely while focus is inside the grid; the
+    // save-on-blur handlers already trigger a fresh render once editing
+    // actually finishes, so nothing is lost by waiting.
+    if (grid && grid.contains(root.activeElement)) return;
+
+    const cards = this._cardsFromHass();
 
     if (!cards.length) {
       grid.innerHTML = '<p class="empty-state">No notes yet — click "+ Add note" to start one.</p>';

@@ -129,7 +129,10 @@ def khione_todo_delete_card(id=None):
         log.error("khione_todo_delete_card: missing id")
         return
     cards = load_cards()
-    if not any(c["id"] == cid for c in cards):
+    # pyscript's restricted interpreter doesn't implement bare generator
+    # expressions (confirmed live: NotImplementedError ast_generatorexp) --
+    # needs the explicit list brackets, same as khione_meals.py's any([...]).
+    if not any([c["id"] == cid for c in cards]):
         log.error(f"khione_todo_delete_card: no card with id {cid!r}")
         return
     write_json(CARDS_PATH, {"cards": delete_card(cards, cid)})
