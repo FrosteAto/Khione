@@ -1,6 +1,6 @@
 # Welcome to Khione ULW
 
-Setup has finished. This is the ULW edition — Ultra Lightweight, Xfce-based, a blank slate with just the essentials so you can build it up however you like.
+Setup has finished. This is the ULW edition — Ultra-Lightweight, Xfce-based, a blank slate with just the essentials so you can build it up however you like.
 
 ## Quick start
 

@@ -2,14 +2,14 @@
   <img width="400" height="389" alt="Screenshot_20260112_200906" src="./docs/images/KhioneLogov2.png" />
 </p>
 
-Khione is an Arch-based Linux distribution built around a practical, opinionated setup for desktop, server, and appliance use.
+Khione is an Arch-based Linux distribution built to get a fully configured machine running with as little manual setup as possible. It is written to my exacting specifications, and mirrors what I use on the day to day, so I can immediately set up a new device with almost zero effort.
 
 There are four editions to choose:
 
 - Desktop Edition
 - Server Edition
 - Node Edition
-- ULW Edition
+- Ultra-Lightweight Edition
 
 ---
 
@@ -234,14 +234,14 @@ Sleep, suspend, and hibernate are all disabled while plugged in, so it stays rea
 frosteato@khione-ulw ~ $ fastfetch
 
 OS         Khione ULW
-Role       Ultra lightweight, build-it-yourself
+Role       Ultra-Lightweight, build-it-yourself
 DE         Xfce
 Terminal   kitty
 Est. Size  ~TBD
 Packages   47 (pacman)
 ```
 
-ULW means Ultra LightWeight. It uses Xfce instead of KDE Plasma, and otherwise comes as a pretty much blank slate.  Just the bare essentials like a file manager and browser.
+ULW means Ultra-Lightweight. It uses Xfce instead of KDE Plasma, and otherwise comes as a pretty much blank slate.  Just the bare essentials like a file manager and browser.
 
 **Featherweight**
 
