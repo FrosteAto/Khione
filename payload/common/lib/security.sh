@@ -818,20 +818,52 @@ EOF
 # directly, which NetworkManager would just overwrite on the next
 # reconnect/reboot. Finds the real uplink connection by device type so
 # it never touches loopback or Docker's bridge.
+#
+# Deferred to a first-boot oneshot service rather than run here directly:
+# nmcli needs a LIVE NetworkManager reachable over D-Bus, not just the
+# enabled-but-not-running state every other chroot-safe step in this
+# file relies on (systemctl_live's enable/disable/mask are pure
+# filesystem ops; this genuinely has nothing to talk to yet). Confirmed
+# live: this was a hard install blocker on EVERY edition -- "Error:
+# Could not create NMClient object: Could not connect: No such file or
+# directory" from the old `conn="$(nmcli ...)"` line, then `set -e`
+# killed the whole installer on that failed command substitution before
+# the old empty-$conn guard ever ran. Re-running on every boot (not
+# just once) is deliberate and harmless -- nmcli con mod/up are
+# idempotent, and it self-heals if anything ever resets these settings.
 # ---------------------------------------------------------------------
 configure_dns_threat_blocking() {
   if ! command -v nmcli &>/dev/null; then
     echo "NetworkManager not installed, skipping DNS threat blocking."
     return 0
   fi
-  local conn
-  conn="$(nmcli -t -f NAME,TYPE con show --active | awk -F: '$2=="802-3-ethernet" || $2=="802-11-wireless" {print $1; exit}')"
-  if [[ -z "$conn" ]]; then
-    echo "WARNING: no active wired/wireless connection found -- skipping DNS threat blocking."
-    return 0
-  fi
-  echo "Pointing '$conn' at Quad9's filtered DNS (9.9.9.9)..."
-  sudo nmcli con mod "$conn" ipv4.dns "9.9.9.9 149.112.112.112" ipv4.ignore-auto-dns yes
-  sudo nmcli con mod "$conn" ipv6.dns "2620:fe::fe 2620:fe::9" ipv6.ignore-auto-dns yes
-  sudo nmcli con up "$conn" >/dev/null
+  echo "Setting up DNS threat blocking (applies on first boot, once NetworkManager is actually running)..."
+  sudo install -Dm755 /dev/stdin /usr/local/bin/khione-dns-threat-blocking <<'EOF'
+#!/bin/bash
+set -uo pipefail
+conn="$(nmcli -t -f NAME,TYPE con show --active | awk -F: '$2=="802-3-ethernet" || $2=="802-11-wireless" {print $1; exit}')"
+if [[ -z "$conn" ]]; then
+  echo "khione-dns-threat-blocking: no active wired/wireless connection found, skipping."
+  exit 0
+fi
+echo "khione-dns-threat-blocking: pointing '$conn' at Quad9's filtered DNS (9.9.9.9)..."
+sudo nmcli con mod "$conn" ipv4.dns "9.9.9.9 149.112.112.112" ipv4.ignore-auto-dns yes
+sudo nmcli con mod "$conn" ipv6.dns "2620:fe::fe 2620:fe::9" ipv6.ignore-auto-dns yes
+sudo nmcli con up "$conn" >/dev/null
+EOF
+  sudo tee /etc/systemd/system/khione-dns-threat-blocking.service >/dev/null <<'EOF'
+[Unit]
+Description=Point the active connection's DNS at Quad9's threat-blocking resolver
+After=NetworkManager.service
+Wants=NetworkManager.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/khione-dns-threat-blocking
+
+[Install]
+WantedBy=multi-user.target
+EOF
+  systemctl_live daemon-reload
+  sudo systemctl enable khione-dns-threat-blocking.service
 }
