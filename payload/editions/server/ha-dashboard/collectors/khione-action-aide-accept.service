@@ -1,0 +1,6 @@
+[Unit]
+Description=Run the AIDE-baseline-accept action triggered from the Security dashboard
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/khione-action-aide-accept

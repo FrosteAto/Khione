@@ -1144,9 +1144,9 @@ class KhioneHomePanel extends HTMLElement {
       patAdvisoriesStat.className = "mini-stat";
       patDetailEl.hidden = true;
     }
-    const aurUpdate = patAttrs.aur_update_available === true;
-    root.getElementById("pat-aur").textContent = aurUpdate ? "update" : "current";
-    root.getElementById("pat-aur-stat").className = "mini-stat" + (aurUpdate ? " warn" : "");
+    const aurUpdates = Number(patAttrs.aur_updates) || 0;
+    root.getElementById("pat-aur").textContent = aurUpdates > 0 ? aurUpdates + " update" + (aurUpdates === 1 ? "" : "s") : "current";
+    root.getElementById("pat-aur-stat").className = "mini-stat" + (aurUpdates > 0 ? " warn" : "");
     const newsUnread = Number(patAttrs.news_unread) || 0;
     root.getElementById("pat-news").textContent = newsUnread > 0 ? newsUnread + " unread" : "read";
     root.getElementById("pat-news-stat").className = "mini-stat" + (newsUnread > 0 ? " warn" : "");

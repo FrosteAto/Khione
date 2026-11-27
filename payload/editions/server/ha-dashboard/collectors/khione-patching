@@ -32,26 +32,33 @@ if command -v informant &>/dev/null; then
   news_unread="$(informant list --unread 2>/dev/null | sed -E 's/\x1b\[[0-9;]*m//g' | grep -c '^[0-9]\+:' || true)"
 fi
 
-# Written by configure_aur_update_check's generated script (security.sh)
-# each time it runs -- this collector just reads the latest snapshot,
-# hardcoded to Plex since that's the only AUR package tracked today.
-aur_update_available=false
-if [[ -f /var/lib/hass/snapshots/aur-plex-media-server.json ]]; then
-  aur_update_available="$(python3 -c "
-import json
-d = json.load(open('/var/lib/hass/snapshots/aur-plex-media-server.json'))
-print(d.get('update_available', False))
-" 2>/dev/null || echo False)"
-fi
+# Written by configure_aur_update_check's generated per-package script
+# (security.sh), one aur-$package.json per entry in AUR_UPDATE_CHECKS --
+# globbed rather than hardcoded to Plex, so this stays correct however
+# many AUR packages that list grows to.
+aur_update_packages_json="$(python3 -c "
+import json, glob
+pkgs = []
+for f in sorted(glob.glob('/var/lib/hass/snapshots/aur-*.json')):
+    try:
+        d = json.load(open(f))
+    except (OSError, ValueError):
+        continue
+    if d.get('update_available'):
+        pkgs.append(d.get('package') or f)
+print(json.dumps(pkgs))
+" 2>/dev/null || echo '[]')"
 
-python3 - "$last_sync" "$next_run" "$news_unread" "$aur_update_available" <<'PYEOF' > "$out.tmp"
+python3 - "$last_sync" "$next_run" "$news_unread" "$aur_update_packages_json" <<'PYEOF' > "$out.tmp"
 import json, sys
-last_sync, next_run, news_unread, aur_update = sys.argv[1:5]
+last_sync, next_run, news_unread, aur_update_packages_json = sys.argv[1:5]
+aur_update_packages = json.loads(aur_update_packages_json)
 print(json.dumps({
     "last_sync": int(last_sync) if last_sync else None,
     "next_run": int(next_run) if next_run else None,
     "news_unread": int(news_unread),
-    "aur_update_available": aur_update.strip() == "True",
+    "aur_updates": len(aur_update_packages),
+    "aur_update_packages": aur_update_packages,
 }))
 PYEOF
 mv "$out.tmp" "$out"

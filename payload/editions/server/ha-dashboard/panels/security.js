@@ -65,6 +65,9 @@ p{ margin:0; }
 .card h2 .status-dot{ width:9px; height:9px; border-radius:50%; background: var(--khione-deep); flex:none; }
 .card h2 .status-dot.off{ background: var(--accent); }
 
+.card-head-row{ display:flex; align-items:center; justify-content:space-between; gap:.8rem; flex-wrap:wrap; margin-bottom:.8rem; }
+.card-head-row h2{ margin-bottom:0; }
+
 .detail-list{ display:flex; flex-direction:column; gap:.5rem; max-height: 220px; overflow:auto; font-size:.82rem; }
 .detail-row{ display:flex; justify-content:space-between; gap:.6rem; border-bottom:1px dashed rgba(var(--ink-rgb),.12); padding-bottom:.4rem; }
 .detail-row:last-child{ border-bottom:none; }
@@ -72,6 +75,8 @@ p{ margin:0; }
 
 .chip{ font-size:.68rem; font-weight:800; padding:.25rem .65rem; border-radius:999px; background: color-mix(in srgb, var(--khione-green) 20%, var(--card-bg)); color: var(--khione-deep); white-space:nowrap; }
 .chip.warn{ background: var(--accent); color:#fff; }
+
+.has-tip{ cursor:help; border-bottom:1px dotted currentColor; }
 
 .actions-row{ display:flex; gap:.7rem; flex-wrap:wrap; margin-top:.8rem; }
 .action-btn{
@@ -81,11 +86,11 @@ p{ margin:0; }
 }
 .action-btn:hover{ background: color-mix(in srgb, var(--khione-green) 38%, var(--card-bg)); }
 .action-btn.danger{ background: var(--accent); color:#fff; }
+.action-btn.active{ background: var(--khione-deep); color:#fff; }
+.action-btn.active:hover{ background: var(--khione-deep); }
 .action-btn:disabled{ opacity:.6; cursor:default; }
 .action-status{ font-size:.78rem; color:var(--muted); margin-top:.5rem; min-height: 1.2em; }
 
-.noise-filter{ display:flex; align-items:center; gap:.4rem; font-size:.78rem; color:var(--muted); margin-bottom:.5rem; cursor:pointer; }
-.noise-filter input{ cursor:pointer; }
 .noise-list{ display:flex; flex-direction:column; gap:.35rem; max-height: 260px; overflow:auto; font-size:.78rem; }
 .noise-row{ display:flex; gap:.6rem; align-items:baseline; }
 .noise-row .t{ color:var(--muted); flex:none; width:13.5em; white-space:nowrap; }
@@ -136,6 +141,10 @@ const PAGE_SHELL_HTML = `
       <h2><span class="status-dot" id="dot-aide"></span>AIDE</h2>
       <p id="aide-summary">—</p>
       <div class="detail-list" id="aide-detail"></div>
+      <div class="actions-row" id="aide-actions-row" style="display:none;">
+        <button class="action-btn" id="btn-aide-accept" type="button">Accept as new baseline</button>
+      </div>
+      <p class="action-status" id="aide-action-status"></p>
     </div>
 
     <div class="card">
@@ -146,10 +155,12 @@ const PAGE_SHELL_HTML = `
 
     <div class="card">
       <h2>Updates</h2>
-      <p id="updates-summary">—</p>
+      <p id="updates-summary-official">—</p>
+      <p id="updates-summary-aur" style="margin-top:.2rem;">—</p>
       <div class="detail-list" id="updates-detail"></div>
       <div class="actions-row">
         <button class="action-btn" id="btn-update-official" type="button">Apply official updates</button>
+        <button class="action-btn" id="btn-update-aur" type="button">Apply AUR updates</button>
       </div>
       <p class="action-status" id="update-action-status"></p>
     </div>
@@ -164,9 +175,11 @@ const PAGE_SHELL_HTML = `
     </div>
 
     <div class="card" style="grid-column: 1 / -1;">
-      <h2>Recent blocked connections</h2>
+      <div class="card-head-row">
+        <h2>Recent blocked connections</h2>
+        <button class="action-btn" id="btn-hide-local" type="button" aria-pressed="false">Hide local network traffic</button>
+      </div>
       <p style="color:var(--muted);font-size:.78rem;margin-bottom:.6rem;">Real data from ufw's block log, labelled with CrowdSec's own classification when it has one. The "guess" column is always a guess, never a fact — marked low-confidence unless CrowdSec itself made the classification.</p>
-      <label class="noise-filter"><input type="checkbox" id="noise-hide-local">Hide local network traffic</label>
       <div class="noise-list" id="noise-list"></div>
     </div>
   </div>
@@ -268,10 +281,13 @@ class KhioneSecurityPanel extends HTMLElement {
       });
     }
 
-    const hideLocalCheckbox = this._root.getElementById("noise-hide-local");
-    if (hideLocalCheckbox) {
-      hideLocalCheckbox.addEventListener("change", () => {
-        this._hideLocalNoise = hideLocalCheckbox.checked;
+    const hideLocalBtn = this._root.getElementById("btn-hide-local");
+    if (hideLocalBtn) {
+      hideLocalBtn.addEventListener("click", () => {
+        this._hideLocalNoise = !this._hideLocalNoise;
+        hideLocalBtn.classList.toggle("active", this._hideLocalNoise);
+        hideLocalBtn.setAttribute("aria-pressed", String(this._hideLocalNoise));
+        hideLocalBtn.textContent = this._hideLocalNoise ? "Show local network traffic" : "Hide local network traffic";
         this._renderLiveData();
       });
     }
@@ -315,6 +331,20 @@ class KhioneSecurityPanel extends HTMLElement {
       "khione_update_official",
       "Apply pending official updates now?",
       "update_official",
+    );
+    fire(
+      root.getElementById("btn-update-aur"),
+      root.getElementById("update-action-status"),
+      "khione_update_aur",
+      "Apply pending AUR updates now? AUR packages are unreviewed source — this is a real step up in trust from the notify-only check.",
+      "update_aur",
+    );
+    fire(
+      root.getElementById("btn-aide-accept"),
+      root.getElementById("aide-action-status"),
+      "khione_aide_accept",
+      "Have you reviewed the diff below? This accepts the current state as AIDE's new baseline -- any undetected change hiding in it stops being flagged after this.",
+      "aide_accept",
     );
     fire(
       root.getElementById("btn-shutdown"),
@@ -370,11 +400,26 @@ class KhioneSecurityPanel extends HTMLElement {
     // ---- AIDE ----
     const aideStatus = secAttrs.aide_status || "unknown";
     root.getElementById("dot-aide").className = "status-dot" + (aideStatus === "changes_detected" ? " off" : "");
-    root.getElementById("aide-summary").textContent =
+    const aideSummaryEl = root.getElementById("aide-summary");
+    aideSummaryEl.textContent =
       aideStatus === "clean" ? "Clean, last checked " + (fmtAgo(toEpoch(secAttrs.aide_last_run)) || "—")
       : aideStatus === "changes_detected" ? "Changes detected"
       : aideStatus === "not_yet_run" ? "Not yet run"
       : "Unknown";
+    // Mirrors the exact init sequence this distro's installer uses
+    // (payload/common/lib/security.sh), run via the button below --
+    // that's how you tell AIDE "these changes are the new normal" after
+    // reviewing the diff. Manual fallback shown here uses ";" not "&&":
+    // aide --update's exit code is a bitmask of the very differences
+    // it just found (same as --check), so it's routinely nonzero on
+    // the exact run where you DO want the mv to happen -- `&&` silently
+    // skips it (confirmed live: that's exactly what ate a real accept
+    // attempt, leaving aide.db.new.gz written but never swapped in).
+    aideSummaryEl.title = aideStatus === "changes_detected"
+      ? "Review the diff below, then use the button to accept it as the new baseline (also re-runs the check so this card updates immediately). Manual fallback:\n\nsudo aide --update; sudo mv -f /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz; sudo systemctl start --wait aidecheck.service"
+      : "";
+    aideSummaryEl.classList.toggle("has-tip", aideStatus === "changes_detected");
+    root.getElementById("aide-actions-row").style.display = aideStatus === "changes_detected" ? "flex" : "none";
     const aideDiff = Array.isArray(secAttrs.aide_diff) ? secAttrs.aide_diff : [];
     root.getElementById("aide-detail").innerHTML = aideDiff.length
       ? aideDiff.map((line) => '<div class="detail-row"><span>' + escapeHtml(line) + "</span></div>").join("")
@@ -395,10 +440,13 @@ class KhioneSecurityPanel extends HTMLElement {
     const officialUpdates = Number(sysAttrs.updates) || 0;
     const secUpdates = Number(sysAttrs.security_updates) || 0;
     const newsUnread = Number(patAttrs.news_unread) || 0;
-    const aurAvailable = patAttrs.aur_update_available === true;
-    root.getElementById("updates-summary").textContent =
-      officialUpdates + " official update" + (officialUpdates === 1 ? "" : "s") + " pending" +
+    const aurUpdatePackages = Array.isArray(patAttrs.aur_update_packages) ? patAttrs.aur_update_packages : [];
+    const aurUpdates = Number(patAttrs.aur_updates) || aurUpdatePackages.length;
+    root.getElementById("updates-summary-official").textContent =
+      "Official updates pending: " + officialUpdates +
       (newsUnread > 0 ? " — blocked by " + newsUnread + " unread Arch News item" + (newsUnread === 1 ? "" : "s") : "");
+    root.getElementById("updates-summary-aur").textContent =
+      "AUR updates pending: " + aurUpdates;
     const securityDetail = Array.isArray(sysAttrs.security_detail) ? sysAttrs.security_detail : [];
     const updateRows = [];
     if (secUpdates > 0) {
@@ -406,9 +454,9 @@ class KhioneSecurityPanel extends HTMLElement {
         updateRows.push('<div class="detail-row"><span>' + escapeHtml(d.package) + '</span><span class="chip warn">' + escapeHtml(d.severity || "High") + (d.cve ? " · " + escapeHtml(d.cve) : "") + "</span></div>");
       });
     }
-    if (aurAvailable) {
-      updateRows.push('<div class="detail-row"><span>Plex (AUR)</span><span class="chip">update available</span></div>');
-    }
+    aurUpdatePackages.forEach((pkg) => {
+      updateRows.push('<div class="detail-row"><span>' + escapeHtml(pkg) + ' (AUR)</span><span class="chip">update available</span></div>');
+    });
     root.getElementById("updates-detail").innerHTML = updateRows.length
       ? updateRows.join("")
       : '<p class="detail-empty">Nothing outstanding.</p>';

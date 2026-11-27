@@ -1,0 +1,8 @@
+[Unit]
+Description=Watch for the AIDE-baseline-accept action trigger from the Security dashboard
+
+[Path]
+PathExists=/var/lib/hass/triggers/aide-accept.trigger
+
+[Install]
+WantedBy=multi-user.target

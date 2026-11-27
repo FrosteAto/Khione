@@ -1,0 +1,53 @@
+#!/bin/bash
+# Deliberately not `set -e`: every branch below must still reach the
+# result-file write at the bottom, whether the recheck comes back clean
+# or not.
+set -uo pipefail
+
+source /usr/local/bin/khione-action-common.sh
+
+trigger=/var/lib/hass/triggers/aide-accept.trigger
+out=/var/lib/hass/snapshots/khione_actions.json
+consume_trigger "$trigger" || exit 0
+
+started="$(date +%s)"
+
+# aide --update's exit code is a bitmask of the differences it just
+# found (same as --check) -- it's expected to be nonzero on exactly
+# this run, since accepting those differences is the whole point.
+# Checked separately below instead of chained with `&&`, which would
+# skip the mv on precisely the run where it needs to happen (confirmed
+# live: that's the bug that ate a manual attempt at this same sequence).
+aide --update
+aide_update_rc=$?
+mv -f /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz
+
+# Re-run the systemd-tracked check against the new baseline so the
+# dashboard (which reads aidecheck.service's own last ExecMainStatus,
+# not "is the db in sync") reflects clean immediately instead of
+# waiting for tomorrow's scheduled 05:00 run.
+systemctl start --wait aidecheck.service
+recheck_rc="$(systemctl show aidecheck.service -p ExecMainStatus --value 2>/dev/null || echo 1)"
+finished="$(date +%s)"
+
+if [[ "$recheck_rc" == "0" ]]; then
+  success=true
+  output="Baseline accepted (update exit $aide_update_rc, as expected). Recheck is clean."
+else
+  success=false
+  output="Baseline accepted (update exit $aide_update_rc), but the recheck still found differences (exit $recheck_rc) -- see the AIDE card's diff list."
+fi
+
+mkdir -p "$(dirname "$out")"
+python3 - "aide_accept" "$started" "$finished" "$success" "$output" <<'PYEOF' > "$out.tmp"
+import json, sys
+action, started, finished, success, output = sys.argv[1:6]
+print(json.dumps({
+    "action": action,
+    "started_at": int(started),
+    "finished_at": int(finished),
+    "success": success == "true",
+    "output_tail": output[-2000:],
+}))
+PYEOF
+mv "$out.tmp" "$out"

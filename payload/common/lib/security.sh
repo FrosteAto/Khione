@@ -482,6 +482,128 @@ EOF
 }
 
 # ---------------------------------------------------------------------
+# Action-bridge script for the Security dashboard's "Apply AUR updates"
+# button. Generated (not a static collectors/ file) for the same
+# reason configure_aur_update_check's per-package script is: yay/
+# makepkg refuse to run as root, and this script's own .service unit
+# runs as root by default, so $user has to be baked in at install time.
+#
+# Rebuilt 2026-11-27 after the original version was removed (see git
+# history: "remove the AUR-update auto-apply button and its sudo
+# hole") for granting $user permanent passwordless sudo on raw pacman
+# -- that meant any code execution as $user became instant, unprompted
+# root, exactly the foothold the Plex2Shell incident this hardening
+# pass responds to. This version grants $user NO new privileges at
+# all: the script is already root (its .service has no User=), so it
+# drops to $user only to build (makepkg, no --syncdeps -- a package
+# picking up a brand-new build dep just fails that one run loudly
+# rather than silently gaining sudo rights to fix it), then installs
+# the result itself as root. No sudoers file involved.
+# ---------------------------------------------------------------------
+configure_aur_update_action() {
+  local user="$1"
+  if ! command -v yay &>/dev/null; then
+    echo "yay not installed, skipping the AUR-update action script."
+    return 0
+  fi
+  echo "Setting up the AUR-update action script..."
+  sudo install -Dm755 /dev/stdin /usr/local/bin/khione-action-update-aur <<EOF
+#!/bin/bash
+set -uo pipefail
+source /usr/local/bin/khione-action-common.sh
+
+trigger=/var/lib/hass/triggers/update-aur.trigger
+out=/var/lib/hass/snapshots/khione_actions.json
+consume_trigger "\$trigger" || exit 0
+
+started="\$(date +%s)"
+logfile="\$(mktemp)"
+any_failed=false
+
+# shortcut: assumes pkgname == AUR git repo name (true for plex-media-server
+# and virtually all non-split AUR packages); a split package whose pkgbase
+# differs from pkgname isn't handled -- resolve via \`yay -G\` instead if
+# that's ever needed.
+updates="\$(sudo -u $user yay -Qua 2>/dev/null | awk '{print \$1}')"
+
+if [[ -z "\$updates" ]]; then
+  echo "No AUR updates were pending by the time this ran." >> "\$logfile"
+fi
+
+while IFS= read -r pkg; do
+  [[ -n "\$pkg" ]] || continue
+  workdir="\$(mktemp -d)"
+  chown $user:$user "\$workdir"
+  if ! sudo -u $user bash -c '
+    set -euo pipefail
+    cd "\$1"
+    git clone --depth=1 "https://aur.archlinux.org/\$2.git" src
+    cd src
+    makepkg --noconfirm
+  ' _ "\$workdir" "\$pkg" > "\$workdir/build.log" 2>&1; then
+    any_failed=true
+    { echo "\$pkg: build FAILED"; tail -n 10 "\$workdir/build.log"; } >> "\$logfile"
+    rm -rf "\$workdir"
+    continue
+  fi
+  built=("\$workdir"/src/*.pkg.tar.zst)
+  if [[ ! -e "\${built[0]}" ]]; then
+    any_failed=true
+    echo "\$pkg: build produced no package file" >> "\$logfile"
+    rm -rf "\$workdir"
+    continue
+  fi
+  if pacman -U --noconfirm "\${built[@]}" > "\$workdir/install.log" 2>&1; then
+    echo "\$pkg: updated" >> "\$logfile"
+  else
+    any_failed=true
+    { echo "\$pkg: built OK but install FAILED"; tail -n 10 "\$workdir/install.log"; } >> "\$logfile"
+  fi
+  rm -rf "\$workdir"
+done <<< "\$updates"
+
+finished="\$(date +%s)"
+log="\$(cat "\$logfile")"
+rm -f "\$logfile"
+if [[ "\$any_failed" == true ]]; then success=false; else success=true; fi
+
+mkdir -p "\$(dirname "\$out")"
+python3 - "update_aur" "\$started" "\$finished" "\$success" "\$log" <<'PYEOF' > "\$out.tmp"
+import json, sys
+action, started, finished, success, output = sys.argv[1:6]
+print(json.dumps({
+    "action": action,
+    "started_at": int(started),
+    "finished_at": int(finished),
+    "success": success == "true",
+    "output_tail": output[-2000:],
+}))
+PYEOF
+mv "\$out.tmp" "\$out"
+EOF
+
+  sudo tee /etc/systemd/system/khione-action-update-aur.path >/dev/null <<'EOF'
+[Unit]
+Description=Watch for the AUR-update action trigger from the Security dashboard
+
+[Path]
+PathExists=/var/lib/hass/triggers/update-aur.trigger
+
+[Install]
+WantedBy=multi-user.target
+EOF
+  sudo tee /etc/systemd/system/khione-action-update-aur.service >/dev/null <<'EOF'
+[Unit]
+Description=Run the AUR-update action triggered from the Security dashboard
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/khione-action-update-aur
+EOF
+  systemctl_live daemon-reload
+}
+
+# ---------------------------------------------------------------------
 # Notify-only AUR update check -- generic, reusable per-package. The
 # official-repo auto-update timer above never touches AUR packages
 # (plex-media-server chief among them -- it was the literal entry point
