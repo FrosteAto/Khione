@@ -379,6 +379,9 @@ configure_home_assistant_dashboard() {
   if [[ -f "$dashboard_dir/khione_meals.py" ]]; then
     sudo install -Dm644 "$dashboard_dir/khione_meals.py" /var/lib/hass/pyscript/khione_meals.py
   fi
+  if [[ -f "$dashboard_dir/khione_todo.py" ]]; then
+    sudo install -Dm644 "$dashboard_dir/khione_todo.py" /var/lib/hass/pyscript/khione_todo.py
+  fi
 
   merge_ha_configuration_snippet "$dashboard_dir/configuration-snippet.yaml" /var/lib/hass/configuration.yaml
 }

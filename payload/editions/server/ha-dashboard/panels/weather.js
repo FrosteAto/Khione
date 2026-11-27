@@ -1112,7 +1112,7 @@ const PAGE_SHELL_HTML = `
       <div class="metric">
         <div class="blob blob-sage"></div>
         <div class="metric-icon"><svg viewBox="0 0 48 48"><g transform="translate(2,1) scale(0.82)"><use href="#i-cloud" fill="var(--band-bg)" stroke="var(--accent)" stroke-width="1.6"/></g><use href="#i-drop" fill="var(--khione-blue)" transform="translate(27,27) scale(1.1)"/></svg></div>
-        <div><div class="metric-val mono-num">&mdash;</div><div class="metric-label">Chance of rain</div></div>
+        <div><div class="metric-val mono-num">&mdash;</div><div class="metric-label">Rain, next hr</div></div>
       </div>
       <div class="metric">
         <div class="blob blob-soft"></div>
@@ -1774,7 +1774,14 @@ class KhioneWeatherPanel extends HTMLElement {
       metricVals[2].textContent =
         attrs.wind_speed != null ? Math.round(attrs.wind_speed) + windUnit + " " + bearingToCompass(attrs.wind_bearing) : "—";
       metricVals[3].textContent = attrs.uv_index != null ? Math.round(attrs.uv_index) + " · " + uvLabel(attrs.uv_index) : "—";
-      metricVals[4].textContent = attrs.precipitation_probability != null ? Math.round(attrs.precipitation_probability) + "%" : "—";
+      // Met.no's forecast objects never carry precipitation_probability at
+      // all (confirmed live via the real forecast payload) -- it only gives
+      // an expected amount (mm) per period, not a probability percentage.
+      // Showing that amount for the nearest hourly bucket instead of a
+      // probability that will never exist for this integration.
+      const nowForecast = (this._hourlyForecast && this._hourlyForecast[0]) || null;
+      const nowPrecip = nowForecast ? nowForecast.precipitation : null;
+      metricVals[4].textContent = nowPrecip != null ? nowPrecip.toFixed(1) + " mm" : "—";
       const pressureUnit = attrs.pressure_unit || "hPa";
       metricVals[5].textContent = attrs.pressure != null ? Math.round(attrs.pressure) + " " + pressureUnit : "—";
     }

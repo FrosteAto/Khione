@@ -45,6 +45,13 @@ panel_custom:
     url_path: khione-security
     module_url: /local/panels/security.js
     embed_iframe: false
+  - name: khione-todo-panel
+    sidebar_title: TODO
+    sidebar_icon: mdi:note-multiple
+    url_path: khione-todo
+    module_url: /local/panels/todo.js
+    embed_iframe: false
+    trust_external_script: true
 
 shell_command:
   khione_update_official: "touch /config/triggers/update-official.trigger"
