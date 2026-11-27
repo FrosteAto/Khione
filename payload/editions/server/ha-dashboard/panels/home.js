@@ -140,6 +140,16 @@ main{ flex:1 1 auto; display:grid; grid-template-columns: 1.65fr 1fr; gap: 1.4re
 /* ---------- hero weather+clothing card ---------- */
 .hero-weather-card{ position:relative; overflow:hidden; flex: 1.4 1 0; display:flex; flex-direction:column; justify-content:center; padding: 2rem 2.4rem; }
 .hero-corner{ position:absolute; top:1.5rem; right:2rem; display:flex; align-items:center; gap:.7rem; z-index:2; }
+/* The weather+clothing content never filled this card's full width on a
+   wide display, leaving the right half visibly empty -- splitting it into
+   a row gives that space to a vertical list of TODO card titles instead. */
+.hero-row{ position:relative; z-index:1; display:flex; align-items:center; gap:2rem; width:100%; }
+.hero-weather-left{ flex: 1.4 1 0; min-width:0; }
+.hero-todo-col{ flex: .7 1 0; min-width:0; align-self:stretch; display:flex; flex-direction:column; justify-content:center; border-left:1px dashed rgba(var(--ink-rgb),.15); padding-left:1.8rem; }
+.hero-todo-head{ font-size:.72rem; font-weight:800; letter-spacing:.04em; color: var(--muted); text-transform:uppercase; margin-bottom:.7rem; }
+.hero-todo-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:.5rem; max-height:280px; overflow:auto; }
+.hero-todo-list li{ font-size:.9rem; color: var(--ink); padding-left:.8rem; border-left:2px solid var(--khione-green); }
+.hero-todo-empty{ font-size:.85rem; color: var(--muted); font-style:italic; }
 .hero-clock{ font-weight:700; font-size:1.15rem; color: var(--muted); }
 .weather-main{ display:flex; align-items:center; gap:1.3rem; }
 .weather-temp{ font-size: clamp(3rem, 2rem + 4vh, 4.6rem); font-weight:700; color: var(--ink); line-height:1; }
@@ -320,6 +330,8 @@ main{ flex:1 1 auto; display:grid; grid-template-columns: 1.65fr 1fr; gap: 1.4re
 @media (max-width: 500px){
   .hero-weather-card{ padding: 1.4rem 1.5rem; }
   .hero-corner{ top:1rem; right:1.2rem; }
+  .hero-row{ flex-direction:column; align-items:stretch; }
+  .hero-todo-col{ border-left:none; border-top:1px dashed rgba(var(--ink-rgb),.15); padding-left:0; padding-top:1.2rem; }
 }
 `;
 
@@ -441,36 +453,45 @@ const PAGE_SHELL_HTML = `
           <svg class="icon" id="theme-toggle-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-moon"></use></svg>
         </button>
       </div>
-      <div class="weather-main">
-        <div class="icon-badge" style="width:80px;height:80px;"><div class="blob blob-a"></div><svg class="icon" style="width:42px;height:42px"><use href="#i-cloud-sun"></use></svg></div>
-        <div>
-          <div class="weather-temp tabular" id="weather-temp">&mdash;</div>
-          <div class="weather-cond" id="weather-cond">&nbsp;</div>
-          <div class="weather-loc" id="weather-loc">&nbsp;</div>
-        </div>
-      </div>
-      <p class="hero-note" id="hero-note">&nbsp;</p>
-      <div class="weather-stats">
-        <div><b class="tabular" id="wstat-feels">&mdash;</b><span>Feels like</span></div>
-        <div class="wind-stat">
-          <div><b class="tabular" id="wstat-wind">&mdash;</b><span>Wind</span></div>
-          <svg class="wind-compass" viewBox="0 0 32 32" aria-hidden="true">
-            <circle class="wc-ring" cx="16" cy="16" r="13.5"/>
-            <text class="wc-n" x="16" y="6.5">N</text>
-            <g id="wind-needle"><path class="wc-needle" d="M16 5 L19 17 L16 14.5 L13 17 Z"/></g>
-          </svg>
-          <span class="wind-dir" id="wind-dir"></span>
-        </div>
-        <div><b class="tabular" id="wstat-humidity">&mdash;</b><span>Humidity</span></div>
-      </div>
+      <div class="hero-row">
+        <div class="hero-weather-left">
+          <div class="weather-main">
+            <div class="icon-badge" style="width:80px;height:80px;"><div class="blob blob-a"></div><svg class="icon" style="width:42px;height:42px"><use href="#i-cloud-sun"></use></svg></div>
+            <div>
+              <div class="weather-temp tabular" id="weather-temp">&mdash;</div>
+              <div class="weather-cond" id="weather-cond">&nbsp;</div>
+              <div class="weather-loc" id="weather-loc">&nbsp;</div>
+            </div>
+          </div>
+          <p class="hero-note" id="hero-note">&nbsp;</p>
+          <div class="weather-stats">
+            <div><b class="tabular" id="wstat-feels">&mdash;</b><span>Feels like</span></div>
+            <div class="wind-stat">
+              <div><b class="tabular" id="wstat-wind">&mdash;</b><span>Wind</span></div>
+              <svg class="wind-compass" viewBox="0 0 32 32" aria-hidden="true">
+                <circle class="wc-ring" cx="16" cy="16" r="13.5"/>
+                <text class="wc-n" x="16" y="6.5">N</text>
+                <g id="wind-needle"><path class="wc-needle" d="M16 5 L19 17 L16 14.5 L13 17 Z"/></g>
+              </svg>
+              <span class="wind-dir" id="wind-dir"></span>
+            </div>
+            <div><b class="tabular" id="wstat-humidity">&mdash;</b><span>Humidity</span></div>
+          </div>
 
-      <div class="clothing-head">
-        <div class="icon-badge soft sm"><div class="blob blob-c"></div><svg class="icon"><use id="clothing-icon-use" href="#i-jacket"></use></svg></div>
-        <div>
-          <h3 id="clothing-headline">&nbsp;</h3>
-          <p class="clothing-sub" id="clothing-sub">&nbsp;</p>
+          <div class="clothing-head">
+            <div class="icon-badge soft sm"><div class="blob blob-c"></div><svg class="icon"><use id="clothing-icon-use" href="#i-jacket"></use></svg></div>
+            <div>
+              <h3 id="clothing-headline">&nbsp;</h3>
+              <p class="clothing-sub" id="clothing-sub">&nbsp;</p>
+            </div>
+            <div class="clothing-chips" id="clothing-chips"></div>
+          </div>
         </div>
-        <div class="clothing-chips" id="clothing-chips"></div>
+
+        <div class="hero-todo-col">
+          <div class="hero-todo-head">TODO</div>
+          <ul class="hero-todo-list" id="hero-todo-list"></ul>
+        </div>
       </div>
     </div>
 
@@ -957,6 +978,7 @@ class KhioneHomePanel extends HTMLElement {
     const security = hass.states["sensor.khione_security"];
     const netwatch = hass.states["sensor.khione_netwatch"];
     const patching = hass.states["sensor.khione_patching"];
+    const todoCards = hass.states["sensor.khione_todo_cards"];
 
     // ---- hero: weather & clothing ----
     const wAttrs = (weather && weather.attributes) || {};
@@ -997,6 +1019,11 @@ class KhioneHomePanel extends HTMLElement {
       windNeedle.style.transform = wAttrs.wind_bearing != null ? "rotate(" + wAttrs.wind_bearing + "deg)" : "rotate(0deg)";
     }
     root.getElementById("wind-dir").textContent = wAttrs.wind_bearing != null ? CARDINALS[Math.round(wAttrs.wind_bearing / 22.5) % 16] : "";
+
+    const todoList = (todoCards && todoCards.attributes && todoCards.attributes.cards) || [];
+    root.getElementById("hero-todo-list").innerHTML = todoList.length
+      ? todoList.map((c) => "<li>" + escapeHtml(c.title && c.title.trim() ? c.title : "Untitled") + "</li>").join("")
+      : '<li class="hero-todo-empty">No notes yet</li>';
 
     const clothingIconUse = root.getElementById("clothing-icon-use");
     if (clothingIconUse) {
