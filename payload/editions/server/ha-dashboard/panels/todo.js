@@ -86,14 +86,14 @@ h1{ font-family: var(--font-display); font-weight: 800; margin:0; text-wrap: bal
 }
 .note-title::placeholder{ color: color-mix(in srgb, currentColor 55%, transparent); }
 .note-title:focus{ text-decoration:underline; text-decoration-style:dotted; }
-.note-body{ flex:1; font-size:.85rem; line-height:1.5; }
-.note-body-view{ cursor:text; min-height:2.5em; }
+.note-body{ flex:1; font-size:.85rem; line-height:1.5; display:flex; flex-direction:column; }
+.note-body-view{ cursor:text; flex:1; min-height:2.5em; }
 .note-body-view p{ margin:0 0 .5em; }
 .note-body-view ul,.note-body-view ol{ margin:.3em 0 .5em 1.1em; padding:0; }
 .note-body-view h1,.note-body-view h2,.note-body-view h3{ font-size:1em; margin:.4em 0 .2em; }
 .note-body-view:empty::before{ content:"Click to write..."; color: color-mix(in srgb, currentColor 55%, transparent); font-style:italic; }
 .note-body-edit{
-  width:100%; min-height:10em; resize:vertical; border:none; outline:none;
+  flex:1; width:100%; min-height:10em; resize:vertical; border:none; outline:none;
   background: color-mix(in srgb, var(--note-ink) 6%, transparent);
   color:inherit; font-family: var(--font-body); font-size:.85rem; line-height:1.5;
   padding:.4em; border-radius:3px;
