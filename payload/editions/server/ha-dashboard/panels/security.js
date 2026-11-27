@@ -88,7 +88,7 @@ p{ margin:0; }
 .noise-filter input{ cursor:pointer; }
 .noise-list{ display:flex; flex-direction:column; gap:.35rem; max-height: 260px; overflow:auto; font-size:.78rem; }
 .noise-row{ display:flex; gap:.6rem; align-items:baseline; }
-.noise-row .t{ color:var(--muted); flex:none; width:4.2em; }
+.noise-row .t{ color:var(--muted); flex:none; width:13.5em; white-space:nowrap; }
 .noise-row .ip{ font-weight:700; flex:none; }
 .noise-row .guess{ color:var(--muted); font-style:italic; }
 `;
@@ -183,7 +183,10 @@ function escapeHtml(s) {
 // sync with that definition rather than inferring "local" from the
 // guess text, since the guess is free-form and not meant to be parsed.
 function isPrivateIp(ip) {
-  return !!ip && /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)/.test(ip);
+  // shortcut: matches the fe80:: prefix only, not the full fe80::/10 link-local
+  // range (fec0::-febf:: are deprecated/unused in practice) -- widen if a real
+  // fecx/febx source ever shows up.
+  return !!ip && /^(10\.|127\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|fe80:)/i.test(ip);
 }
 
 function fmtAgo(epochSeconds) {
@@ -419,7 +422,12 @@ class KhioneSecurityPanel extends HTMLElement {
       ? noiseEvents
           .slice(0, 100)
           .map((e) => {
-            const t = e.time ? new Date(e.time * 1000).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—";
+            const pad2 = (n) => String(n).padStart(2, "0");
+            const d = e.time ? new Date(e.time * 1000) : null;
+            const t = d
+              ? pad2(d.getDate()) + "-" + pad2(d.getMonth() + 1) + "-" + d.getFullYear() +
+                " " + pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + ":" + pad2(d.getSeconds())
+              : "—";
             const portText = e.dst_port != null ? ":" + e.dst_port : "";
             const origin = isPrivateIp(e.src_ip) ? "LOCAL" : "EXTERNAL";
             const message = e.guess + (e.guess_confidence === "crowdsec" ? "" : " (guess)");
