@@ -84,7 +84,10 @@ PORT_GUESS = {
 }
 
 def is_private(ip):
-    return bool(ip) and bool(re.match(r"^(10\.|127\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.)", ip))
+    # shortcut: matches the fe80:: prefix only, not the full fe80::/10 link-local
+    # range (fec0::-febf:: are deprecated/unused in practice) -- widen if a real
+    # fecx/febx source ever shows up.
+    return bool(ip) and bool(re.match(r"^(10\.|127\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|fe80:)", ip, re.IGNORECASE))
 
 events = []
 for line in new_events_json.splitlines():
