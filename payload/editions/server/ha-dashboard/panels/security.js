@@ -71,6 +71,8 @@ p{ margin:0; }
 .detail-list{ display:flex; flex-direction:column; gap:.5rem; max-height: 220px; overflow:auto; font-size:.82rem; }
 .detail-row{ display:flex; justify-content:space-between; gap:.6rem; border-bottom:1px dashed rgba(var(--ink-rgb),.12); padding-bottom:.4rem; }
 .detail-row:last-child{ border-bottom:none; }
+.detail-row a{ color: var(--accent); text-decoration: none; }
+.detail-row a:hover{ text-decoration: underline; }
 .detail-empty{ color:var(--muted); font-size:.82rem; }
 
 .chip{ font-size:.68rem; font-weight:800; padding:.25rem .65rem; border-radius:999px; background: color-mix(in srgb, var(--khione-green) 20%, var(--card-bg)); color: var(--khione-deep); white-space:nowrap; }
@@ -449,6 +451,14 @@ class KhioneSecurityPanel extends HTMLElement {
       "AUR updates pending: " + aurUpdates;
     const securityDetail = Array.isArray(sysAttrs.security_detail) ? sysAttrs.security_detail : [];
     const updateRows = [];
+    const newsUnreadItems = Array.isArray(patAttrs.news_unread_items) ? patAttrs.news_unread_items : [];
+    newsUnreadItems.forEach((item) => {
+      const titleHtml = escapeHtml(item.title || "Untitled");
+      const linkHtml = item.link
+        ? '<a href="' + escapeHtml(item.link) + '" target="_blank" rel="noopener">' + titleHtml + "</a>"
+        : titleHtml;
+      updateRows.push('<div class="detail-row"><span>' + linkHtml + '</span><span class="chip warn">unread Arch News</span></div>');
+    });
     if (secUpdates > 0) {
       securityDetail.forEach((d) => {
         updateRows.push('<div class="detail-row"><span>' + escapeHtml(d.package) + '</span><span class="chip warn">' + escapeHtml(d.severity || "High") + (d.cve ? " · " + escapeHtml(d.cve) : "") + "</span></div>");

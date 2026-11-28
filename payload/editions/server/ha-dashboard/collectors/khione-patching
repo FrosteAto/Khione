@@ -32,6 +32,28 @@ if command -v informant &>/dev/null; then
   news_unread="$(informant list --unread 2>/dev/null | sed -E 's/\x1b\[[0-9;]*m//g' | grep -c '^[0-9]\+:' || true)"
 fi
 
+# The actual unread titles, for the dashboard -- not parsed from
+# informant's own output. Confirmed live: informant's human-readable
+# layout is column-width-fixed for an interactive terminal and splices
+# the date into the middle of any title too long to fit, so a title
+# pulled from it often comes out mangled (date text embedded mid-word).
+# ha-rss already fetches this same archlinux.org feed into
+# rss_archlinux.json with clean, correctly-parsed titles/links, and both
+# it and informant list newest-first and mark items read in
+# chronological order -- so the N unread items are just the N most
+# recent entries ha-rss already has.
+news_unread_items_json='[]'
+if [[ -f /var/lib/hass/snapshots/rss_archlinux.json && "$news_unread" -gt 0 ]]; then
+  news_unread_items_json="$(python3 -c "
+import json
+try:
+    arts = json.load(open('/var/lib/hass/snapshots/rss_archlinux.json')).get('articles', [])
+except (OSError, ValueError):
+    arts = []
+print(json.dumps([{'title': a.get('title'), 'link': a.get('link')} for a in arts[:$news_unread]]))
+" 2>/dev/null || echo '[]')"
+fi
+
 # Written by configure_aur_update_check's generated per-package script
 # (security.sh), one aur-$package.json per entry in AUR_UPDATE_CHECKS --
 # globbed rather than hardcoded to Plex, so this stays correct however
@@ -49,14 +71,15 @@ for f in sorted(glob.glob('/var/lib/hass/snapshots/aur-*.json')):
 print(json.dumps(pkgs))
 " 2>/dev/null || echo '[]')"
 
-python3 - "$last_sync" "$next_run" "$news_unread" "$aur_update_packages_json" <<'PYEOF' > "$out.tmp"
+python3 - "$last_sync" "$next_run" "$news_unread" "$news_unread_items_json" "$aur_update_packages_json" <<'PYEOF' > "$out.tmp"
 import json, sys
-last_sync, next_run, news_unread, aur_update_packages_json = sys.argv[1:5]
+last_sync, next_run, news_unread, news_unread_items_json, aur_update_packages_json = sys.argv[1:6]
 aur_update_packages = json.loads(aur_update_packages_json)
 print(json.dumps({
     "last_sync": int(last_sync) if last_sync else None,
     "next_run": int(next_run) if next_run else None,
     "news_unread": int(news_unread),
+    "news_unread_items": json.loads(news_unread_items_json),
     "aur_updates": len(aur_update_packages),
     "aur_update_packages": aur_update_packages,
 }))

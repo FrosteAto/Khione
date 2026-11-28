@@ -142,6 +142,7 @@ command_line:
         - last_sync
         - next_run
         - news_unread
+        - news_unread_items
         - aur_updates
         - aur_update_packages
       scan_interval: 60
