@@ -444,7 +444,7 @@ fi
 # explain a failure (401, a rejected handler, a "form" step wanting real
 # data instead of the empty confirm below, ...).
 add_integration() {
-  local handler="$1" resp flow_id resp2 flow_type
+  local handler="$1" confirm_data="${2:-{\}}" resp flow_id resp2 flow_type
   resp="$(curl -s -H "Authorization: Bearer $token" -H "Content-Type: application/json" \
     -X POST -d "{\"handler\": \"$handler\"}" http://localhost:8123/api/config/config_entries/flow)"
   flow_id="$(echo "$resp" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("flow_id",""))' 2>/dev/null)"
@@ -454,7 +454,7 @@ add_integration() {
     return 0
   fi
   resp2="$(curl -s -H "Authorization: Bearer $token" -H "Content-Type: application/json" \
-    -X POST -d '{}' "http://localhost:8123/api/config/config_entries/flow/$flow_id")"
+    -X POST -d "$confirm_data" "http://localhost:8123/api/config/config_entries/flow/$flow_id")"
   flow_type="$(echo "$resp2" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("type",""))' 2>/dev/null)"
   if [[ "$flow_type" == "create_entry" ]]; then
     echo "$handler -- added."
@@ -464,7 +464,27 @@ add_integration() {
   fi
 }
 
-add_integration met
+# Met.no's confirm step wants real location data, not an empty {} --
+# confirmed live (2026-11-28): {"errors":{"location":"required key not
+# provided","elevation":"required key not provided"}}. HA already has this
+# instance's home location from onboarding -- /api/config is a stable,
+# documented REST endpoint that returns it, so pulling from there instead
+# of asking the user (or guessing coordinates) for data HA already has.
+home_cfg="$(curl -s -H "Authorization: Bearer $token" http://localhost:8123/api/config)"
+met_data="$(echo "$home_cfg" | python3 -c '
+import json, sys
+c = json.load(sys.stdin)
+print(json.dumps({
+    "location": {"latitude": c["latitude"], "longitude": c["longitude"]},
+    "elevation": c["elevation"],
+}))
+' 2>/dev/null)"
+if [[ -z "$met_data" ]]; then
+  echo "met -- could not read this instance's location from /api/config, skipping. Response:"
+  echo "  $home_cfg"
+else
+  add_integration met "$met_data"
+fi
 add_integration systemmonitor
 add_integration speedtestdotnet
 
