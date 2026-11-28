@@ -220,6 +220,7 @@ install_flatpak_packages FLATPAK_PACKAGES
 section "Configuring services and firewall"
 configure_home_assistant "${HOME_ASSISTANT_UNIT_REL:+$REPO_ROOT/$HOME_ASSISTANT_UNIT_REL}"
 configure_home_assistant_dashboard "${HA_DASHBOARD_DIR_REL:+$REPO_ROOT/$HA_DASHBOARD_DIR_REL}"
+configure_ha_desktop_shortcuts "${HA_DASHBOARD_DIR_REL:+$REPO_ROOT/$HA_DASHBOARD_DIR_REL}"
 configure_host_collectors "${HA_COLLECTORS_DIR_REL:+$REPO_ROOT/$HA_COLLECTORS_DIR_REL}"
 enable_services SERVICES_ENABLE
 mask_services SERVICES_MASK
@@ -239,8 +240,7 @@ if [[ "$SETUP_SECURITY_HARDENING" == "true" ]]; then
   configure_auditd AUDITD_EXTRA_WATCH
   configure_auto_updates
   configure_apparmor
-  configure_bootloader_password
-  configure_dns_threat_blocking
+  configure_post_boot_tasks
 fi
 for pkg in "${AUR_UPDATE_CHECKS[@]}"; do
   configure_aur_update_check "$ARCH_USER" "$pkg"

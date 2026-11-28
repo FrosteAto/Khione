@@ -96,7 +96,7 @@ Enough local tooling for hands-on debugging - terminal, file manager, text edito
 
 **Security Hardening**
 
-Server Edition opts into a full hardening pass: a default-deny firewall scoped to LAN where it can be, fail2ban and CrowdSec watching for abuse, file-integrity and audit monitoring, locked-down SSH/PAM/sysctl defaults, a hardened Docker daemon, a GRUB bootloader password, gated auto-updates that won't apply a security fix silently, and Quad9 DNS filtering for known-malicious domains. See the architecture diagram below for how it all fits together.
+Server Edition opts into a full hardening pass: a default-deny firewall scoped to LAN where it can be, fail2ban and CrowdSec watching for abuse, file-integrity and audit monitoring, locked-down SSH/PAM/sysctl defaults, a hardened Docker daemon, gated auto-updates that won't apply a security fix silently, and Quad9 DNS filtering for known-malicious domains. See the architecture diagram below for how it all fits together.
 
 <br>
 
@@ -144,7 +144,6 @@ flowchart TD
         SSHD["sshd<br/>no root login, 3 max auth tries,<br/>key-only once keys exist"]
         PAM["pam_faillock<br/>5 fails -> 15 min lockout"]
         SYSCTL["sysctl hardening<br/>kptr_restrict, ptrace_scope, rp_filter..."]
-        GRUB["GRUB bootloader password"]
         DOCKERD["Docker daemon hardening<br/>no-new-privileges, icc off, log limits"]
     end
 
@@ -184,7 +183,7 @@ flowchart TD
     classDef watchNode fill:#f6e6b8,stroke:#c9a23d,color:#6b5420,stroke-width:1.5px;
     class INTERNET,ROUTER,QUAD9,CS_CLOUD external
     class UFW,F2B,CSBOUNCER edgeNode
-    class SSHD,PAM,SYSCTL,GRUB,DOCKERD hostNode
+    class SSHD,PAM,SYSCTL,DOCKERD hostNode
     class PLEX,HA,SAMBA,COCKPIT,DASH servicesNode
     class AIDE,AUDITD,PACTIMER,INFORMANT,ARCHAUDIT watchNode
 ```

@@ -386,6 +386,108 @@ configure_home_assistant_dashboard() {
   merge_ha_configuration_snippet "$dashboard_dir/configuration-snippet.yaml" /var/lib/hass/configuration.yaml
 }
 
+# ---------------------------------------------------------------------
+# KRunner-launchable shortcut for the one manual step first-boot.md
+# can't fully script: adding the Weather/System Monitor/Speedtest.net
+# integrations. Shows up by name in KRunner (Alt+Space) via a plain
+# .desktop entry -- no custom runner needed, the stock Application
+# Launcher runner already surfaces any .desktop file here.
+#
+# khione-setup-ha-integrations adds them via HA's config_entries flow
+# REST API -- the same API the frontend's own "+ Add Integration"
+# button calls. Runs as the plain desktop user, no pkexec: it only
+# talks to HA over localhost:8123. Needs one long-lived access token,
+# pasted once (profile -> Security -> Long-Lived Access Tokens in the
+# HA UI) -- minting that token needs an already-logged-in HA session,
+# so it's the one piece of this that has to stay a human step. Renaming
+# the weather entity to weather.home and enabling the two disabled-by-
+# default System Monitor sensors are still a couple of manual clicks
+# after this runs: entity-registry changes go through HA's websocket
+# API, not the plain REST surface this script uses, and confirming a
+# websocket client's exact command shape isn't worth it for two
+# checkbox clicks. See first-boot.md for those.
+#
+# There used to be a second shortcut here for installing HACS. Removed
+# 2026-11-28, confirmed live on Khione-SVR: HA 2026.11 folded HACS into
+# core as a built-in "Marketplace" integration and now refuses to let
+# HACS install itself as a custom integration at all ("HACS does not
+# work on Home Assistant 2026.11 and newer... replaced by the native
+# Marketplace integration"). Every future install pulls
+# home-assistant:stable, which only ever means 2026.11+ from here on,
+# so that shortcut could never work again -- pyscript (what it existed
+# for) is just Settings -> Marketplace -> Discover -> search "pyscript"
+# -> Install now, no separate HACS step or GitHub device-code at all.
+# ---------------------------------------------------------------------
+configure_ha_desktop_shortcuts() {
+  local dashboard_dir="$1"
+  if [[ -z "$dashboard_dir" ]]; then
+    echo "No HA dashboard for this mode, skipping the HA setup shortcuts."
+    return 0
+  fi
+  echo "Installing the KRunner shortcut for HA integration setup..."
+
+  sudo install -Dm755 /dev/stdin /usr/local/bin/khione-setup-ha-integrations <<'EOF'
+#!/bin/bash
+set -uo pipefail
+# Same reasoning as khione-install-hacs: this runs inside a Terminal=true
+# desktop launch, so the EXIT trap guarantees there's always a pause (and
+# the output above it to actually read) before the window can close.
+trap 'echo; read -r -p "Press Enter to close: " _ || true' EXIT
+
+token="$(kdialog --title "Khione: Finish HA setup" --password "Paste a Home Assistant long-lived access token.\n\nCreate one in HA: your profile (bottom-left) -> Security -> Long-Lived Access Tokens -> Create Token.")"
+if [[ -z "${token:-}" ]]; then
+  exit 0
+fi
+
+# Deliberately plain `curl -s`, not `-f`: `-f` discards the response body on
+# any non-2xx status, which was hiding exactly the error text that would
+# explain a failure (401, a rejected handler, a "form" step wanting real
+# data instead of the empty confirm below, ...).
+add_integration() {
+  local handler="$1" resp flow_id resp2 flow_type
+  resp="$(curl -s -H "Authorization: Bearer $token" -H "Content-Type: application/json" \
+    -X POST -d "{\"handler\": \"$handler\"}" http://localhost:8123/api/config/config_entries/flow)"
+  flow_id="$(echo "$resp" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("flow_id",""))' 2>/dev/null)"
+  if [[ -z "$flow_id" ]]; then
+    echo "$handler -- could not start its setup. Response:"
+    echo "  $resp"
+    return 0
+  fi
+  resp2="$(curl -s -H "Authorization: Bearer $token" -H "Content-Type: application/json" \
+    -X POST -d '{}' "http://localhost:8123/api/config/config_entries/flow/$flow_id")"
+  flow_type="$(echo "$resp2" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("type",""))' 2>/dev/null)"
+  if [[ "$flow_type" == "create_entry" ]]; then
+    echo "$handler -- added."
+  else
+    echo "$handler -- started but didn't finish (probably needs real form data, not an empty confirm). Response:"
+    echo "  $resp2"
+  fi
+}
+
+add_integration met
+add_integration systemmonitor
+add_integration speedtestdotnet
+
+echo
+echo "Two manual bits left (Settings -> Entities in HA, for whichever of"
+echo "the above actually got added):"
+echo " - rename the weather entity's Entity ID to weather.home"
+echo " - enable sensor.system_monitor_processor_use and"
+echo "   sensor.system_monitor_memory_usage (they start disabled)"
+EOF
+
+  sudo tee /usr/share/applications/khione-setup-ha-integrations.desktop >/dev/null <<'EOF'
+[Desktop Entry]
+Type=Application
+Name=Finish Home Assistant integrations
+Comment=Add the Weather, System Monitor, and Speedtest.net integrations
+Icon=preferences-system-network
+Exec=/usr/local/bin/khione-setup-ha-integrations
+Terminal=true
+Categories=System;
+EOF
+}
+
 configure_greetd() {
   local session_cmd="${1:-/usr/bin/startplasma-wayland}"
   echo "Configuring greetd..."

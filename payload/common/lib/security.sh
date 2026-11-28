@@ -764,106 +764,91 @@ configure_apparmor() {
   return 0
 }
 
-# ---------------------------------------------------------------------
-# GRUB bootloader password. Gates editing boot entries (recovery mode,
-# alternate kernel params) from the GRUB menu -- normal boots are
-# completely unaffected, you never see this prompt just turning the
-# machine on. The password is generated, not invented, and printed once
-# so it can be saved somewhere safe; it's also never stored in plaintext
-# (grub-mkpasswd-pbkdf2's hash goes in the config, not the password).
-# ---------------------------------------------------------------------
-configure_bootloader_password() {
-  if ! command -v grub-mkpasswd-pbkdf2 &>/dev/null; then
-    echo "grub-mkpasswd-pbkdf2 not available, skipping bootloader password."
-    return 0
-  fi
-  if [[ -f /etc/grub.d/40_custom ]] && grep -q "^set superusers" /etc/grub.d/40_custom 2>/dev/null; then
-    echo "GRUB password already configured, skipping."
-    return 0
-  fi
-  echo "Setting a GRUB bootloader password..."
-  local password hash
-  password="$(openssl rand -base64 18)"
-  hash="$(echo -e "$password\n$password" | grub-mkpasswd-pbkdf2 | grep -o 'grub\.pbkdf2\.sha512\..*')"
-  sudo tee -a /etc/grub.d/40_custom >/dev/null <<EOF
-
-set superusers="root"
-password_pbkdf2 root $hash
-EOF
-  sudo grub-mkconfig -o /boot/grub/grub.cfg
-  echo
-  echo "=============================================================="
-  echo "GRUB bootloader password set. SAVE THIS NOW, it is shown once:"
-  echo "  $password"
-  echo "You will NOT be asked for it on a normal boot -- only if you"
-  echo "ever need to edit a boot entry or enter recovery/single-user"
-  echo "mode from the GRUB menu."
-  echo "=============================================================="
-  echo
-}
+# There used to be a configure_bootloader_password() here (GRUB superuser
+# password, via password_pbkdf2). Removed 2026-11-28, confirmed live: GRUB's
+# superuser mechanism restricts the WHOLE menu once a password is set, not
+# just editing entries/recovery mode as this function's own comment assumed
+# -- every normal boot ends up asking for it too, unless every auto-
+# generated menuentry is flagged --unrestricted, which means hand-patching
+# the grub package's own /etc/grub.d/10_linux (overwritten on the next grub
+# update, silently undoing the fix). With no full-disk encryption on any
+# edition, physical/console access already bypasses a GRUB password trivially
+# (live-USB chroot), so the security value was always marginal -- not worth
+# the choice between permanent every-boot friction or an ongoing patch
+# against a package-owned file.
 
 # ---------------------------------------------------------------------
-# DNS threat blocking via Quad9 (9.9.9.9) -- a nonprofit, security-
-# focused public resolver that blocks known-malicious domains using IBM
-# X-Force threat intel, updated continuously on their end, nothing to
-# sync or maintain here. This is the layer that would have actually
-# caught the mining pools from this project's Nov 2026 incident
-# (gulf.moneroocean.stream, pool.hashvault.pro) -- they're named
-# domains, not bare IPs. Real limit: malware connecting straight to a
-# raw IP skips DNS entirely and isn't touched by this.
+# Post-boot tasks: a shared landing spot for anything that needs things
+# the chroot install never has, most commonly a live NetworkManager
+# D-Bus connection. Runs every boot via khione-post-boot-tasks.service;
+# each task below is responsible for its own idempotency so repeat runs
+# stay a safe no-op. Add future work that can't run inside the chroot
+# install as another task_* function + a call to it at the bottom of
+# the generated script -- no new unit needed.
 #
-# Overrides the active connection's DNS via NetworkManager (every
-# edition in this repo enables NetworkManager.service, confirmed by
-# grep across all mode.sh files) rather than editing /etc/resolv.conf
-# directly, which NetworkManager would just overwrite on the next
-# reconnect/reboot. Finds the real uplink connection by device type so
-# it never touches loopback or Docker's bridge.
+# Today's only task: DNS threat blocking via Quad9 (9.9.9.9) -- a
+# nonprofit, security-focused public resolver that blocks known-
+# malicious domains using IBM X-Force threat intel, updated
+# continuously on their end, nothing to sync or maintain here. This is
+# the layer that would have actually caught the mining pools from this
+# project's Nov 2026 incident (gulf.moneroocean.stream,
+# pool.hashvault.pro) -- they're named domains, not bare IPs. Real
+# limit: malware connecting straight to a raw IP skips DNS entirely and
+# isn't touched by this. Overrides the active connection's DNS via
+# NetworkManager (every edition in this repo enables
+# NetworkManager.service, confirmed by grep across all mode.sh files)
+# rather than editing /etc/resolv.conf directly, which NetworkManager
+# would just overwrite on the next reconnect/reboot. Finds the real
+# uplink connection by device type so it never touches loopback or
+# Docker's bridge.
 #
-# Deferred to a first-boot oneshot service rather than run here directly:
+# Deferred to this service rather than run from install.sh directly:
 # nmcli needs a LIVE NetworkManager reachable over D-Bus, not just the
 # enabled-but-not-running state every other chroot-safe step in this
-# file relies on (systemctl_live's enable/disable/mask are pure
-# filesystem ops; this genuinely has nothing to talk to yet). Confirmed
-# live: this was a hard install blocker on EVERY edition -- "Error:
-# Could not create NMClient object: Could not connect: No such file or
-# directory" from the old `conn="$(nmcli ...)"` line, then `set -e`
-# killed the whole installer on that failed command substitution before
-# the old empty-$conn guard ever ran. Re-running on every boot (not
-# just once) is deliberate and harmless -- nmcli con mod/up are
-# idempotent, and it self-heals if anything ever resets these settings.
+# file relies on. Confirmed live: this was a hard install blocker on
+# EVERY edition -- "Error: Could not create NMClient object: Could not
+# connect: No such file or directory" from the old
+# `conn="$(nmcli ...)"` line, then `set -e` killed the whole installer
+# on that failed command substitution before the old empty-$conn guard
+# ever ran. Re-running on every boot (not just once) is deliberate and
+# harmless -- nmcli con mod/up are idempotent, and it self-heals if
+# anything ever resets these settings.
 # ---------------------------------------------------------------------
-configure_dns_threat_blocking() {
-  if ! command -v nmcli &>/dev/null; then
-    echo "NetworkManager not installed, skipping DNS threat blocking."
-    return 0
-  fi
-  echo "Setting up DNS threat blocking (applies on first boot, once NetworkManager is actually running)..."
-  sudo install -Dm755 /dev/stdin /usr/local/bin/khione-dns-threat-blocking <<'EOF'
+configure_post_boot_tasks() {
+  echo "Setting up khione's post-boot tasks (DNS threat blocking)..."
+  sudo install -Dm755 /dev/stdin /usr/local/bin/khione-post-boot-tasks <<'EOF'
 #!/bin/bash
 set -uo pipefail
-conn="$(nmcli -t -f NAME,TYPE con show --active | awk -F: '$2=="802-3-ethernet" || $2=="802-11-wireless" {print $1; exit}')"
-if [[ -z "$conn" ]]; then
-  echo "khione-dns-threat-blocking: no active wired/wireless connection found, skipping."
-  exit 0
-fi
-echo "khione-dns-threat-blocking: pointing '$conn' at Quad9's filtered DNS (9.9.9.9)..."
-sudo nmcli con mod "$conn" ipv4.dns "9.9.9.9 149.112.112.112" ipv4.ignore-auto-dns yes
-sudo nmcli con mod "$conn" ipv6.dns "2620:fe::fe 2620:fe::9" ipv6.ignore-auto-dns yes
-sudo nmcli con up "$conn" >/dev/null
+
+task_dns_threat_blocking() {
+  command -v nmcli &>/dev/null || return 0
+  local conn
+  conn="$(nmcli -t -f NAME,TYPE con show --active | awk -F: '$2=="802-3-ethernet" || $2=="802-11-wireless" {print $1; exit}')"
+  if [[ -z "$conn" ]]; then
+    echo "khione-post-boot-tasks: no active wired/wireless connection found, skipping DNS threat blocking."
+    return 0
+  fi
+  echo "khione-post-boot-tasks: pointing '$conn' at Quad9's filtered DNS (9.9.9.9)..."
+  nmcli con mod "$conn" ipv4.dns "9.9.9.9 149.112.112.112" ipv4.ignore-auto-dns yes
+  nmcli con mod "$conn" ipv6.dns "2620:fe::fe 2620:fe::9" ipv6.ignore-auto-dns yes
+  nmcli con up "$conn" >/dev/null
+}
+
+task_dns_threat_blocking
 EOF
-  sudo tee /etc/systemd/system/khione-dns-threat-blocking.service >/dev/null <<'EOF'
+  sudo tee /etc/systemd/system/khione-post-boot-tasks.service >/dev/null <<'EOF'
 [Unit]
-Description=Point the active connection's DNS at Quad9's threat-blocking resolver
+Description=Run khione's post-boot tasks (DNS threat blocking, GRUB password, ...)
 After=NetworkManager.service
 Wants=NetworkManager.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/bin/khione-dns-threat-blocking
+ExecStart=/usr/local/bin/khione-post-boot-tasks
 
 [Install]
 WantedBy=multi-user.target
 EOF
   systemctl_live daemon-reload
-  sudo systemctl enable khione-dns-threat-blocking.service
+  sudo systemctl enable khione-post-boot-tasks.service
 }

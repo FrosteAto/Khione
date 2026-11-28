@@ -115,7 +115,6 @@ command_line:
         - last_ban_jail
         - last_ban_time
         - quad9_active
-        - grub_locked
         - fail2ban_active
         - crowdsec_active
         - ban_list

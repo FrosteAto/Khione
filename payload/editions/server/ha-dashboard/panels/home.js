@@ -570,7 +570,6 @@ const PAGE_SHELL_HTML = `
           </div>
           <div class="mini-stats">
             <div class="mini-stat" id="sec-quad9-stat"><b class="tabular" id="sec-quad9">&mdash;</b><span>DNS filtering</span></div>
-            <div class="mini-stat" id="sec-grub-stat"><b class="tabular" id="sec-grub">&mdash;</b><span>GRUB password</span></div>
             <div class="mini-stat"><b class="tabular" id="sec-sessions">&mdash;</b><span>active sessions</span></div>
           </div>
           <p class="rail-history" id="sec-history">&nbsp;</p>
@@ -1139,8 +1138,6 @@ class KhioneHomePanel extends HTMLElement {
     root.getElementById("sec-aide-stat").className = "mini-stat" + (aideStatus === "changes_detected" ? " warn" : "");
     root.getElementById("sec-quad9").textContent = secAttrs.quad9_active === true ? "Quad9" : "off";
     root.getElementById("sec-quad9-stat").className = "mini-stat" + (secAttrs.quad9_active === true ? "" : " warn");
-    root.getElementById("sec-grub").textContent = secAttrs.grub_locked === true ? "set" : "unset";
-    root.getElementById("sec-grub-stat").className = "mini-stat" + (secAttrs.grub_locked === true ? "" : " warn");
     root.getElementById("sec-sessions").textContent = secAttrs.active_sessions ?? "—";
 
     const secHistoryEl = root.getElementById("sec-history");

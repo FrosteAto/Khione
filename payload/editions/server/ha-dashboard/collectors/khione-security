@@ -132,16 +132,12 @@ if [[ -r /var/lib/fail2ban/fail2ban.sqlite3 ]] && command -v sqlite3 &>/dev/null
   fi
 fi
 
-# Quad9 DNS and the GRUB password are both one-time installer config,
-# not something HA has a sensor for -- confirmed live rather than
-# assumed, in case either was ever hand-reverted after install.
+# Quad9 DNS is one-time installer config, not something HA has a sensor
+# for -- confirmed live rather than assumed, in case it was ever
+# hand-reverted after install.
 quad9_active=false
 if grep -q "nameserver 9\.9\.9\.9" /etc/resolv.conf 2>/dev/null; then
   quad9_active=true
-fi
-grub_locked=false
-if [[ -f /etc/grub.d/40_custom ]] && grep -q "^set superusers" /etc/grub.d/40_custom 2>/dev/null; then
-  grub_locked=true
 fi
 
 # cs_json can be large (a burst of CrowdSec decisions) -- Linux caps a
@@ -152,12 +148,12 @@ trap 'rm -rf "$tmpdir"' EXIT
 printf '%s' "$cs_json" > "$tmpdir/cs.json"
 
 python3 - "$f2b_banned" "$aide_status" "$aide_last_run" "$auditd_active" "$auditd_immutable" \
-  "$ufw_rules" "$active_sessions" "$aide_next_run" "$last_ban_jail" "$last_ban_time" "$quad9_active" "$grub_locked" \
+  "$ufw_rules" "$active_sessions" "$aide_next_run" "$last_ban_jail" "$last_ban_time" "$quad9_active" \
   "$fail2ban_active" "$crowdsec_active" "$ban_list_raw" "$tmpdir/cs.json" "$aide_diff_raw" "$auditd_recent_raw" <<'PYEOF' > "$out.tmp"
 import json, sys
 (f2b_banned, aide_status, aide_last_run, auditd_active, auditd_immutable,
- ufw_rules, active_sessions, aide_next_run, last_ban_jail, last_ban_time, quad9_active, grub_locked,
- fail2ban_active, crowdsec_active, ban_list_raw, cs_json_path, aide_diff_raw, auditd_recent_raw) = sys.argv[1:19]
+ ufw_rules, active_sessions, aide_next_run, last_ban_jail, last_ban_time, quad9_active,
+ fail2ban_active, crowdsec_active, ban_list_raw, cs_json_path, aide_diff_raw, auditd_recent_raw) = sys.argv[1:18]
 with open(cs_json_path) as f:
     cs_json = f.read()
 
@@ -198,7 +194,6 @@ print(json.dumps({
     "last_ban_jail": last_ban_jail or None,
     "last_ban_time": int(last_ban_time) if last_ban_time else None,
     "quad9_active": quad9_active == "true",
-    "grub_locked": grub_locked == "true",
     "fail2ban_active": fail2ban_active == "true",
     "crowdsec_active": crowdsec_active == "true",
     "ban_list": ban_list,
